@@ -1,0 +1,153 @@
+{
+  "reviews": [
+    {
+      "id": 19180,
+      "comments": "Setting up a lab and try to figure out the solution. No risk so far.",
+      "sr_number": "2108040060003799",
+      "reviewed_on": "2021-08-08T23:25:33.643Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "1",
+      "email_sent": true,
+      "tracktodfm": false,
+      "sr_owner": "renhe"
+    },
+    {
+      "id": 6716,
+      "comments": "This is identified as a bug and workaround provided: merge the record using advanced find",
+      "sr_number": "2107300060002485",
+      "reviewed_on": "2021-08-09T00:49:50.139Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "2",
+      "email_sent": true,
+      "tracktodfm": false,
+      "sr_owner": "renhe"
+    },
+    {
+      "id": 38810,
+      "comments": "Configuring the service account as a domain account for SSRS is a must for Dynamics CRM report rendering. <br>\"<br>The identity account running the instance of SQL Server Reporting Services where the Microsoft Dynamics 365 Reporting Extensions are running can’t be the local system or a virtual account. This is required for Dynamics 365 for Customer Engagement reporting to work because the identity account must be added to the PrivReportingGroup Active Directory security group that is used by Dynamics 365 for Customer Engagement.<br>\"<br><br>link: https://docs.microsoft.com/en-us/dynamics365/customerengagement/on-premises/deploy/microsoft-dynamics-365-reporting-requirements?view=op-9-1",
+      "sr_number": "2108040060003799",
+      "reviewed_on": "2021-08-09T03:16:17.699Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "1",
+      "email_sent": true,
+      "tracktodfm": true,
+      "sr_owner": "renhe"
+    },
+    {
+      "id": 57615,
+      "comments": " Long aged case 82 days. Customer would like to further monitor this case until Wednesday to wait for business user's confirmation. Per engineer’s plan, will close it this week. ",
+      "sr_number": "2105200060003130",
+      "reviewed_on": "2021-08-10T02:58:36.504Z",
+      "reviewed_by": "fedong",
+      "cpe_assessment": "3",
+      "email_sent": false,
+      "tracktodfm": false,
+      "sr_owner": "jinshe"
+    },
+    {
+      "id": 65119,
+      "comments": "New case was raised yesterday. Engineer has explained the root cause to customer and waiting for customer confirmation. No risk  ",
+      "sr_number": "2108090060000899",
+      "reviewed_on": "2021-08-10T03:04:02.646Z",
+      "reviewed_by": "fedong",
+      "cpe_assessment": "1",
+      "email_sent": false,
+      "tracktodfm": false,
+      "sr_owner": "jinshe"
+    },
+    {
+      "id": 56952,
+      "comments": "Problems:<br>1. You were keeping communication with customer via email and doing research while didn't understood what customer has done. As a consequence, the \"solution\" you delivered didn't work, and was told he already did.<br><br>2. Please do not write an over-long email because most of the customer has no interest to go through such long email and they have their own business.  if the steps are a little bit duplicated, set up a meeting and do it for the customer. <br><br>3. it's more like that customer is losing patience now and didn't respond anymore.<br><br>Tips:<br>1. Please arrange a teams session with the customer and collect all information you need via teams session, which will be the most efficient way. ",
+      "sr_number": "2107210060001738",
+      "reviewed_on": "2021-08-11T01:56:34.188Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "3",
+      "email_sent": true,
+      "tracktodfm": false,
+      "sr_owner": "chenleizhao"
+    },
+    {
+      "id": 22155,
+      "comments": "Current Status<br>1. Issue seems to disappear per logs, no response from cx<br><br>Next Action Plan<br>2. Follow up with customer to confirm if they have further questions ",
+      "sr_number": "2107220060000066",
+      "reviewed_on": "2021-08-11T06:04:30.138Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "1",
+      "email_sent": false,
+      "tracktodfm": false,
+      "sr_owner": "yuhhu"
+    },
+    {
+      "id": 38092,
+      "comments": "Current Status:<br>New case received today. Troubleshooting is ongoing<br><br>Next Action Plan:<br>Continue to troubleshoot the issue",
+      "sr_number": "2108090060000137",
+      "reviewed_on": "2021-08-11T06:05:05.769Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "1",
+      "email_sent": false,
+      "tracktodfm": false,
+      "sr_owner": "yuhhu"
+    },
+    {
+      "id": 64221,
+      "comments": "Customer persist to keep this case open until the hotfix is released. The hotfix is expected to be released in the late of Aug or mid Sep.",
+      "sr_number": "2107300060002485",
+      "reviewed_on": "2021-08-11T07:18:49.494Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "1",
+      "email_sent": true,
+      "tracktodfm": false,
+      "sr_owner": "renhe"
+    },
+    {
+      "id": 56213,
+      "comments": "test",
+      "sr_number": "2107300060002485",
+      "reviewed_on": "2021-08-12T05:09:02.462Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "1",
+      "email_sent": false,
+      "tracktodfm": false,
+      "sr_owner": "renhe"
+    },
+    {
+      "id": 21377,
+      "comments": "23233",
+      "sr_number": "2107300060002485",
+      "reviewed_on": "2021-08-12T05:09:36.326Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "1",
+      "email_sent": false,
+      "tracktodfm": false,
+      "sr_owner": "renhe"
+    },
+    {
+      "id": 18570,
+      "comments": "3233",
+      "sr_number": "2107300060002485",
+      "reviewed_on": "2021-08-12T05:10:54.830Z",
+      "reviewed_by": "renhe",
+      "cpe_assessment": "1",
+      "email_sent": false,
+      "tracktodfm": false,
+      "sr_owner": "renhe"
+    }
+  ],
+  "reviewedhistory": [
+    {
+      "sr_number": "2105200060003130",
+      "reviewtimes": 1,
+      "id": 62551
+    },
+    {
+      "sr_number": "2108090060000899",
+      "reviewtimes": 1,
+      "id": 21560
+    },
+    {
+      "sr_number": "2107210060001738",
+      "reviewtimes": 1,
+      "id": 4172
+    }
+  ]
+}
