@@ -171,8 +171,8 @@ let SaveSettingToSessionStorage =(setting_name,value) => {
 
 }
 
-let ClearSettingFromLocalStorage=()=> {
-  window.localStorage.clear();
+let ClearSettingFromLocalStorage=(setting_name)=> {
+  window.localStorage.removeItem(setting_name);
 }
 
 //Shuffle the array so that we will get top items randomly

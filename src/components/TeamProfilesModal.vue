@@ -242,7 +242,7 @@
               enabled: submit_disable === false,
             }"
           >
-            <i class="fas fa-check"></i> SAVE
+          <i class="fas fa-save"></i> SAVE
           </button>
           <button
             type="button"

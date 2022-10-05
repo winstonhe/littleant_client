@@ -63,6 +63,28 @@
     </div>
 
     <div
+      id="display60"
+      :class="{
+        'displayboard trending': appstylemode === 'DEFAULT',
+        'displayboard dark': appstylemode === 'DARK',
+      }"
+    >
+      <p
+        :class="{
+          'title title_default': appstylemode === 'DEFAULT',
+          'title title_dark': appstylemode === 'DARK',
+        }"
+      >
+        <i class="fas fa-bug"></i> BUG
+      </p>
+      <p class="boardcontent">{{ Compueted_bug_count }}</p>
+      <p class="boardcontent_sub">
+        &nbsp;{{ Compueted_bug_count_percentage }}
+      </p>
+      <!-- <div v-show="appstylemode === 'DARK'" style="background:gray;height:2px;width:100%;margin-bottom:0px" ></div> -->
+    </div>
+
+    <div
       id="display15"
       :class="{
         'displayboard display15': appstylemode === 'DEFAULT',
@@ -199,6 +221,18 @@ export default {
       else return "...";
     },
 
+    Compueted_bug_count() {
+      if (this.$props.summary != null)
+        return this.$props.summary.bug_count;
+      else return "...";
+    },
+
+    Compueted_bug_count_percentage() {
+      if (this.$props.summary != null)
+        return this.$props.summary.bug_count_percentage;
+      else return "...";
+    },
+
     Compueted_count15() {
       if (this.$props.summary != null) return this.$props.summary.count15;
       else return "...";
@@ -286,7 +320,7 @@ export default {
 }
 
 .displayboard {
-  width: 12.5%;
+  width: 11.1%;
   height: 100px;
   display: inline-block;
 }

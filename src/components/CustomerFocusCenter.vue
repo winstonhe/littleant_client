@@ -55,7 +55,7 @@
        <a><i class="fas fa-cog"></i></a>
     </li>
 
-      <li style="float: right;" @click="CleanCache">
+      <li style="float: right;" @click="CleanCache" v-if="!ErrorRaised">
         <a>
           <i
             class="fas fa-sync-alt"
@@ -72,6 +72,7 @@
           filter_canceled: filterApplied === false,
         }"
         @click="showFilter = true"
+        v-if="!ErrorRaised"
       >
         <a><i class="fas fa-filter" title="Filter PODs"></i> </a>
       </li>
@@ -79,7 +80,7 @@
       <li   v-show="filterApplied"  
       style="float: right"
      class=cahrtfilter_applied
-      @click="CancelFilter"
+      @click="CancelFilter"    
     >
       <a>[{{pod_Filters_Description}}]    <i class="fas fa-eraser"></i></a>
     </li>  

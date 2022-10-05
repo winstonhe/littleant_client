@@ -458,6 +458,8 @@ export default {
         (ticket) => ticket.sr_age >= 60
       );
 
+      let bug_count = "NA";//servicetickets.filter(ticket => ticket.sr_bugurl!==null).length;
+      //calculate the bug infor is too high price.
       let summary = {};
 
       summary.count15 = servicetickets_15.length;
@@ -469,16 +471,21 @@ export default {
 
       if (manager_alias !== null) {
         //  summary.engineers =await this.getteammembers(manager_alias).length; //this.Refresh_Engieers_Number(servicetickets);
-        let engineers = GetSettingFromSessionStorage(manager_alias).split(",");
-        if (engineers === null) {
+        let engineers_string = GetSettingFromSessionStorage(manager_alias);
+        let engineers=[];
+        if (engineers_string === null) {
           engineers = await this.getteammembers(manager_alias);
           SaveSettingToSessionStorage(manager_alias, engineers);
+        }
+        else {
+          engineers = engineers_string.split(",");
         }
         summary.engineers = engineers.length;
       } else {
         summary.engineers = 0;
       }
 
+      summary.bug_count = bug_count;
       summary.trendingissues_count =
         this.Refresh_Trending_Issues_Count(servicetickets);
 
@@ -502,6 +509,9 @@ export default {
           (100 * (summary.count60 / total)).toFixed(1) + "%";
         summary.trendingissues_count_percentage =
           (100 * (summary.trendingissues_count / total)).toFixed(1) + "%";
+
+          summary.bug_count_percentage = "NA";
+         // (100 * (summary.bug_count / total)).toFixed(1) + "%";
       }
 
       return summary;

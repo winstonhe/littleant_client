@@ -6,21 +6,21 @@
         <div
           style="
             background-color: darkgray;
-            height: 60px;
+            height: 50px;
             width: 100%;
             margin: 0px auto;
           "
         >
           <p
             style="
-              font-size: 40px;
+              font-size: 30px;
               color: white;
               text-align: center;
               font-family: Segoe UI;
               font-weight: lighter;
             "
           >
-            MCE Task Assignment
+            Customer Recovery Task Assignment
           </p>
           <p
             style="
@@ -30,7 +30,7 @@
               font-weight: lighter;
               position: absolute;
               right: 20px;
-              top: 25px;
+              top: 10px;
               cursor: pointer;
             "
             @click="$emit('CloseAssignModal')"

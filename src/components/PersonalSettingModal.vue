@@ -134,7 +134,7 @@
             class="applyfilter_button"
             @click="Save_Personal_Settings"
           >
-            <i class="fas fa-check"></i> SAVE
+          <i class="fas fa-save"></i> SAVE
           </button>
           <button
             type="button"

@@ -72,7 +72,7 @@
       <i
         v-show="serviceticket.is_trending_issue"
         class="fas fa-chart-line"
-        style="color: darkred"
+        style="color: orangered"
         title="Trending Issue"
       ></i>
     </a>

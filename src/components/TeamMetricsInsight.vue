@@ -70,6 +70,21 @@
           ></a>
         </li>
       </ul>
+     
+      
+      <div
+      v-if="Team_DateSet_Array.length === 1 && !Team_DateSet_Array[0].isDataContained"
+        style="display: inline-block; margin: 50px; padding-top: 5px"
+      >
+        <label  style="top: 5px"        
+         :class="{
+            'white-text': appstylemode === 'DARK' ,
+            'black-text': appstylemode !== 'DARK'
+          }"
+        >
+          To display the operation footprint of your team, kindly please create a daily snapshot by navigating to my little ant and clicking the button of snapshot creation.</label>
+      </div>
+    
 
       <div v-for="Team_DataSet in Team_DateSet_Array" :key="Team_DataSet.name" v-show="Team_DataSet.isDataContained">
         <label style="
@@ -98,7 +113,7 @@
           :height="200"
           :title="`Team Case Distribution`"
           :minValue="0"
-          :maxValue="200"
+          :maxValue="Team_DataSet.maxValue"
           :stepValue="20"
         ></ChartLine>
 
@@ -564,6 +579,7 @@ export default {
         dataset: team_dataset_chart_line,
         dataset_assigned: team_dataset_chart_line_assigned,
         dataset_percent: team_dataset_percent_chart_line,
+        maxValue: Math.ceil(Math.max(...this.dataset_chart_line.datasets[5].data) / 100) *100
       };
 
       this.Team_DateSet_Array.push(this.Team_DataSet);

@@ -197,6 +197,7 @@ import {
   GetSettingFromSessionStorage,
   SaveSettingToSessionStorage,
   Sleep,
+  ClearSettingFromLocalStorage,
 } from "../common.js";
 
 import Servicetickets from "../components/ServiceTickets.vue";
@@ -312,6 +313,10 @@ export default {
 
       // Chart Filtered enabled or not
       chartFilter_Enabled: false,
+
+      //bug count:
+      bug_count:0,
+      bug_count_percentage:0.0,
 
       // Site Nav Bar status:
       siteNivBar_expanded: "true",
@@ -500,8 +505,9 @@ export default {
       this.messageforsnapshot ="Creating snapshot in process. Please feel free to enjoy your coffee now  <i class='fas fa-mug-hot'></i> ...";
       let snapshotMessageInterval= setInterval(this.setTickWhenCreatingSnapshot,1000)
       this.processingforsnapshot = true;
+      
       //clean cache
-      await WebAPI_Helper("get", "cleancache(case)", null);
+      //await WebAPI_Helper("get", "cleancache(case)", null);
 
      //  const whoami = GetSettingFromSessionStorage("whoami");
       let manager_alias = await this.reportingm1manager(this.currentuser);
@@ -606,7 +612,7 @@ export default {
       this.showDialog_Snapshot = false;
       this.processingforsnapshot = false;
       this.messageforsnapshot =
-        "Are you sure to create team operation snapshot of today now ? To create snapshot, we will clean cache and retrieve the live data which could take seconds.";
+        "Are you sure to create team operation snapshot of today now ?  You can create today's snapshot for multiples times within one day.";
 
       //reload the page
         location.reload();
@@ -1066,6 +1072,8 @@ export default {
         engineers_chosen
       );
 
+      //bug
+      this.bug_count = this.servicetickets.filter(ticket => ticket.sr_bugurl!=="" && ticket.sr_bugurl!==null).length;
       this.Refresh_Summary();
     },
 
@@ -1094,9 +1102,9 @@ export default {
       this.summary.count4560 = this.servicetickets_45_60.length;
       this.summary.count60 = this.servicetickets_60.length;
       this.summary.backlog = this.servicetickets.length;
+      this.summary.bug_count = this.bug_count;
       this.summary.engineers = this.Refresh_Engieers_Number();
-      this.summary.trendingissues_count = this.Refresh_Trending_Issues_Count(
-        this.servicetickets
+      this.summary.trendingissues_count = this.Refresh_Trending_Issues_Count(this.servicetickets
       );
 
       const total =
@@ -1105,6 +1113,8 @@ export default {
         this.summary.count3045 +
         this.summary.count4560 +
         this.summary.count60;
+      
+        this.summary.bug_count_percentage = 0.0;
 
       if (total !== 0) {
         this.summary.count15_percentage =
@@ -1119,6 +1129,8 @@ export default {
           (100 * (this.summary.count60 / total)).toFixed(1) + "%";
         this.summary.trendingissues_count_percentage =
           (100 * (this.summary.trendingissues_count / total)).toFixed(1) + "%";
+          //bug statistics        
+        this.summary.bug_count_percentage =   (100 * (this.summary.bug_count / total)).toFixed(1) + "%";
       }
     },
 
@@ -1155,13 +1167,12 @@ export default {
       //disable chart filter
       this.DisableChartFitler_UI();
 
-      //set filterAplied status as false
-      let myStorage = window.sessionStorage;
+      //set filterAplied status as false   
       SaveSettingToLocalStorage("filterApplied","false");
       this.filterApplied = 'false';
 
-      //clean the chosen engineers list so that all service tickets will be loaded.
-      myStorage.removeItem("engineers_chosen");
+      //clean the chosen engineers list so that all service tickets will be loaded.   
+      ClearSettingFromLocalStorage("engineers_chosen");
 
       this.showFilter = false; // !this.showFilter;
 
@@ -1199,6 +1210,8 @@ export default {
         );
       this.servicetickets_15 = this.backup_servicetickets_15 =
         this.servicetickets.filter((ticket) => ticket.sr_age < 15);
+
+      this.bug_count = this.servicetickets.filter(ticket => ticket.sr_bugurl!=="" && ticket.sr_bugurl!==null).length;
 
       this.Refresh_Summary();
     },
@@ -1299,6 +1312,8 @@ export default {
       this.servicetickets_15 = this.servicetickets.filter(
         (ticket) => ticket.sr_age < 15
       );
+
+      this.bug_count = this.servicetickets.filter(ticket => ticket.sr_bugurl!=="" && ticket.sr_bugurl!==null).length;
 
       this.chartFilter_Enabled = true;
 
@@ -1569,7 +1584,7 @@ export default {
                   this.teamprofile.Threshold_Active_Review === null
                     ? 3
                     : this.teamprofile.Threshold_Active_Review;
-                if (days_diff <= parseInt(Threshold_Active_Review))
+                if (days_diff <= parseInt(Threshold_Active_Review) && allreview_data[j].latest_review_type !==7)  //viewtype 7 is idle alert
                   this.servicetickets[i].is_reviewed_today = true;
               }
 

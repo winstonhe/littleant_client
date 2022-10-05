@@ -22,7 +22,7 @@
           text-transform: uppercase;
         "
       >
-        <i class="fas fa-align-justify"></i>
+        <!-- <i class="fas fa-align-justify"></i> -->
         <span
           style="display: inline-block; top: 2px; vertical-align: middle;height:24px;weight:24px"
           v-html="Computed_Country"
