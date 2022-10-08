@@ -426,14 +426,15 @@ export default {
         }
         SaveSettingToSessionStorage(
           teammanagers_alias[i],
-          JSON.stringify(team_members)
+          //JSON.stringify(team_members)
+          team_members
         );
       }
 
       //Analyze the assignment of each team
       this.analyzed_ds_teams=[];     
       this.assignment_teams.forEach((team) => {
-        let engineers = JSON.parse(GetSettingFromSessionStorage(team.manager));
+        let engineers = GetSettingFromSessionStorage(team.manager).split(",");
 
         //Generate dataset for team, the generate dataset will be stored tempororily by compononent data.
         this.Generate_Dataset_For_Charts(
@@ -518,7 +519,7 @@ export default {
       let assignments_cleanedup = [];
 
       let teammembers = [];
-      teammembers = JSON.parse(GetSettingFromSessionStorage(manager_alias));
+      teammembers = GetSettingFromSessionStorage(manager_alias).split(",");
 
      
       //initialize the assignment number as 0 for all team members.

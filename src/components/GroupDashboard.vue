@@ -93,7 +93,7 @@
             'white-text': appstylemode === 'DARK' || appstylemode === null,
             'black-text': appstylemode === 'DEFAULT',
           }"
-          style="display:block;font-size:14px;text-align:left;padding:10px;text-transform: uppercase;text-align:left;c"
+          style="display:block;font-size:14px;text-align:left;padding:10px;text-transform: uppercase;text-align:left"
           ><i class="fas fa-user-friends" style="margin-top: 20px"></i> {{ data.manager }}'S TEAM</label
         >
         <Displayboard
@@ -321,7 +321,7 @@ export default {
         this.backlog_teams[i].manager
       );
 
-      this.Generate_Dataset_For_Charts(
+     await this.Generate_Dataset_For_Charts(
         this.backlog_teams[i].backlog,
         this.backlog_teams[i].manager.toUpperCase()
       );
@@ -353,7 +353,7 @@ export default {
     // rectify the overall engineers number:
     summary_overall.engineers = overall_engineers_number;
 
-    this.Generate_Dataset_For_Charts(backlog_overall, "OVERALL DASHBOARD");
+    await this.Generate_Dataset_For_Charts(backlog_overall, "OVERALL DASHBOARD");
     let data_point_overall = {
       summary: summary_overall,
       DSBubble: this.dataset_chart_bubble,
@@ -410,8 +410,36 @@ export default {
       this.showDialog = false;
     },
 
-    Generate_Backlog(servicetickets) {
+   async Generate_Backlog(servicetickets,manager_alias) {
+    let engineers=[];
+    if(manager_alias ==="OVERALL DASHBOARD") {
+      console.log("OVERALL DASHBOARD is called")
+    let teammanagers_alias = GetSettingFromSessionStorage("teammanagers_alias").split(",");
+    for(let i=0;i<teammanagers_alias.length;i++)  
+    {
+      let manager_alias = teammanagers_alias[i];
+      let single_teammembers= [];
+      single_teammembers = await this.GetTeamMembers(manager_alias);  
+      console.log(single_teammembers);
+      if(engineers.length ===0)   engineers= single_teammembers.slice();
+      else engineers=engineers.concat(single_teammembers);
+    }
+      console.log(engineers)
+    } else  // normal team  dist
+      engineers= await this.GetTeamMembers(manager_alias);
+
+   
       let engineers_backlog_array = [];
+
+      engineers.forEach(engineer => {
+
+        let engineer_backlog_item = {
+          sr_caseowner: engineer,
+          backlog: 0
+        };
+        engineers_backlog_array.push(engineer_backlog_item);
+      })     
+    
       for (let i = 0; i < servicetickets.length; i++) {
         let sr_caseowner = servicetickets[i].sr_caseowner;
         let item_found = undefined;
@@ -424,13 +452,15 @@ export default {
         if (item_found !== undefined) {
           // find an existing item
           item_found.backlog += 1;
-        } else {
-          let backlog_item = {
-            sr_caseowner: sr_caseowner,
-            backlog: 1,
-          };
-          engineers_backlog_array.push(backlog_item);
         }
+        
+        // else {
+        //   let backlog_item = {
+        //     sr_caseowner: sr_caseowner,
+        //     backlog: 1,
+        //   };
+        //   engineers_backlog_array.push(backlog_item);
+        // }
       }
       //rank it
 
@@ -440,6 +470,24 @@ export default {
 
       return engineers_backlog_array;
     },
+    
+    async GetTeamMembers(manager_alias){
+      let engineers=[];
+      if (manager_alias !== null) {
+        
+        let engineers_string = GetSettingFromSessionStorage(manager_alias);
+      
+        if (engineers_string === null) {
+          engineers = await this.getteammembers(manager_alias);
+         // SaveSettingToSessionStorage(manager_alias, engineers);
+        }
+        else {
+          engineers = engineers_string.split(",");
+        }
+    }
+
+    return engineers;
+  },
 
     async Generate_Summary(servicetickets, manager_alias = null) {
       let servicetickets_15 = servicetickets.filter(
@@ -469,22 +517,21 @@ export default {
       summary.count60 = servicetickets_60.length;
       summary.backlog = servicetickets.length;
 
-      if (manager_alias !== null) {
-        //  summary.engineers =await this.getteammembers(manager_alias).length; //this.Refresh_Engieers_Number(servicetickets);
-        let engineers_string = GetSettingFromSessionStorage(manager_alias);
-        let engineers=[];
-        if (engineers_string === null) {
-          engineers = await this.getteammembers(manager_alias);
-          SaveSettingToSessionStorage(manager_alias, engineers);
-        }
-        else {
-          engineers = engineers_string.split(",");
-        }
-        summary.engineers = engineers.length;
-      } else {
-        summary.engineers = 0;
-      }
-
+      // if (manager_alias !== null) {
+      //   //  summary.engineers =await this.getteammembers(manager_alias).length; //this.Refresh_Engieers_Number(servicetickets);
+      //   let engineers_string = GetSettingFromSessionStorage(manager_alias);
+      //   let engineers=[];
+      //   if (engineers_string === null) {
+      //     engineers = await this.getteammembers(manager_alias);
+      //     SaveSettingToSessionStorage(manager_alias, engineers);
+      //   }
+      //   else {
+      //     engineers = engineers_string.split(",");
+      //   }
+      let engineers=[];
+      engineers = await this.GetTeamMembers(manager_alias);   
+      summary.engineers = engineers.length;
+     
       summary.bug_count = bug_count;
       summary.trendingissues_count =
         this.Refresh_Trending_Issues_Count(servicetickets);
@@ -607,7 +654,7 @@ export default {
       };
     },
 
-    Generate_Dataset_For_Charts(servicetickets, team_manager) {
+   async Generate_Dataset_For_Charts(servicetickets, team_manager) {
       // Variables for piechart of icm status
       let Number_IcMRaised = 0;
       let Number_NoIcM = 0;
@@ -630,7 +677,7 @@ export default {
       //Variablles for bar chart of backlog
       let labels_backlog = [];
       let Numbers_backlog = [];
-      let engineers_backlog = this.Generate_Backlog(servicetickets);
+      let engineers_backlog = await this.Generate_Backlog(servicetickets,team_manager);
 
       for (let i = 0; i < engineers_backlog.length; i++) {
         let sr_caseowner = engineers_backlog[i].sr_caseowner;

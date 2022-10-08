@@ -156,13 +156,13 @@
             <tr>
               <td>
                 <label class="container" style="display: inline-block">
-                  Distribution Group For Trending Issue Notification</label
+                  Manager's Timezone Offset</label
                 >
                 <input
                   type="text"
-                  placeholder="Seperated by , for multiple DL"
-                  v-model="DistributionGroupForTrendingIssue"
-                  name="DistributionGroupForTrendingIssue"
+                  placeholder="Eg: Just type -8 if manager's timezone if UTC - 8:00"
+                  v-model="timezone_offset"
+                  name="timezone_offset"                  
                 />
               </td>
               <td>
@@ -176,6 +176,22 @@
                   name="Threshold_Active_Review"
                 />
               </td>
+            </tr>
+
+            
+            <tr>
+              <td>
+                <label class="container" style="display: inline-block">
+                  Distribution Group For Trending Issue Notification</label
+                >
+                <input
+                  type="text"
+                  placeholder="Seperated by , for multiple DL"
+                  v-model="DistributionGroupForTrendingIssue"
+                  name="DistributionGroupForTrendingIssue"
+                />
+              </td>
+             
             </tr>
 
          
@@ -289,6 +305,8 @@ export default {
 
       Threshold_Active_Review: "", // threshold for active review
 
+      timezone_offset:"", //timezone_offset
+
       grouplead_alias:"", // group lead alias
 
       userRole: "",
@@ -333,6 +351,7 @@ grouplead_alias(new_group) {
       this.DistributionGroupForTrendingIssue = teamprofile.DistributionGroupForTrendingIssue;
       this.Threshold_Active_Review = teamprofile.Threshold_Active_Review;
       this.grouplead_alias = teamprofile.grouplead_alias;
+      this.timezone_offset = teamprofile.timezone_offset;
     },
 
     Save_Team_Profile() {
@@ -352,6 +371,7 @@ grouplead_alias(new_group) {
           DistributionGroupForTrendingIssue: this.DistributionGroupForTrendingIssue,
           Threshold_Active_Review: this.Threshold_Active_Review,   
           grouplead_alias: this.grouplead_alias, 
+          timezone_offset: this.timezone_offset,
         };
         WebAPI_Helper("post", "upsertprofile", this.teamprofile);
         Sleep(500);

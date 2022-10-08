@@ -615,7 +615,7 @@ export default {
         "Are you sure to create team operation snapshot of today now ?  You can create today's snapshot for multiples times within one day.";
 
       //reload the page
-        location.reload();
+       // location.reload();
 
     },
 
