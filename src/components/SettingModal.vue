@@ -104,7 +104,7 @@
                   <label class="switch" style="display: inline-block">
                     <input
                       type="checkbox"
-                      v-model="Brother_Team_Visible"                                  
+                      v-model="Brother_Team_Visible_ToM1"                                  
                     />
                     <span class="slider round"></span>
                   </label>
@@ -114,6 +114,26 @@
                   style="display: inline-block; float: left; padding-top: 10px"
                 >
                   <label>Data Visible To M1 Managers Who Are Under The Same M2 Manager</label>
+                </div>
+              </td>
+            </tr>   
+
+            <tr>
+              <td style="width:98%">
+                <div style="display: inline-block; margin: 5px; float: left">
+                  <label class="switch" style="display: inline-block">
+                    <input
+                      type="checkbox"
+                      v-model="Brother_Team_Visible_ToTA"                                  
+                    />
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+
+                <div
+                  style="display: inline-block; float: left; padding-top: 10px"
+                >
+                  <label>Data Visible To TA whose M1 Managers Are Under The Same M2 Manager</label>
                 </div>
               </td>
             </tr>   
@@ -163,7 +183,8 @@ export default {
 
       Enable_SMTP_Mode: false,
       SyncFolder: "",
-      Brother_Team_Visible:false,     
+      Brother_Team_Visible_ToM1:false,    
+      Brother_Team_Visible_ToTA:false, 
       Dfm_Cookie: "",  
       IntervalofBugSync:2,    
     };
@@ -182,7 +203,8 @@ export default {
       
         this.SyncFolder = this.setting.SyncFolder;
         this.Dfm_Cookie = this.setting.Dfm_Cookie;
-        this.Brother_Team_Visible = this.setting.Brother_Team_Visible;
+        this.Brother_Team_Visible_ToM1 = this.setting.Brother_Team_Visible_ToM1;
+        this.Brother_Team_Visible_ToTA = this.setting.Brother_Team_Visible_ToTA;
         this.IntervalofBugSync = this.setting.IntervalofBugSync;
 
       }
@@ -195,8 +217,9 @@ export default {
        
         SyncFolder: this.SyncFolder,       
         Dfm_Cookie: this.Dfm_Cookie,
-        Brother_Team_Visible:this.Brother_Team_Visible,
-        IntervalofBugSync:this.IntervalofBugSync,
+        Brother_Team_Visible_ToM1:this.Brother_Team_Visible_ToM1,
+        Brother_Team_Visible_ToTA:this.Brother_Team_Visible_ToTA,
+        IntervalofBugSync: this.IntervalofBugSync,
       
       };
 

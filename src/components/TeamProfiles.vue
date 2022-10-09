@@ -18,6 +18,10 @@
           }
           "
 
+          :selectedProfile="selectedProfile"
+
+          @showDeleteModal="showDeleteModal"
+
         @Open-Team-Profile="OpenTeamProfile"
     
       >
@@ -35,6 +39,14 @@
       > </TeamProfileCard>
     </div>
   </div>
+
+  <DeleteConfirmationModal
+  :showDeleteDialog="showDeleteDialog"
+   @Delete_Confirmed="DeleteConfirmed"
+   @Delete_Canceled="DeleteCanceled"
+  >
+  </DeleteConfirmationModal>
+
 </template>
 
 <script>
@@ -48,10 +60,11 @@ import {
 } from "../common.js";
 
 import TeamProfileCard from "./TeamProfileCard";
+import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 export default {
   name: "TeamProfiles",
-  props: ["card_Hovered"],
+  props: ["card_Hovered","lastUpdatedtoProfiles"],
   data() {
     return {
       profiles: [],
@@ -59,11 +72,18 @@ export default {
      
       selectedProfile: "",
       userRole:1,
+
+      profileToBeDeleted:null,
+      showDeleteDialog:false,//show delete dialog       
     };
   },
 
   components: {
-    TeamProfileCard,
+    TeamProfileCard,DeleteConfirmationModal
+  },
+
+ async updated() {
+   this.profiles = await this.teamprofiles();
   },
 
   async created() {
@@ -84,7 +104,32 @@ export default {
       return await WebAPI_Helper("get", "teamprofiles", "");
     },
 
-    
+    showDeleteModal(teamprofile){
+      this.showDeleteDialog = true;
+      this.profileToBeDeleted = teamprofile;  
+     
+    },
+
+   async DeleteConfirmed(){
+     
+      await WebAPI_Helper("get","deleteteamprofile/manager/"+this.profileToBeDeleted.Manager_Nickname,null);
+      this.profileToBeDeleted = null;  
+      this.profiles = await this.teamprofiles();
+
+      //refresh the default profile again.
+      if (this.profiles.length !== 0) {
+       this.selectedProfile =  this.profiles[0].Manager_Nickname
+      this.$emit("Load-Default-Profile", this.profiles[0]);
+    }
+
+      this.showDeleteDialog = false;
+    },
+
+    DeleteCanceled(){
+      this.profileToBeDeleted = null;  
+      this.showDeleteDialog = false;
+    },
+        
   OpenTeamProfile(teamprofile){     
        this.selectedProfile = teamprofile.Manager_Nickname;
        this.$emit("Open-Team-Profile",teamprofile);

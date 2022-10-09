@@ -210,6 +210,7 @@ import {
   GetSettingFromSessionStorage,  
   SaveSettingToSessionStorage,
   GetSettingFromLocalStorage,
+  SaveSettingToLocalStorage,
   GetAppStyleMode,
 
 } from "../common.js";
@@ -322,9 +323,9 @@ export default {
 
     
     this.lineChartMode =
-      GetSettingFromSessionStorage("lineChartMode") === null
+      GetSettingFromLocalStorage("lineChartMode") === null
         ? "datemode"
-        : GetSettingFromSessionStorage("lineChartMode");
+        : GetSettingFromLocalStorage("lineChartMode");
 
     this.Init_LineChart_For_Team();
   },
@@ -366,7 +367,7 @@ export default {
       this.engineers_Filters_Description = "";
     },
     ApplyFilter(engineers_chosen) {
-      SaveSettingToSessionStorage(
+      SaveSettingToLocalStorage(
         "engineers_chosen_forchart",
         JSON.stringify(engineers_chosen)
       );
@@ -465,7 +466,7 @@ export default {
     showChartofMonth() {
       this.lineChartMode = "monthmode";
 
-      SaveSettingToSessionStorage("lineChartMode", "monthmode");
+      SaveSettingToLocalStorage("lineChartMode", "monthmode");
 
       this.Team_DataSet={};
       this.Team_DateSet_Array=[];
@@ -475,7 +476,7 @@ export default {
 
     showChartofDate() {
       this.lineChartMode = "datemode";
-      SaveSettingToSessionStorage("lineChartMode", "datemode");
+      SaveSettingToLocalStorage("lineChartMode", "datemode");
       this.Team_DataSet={};
       this.Team_DateSet_Array=[];
       this.Init_LineChart_For_Team();
@@ -589,7 +590,7 @@ export default {
       }    
 
       const engineers_chosen_forchart = JSON.parse(
-        GetSettingFromSessionStorage("engineers_chosen_forchart")
+        GetSettingFromLocalStorage("engineers_chosen_forchart")
       );
 
       if (engineers_chosen_forchart !== null) {

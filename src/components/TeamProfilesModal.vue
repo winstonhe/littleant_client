@@ -1,4 +1,6 @@
 <template id="dialog">
+
+
   <div class="dialog" v-if="showTeamProfileDialog">
     <div class="dialog_mask"></div>
     <div class="dialog_container">
@@ -41,7 +43,9 @@
 
         <TeamProfiles 
         @Load-Default-Profile="LoadDefaultProfile" 
-        @Open-Team-Profile="OpenTeamProfile"   
+        @Open-Team-Profile="OpenTeamProfile" 
+        :lastUpdatedtoProfiles="lastUpdatedtoProfiles" 
+      
         >
         </TeamProfiles>
         <div>
@@ -271,16 +275,20 @@
       </div>
     </div>
   </div>
+
+
 </template>
 
 <script>
 import { WebAPI_Helper, Sleep} from "../common.js";
 import TeamProfiles from "./TeamProfiles.vue";
 
+
+
 export default {
   name: "TeamProfilesModal",
   props: ["showTeamProfileDialog", "modalTitle"],
-  components: { TeamProfiles },
+  components: { TeamProfiles},
 
   data() {
     return {
@@ -308,6 +316,7 @@ export default {
       timezone_offset:"", //timezone_offset
 
       grouplead_alias:"", // group lead alias
+      
 
       userRole: "",
       teamprofile:"",
@@ -354,6 +363,8 @@ grouplead_alias(new_group) {
       this.timezone_offset = teamprofile.timezone_offset;
     },
 
+ 
+
     Save_Team_Profile() {
       if(this.submit_disable) return;
 
@@ -375,7 +386,25 @@ grouplead_alias(new_group) {
         };
         WebAPI_Helper("post", "upsertprofile", this.teamprofile);
         Sleep(500);
-        this.$emit("Close_TeamProfile_Modal"); // edit the message parent component to close the modal       
+        this.lastUpdatedtoProfiles= Date.now();
+
+      
+        //reset value
+          this.TA_list="";
+          this.Bcc_list="";
+          this.MCEApproval_List="";     
+          this.Engineers_List="";
+          this.Enable_Engineer_Mode=false;    
+          this.Manager_Nickname="";   
+          this.Idle_Threshold_In_Days="";
+          this.Interval_Idle_Notification_In_Days="";        
+          this.Threshold_High_Backlog="";
+          this.Team_Name="";
+          this.DistributionGroupForTrendingIssue="";
+           this.Threshold_Active_Review="";
+         this.grouplead_alias=""; 
+         this.timezone_offset="";
+        //this.$emit("Close_TeamProfile_Modal"); // edit the message parent component to close the modal       
     },
 
   },

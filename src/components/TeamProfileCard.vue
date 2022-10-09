@@ -14,10 +14,11 @@
     ></div>
    
     <div style="padding: 10px">
-      <p style="color: black; font-size: 14px;   text-transform: uppercase;" v-html="Computed_Profile_Name">       
+      <p style="color: black; font-size: 14px; display:inline;text-transform: uppercase;" v-html="Computed_Profile_Name">       
        
       </p> 
-    </div>
+      <p style="display:inline;padding:8px"> <i class='fas fa-trash-alt' v-if="teamprofile.Manager_Nickname === selectedProfile" @click="$emit('showDeleteModal',teamprofile)" title='Delete this team profile'></i></p>
+    </div> 
 
     
   </div>
@@ -29,7 +30,7 @@
 
 export default {
   name: "TeamProfileCard",
-  props: ["teamprofile"],
+  props: ["teamprofile","selectedProfile"],
   components: {},
 
   data() {
@@ -48,14 +49,12 @@ export default {
 
     Computed_Profile_Name(){
 
-      let teamprofile = this.$props.teamprofile;
+      let teamprofile = this.$props.teamprofile;   
       if(teamprofile.Manager_Nickname === "New") {
       
         return  "<i class='fas fa-plus'></i> New";
-      }
-      else {
-      
-        return "<i class='fas fa-address-card'></i>  "+ teamprofile.Manager_Nickname + "  (<i class='fas fa-user-shield'></i>  "+teamprofile.grouplead_alias+"  )";
+      } else {      
+        return "<i class='fas fa-address-card'></i>  "+ teamprofile.Manager_Nickname + "  ( <i class='fas fa-user-shield'></i>  "+teamprofile.grouplead_alias+"  )  ";
       }
     },
    
