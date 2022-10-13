@@ -132,10 +132,10 @@
           :height="200"
           :title="`Team Case Assignment`"
           :minValue="0"
-          :maxValue="maxValue_team_linechart_assigned"
-          :stepValue="stepValue_team_linechart_assigned"
+          :maxValue= "Team_DataSet.maxValue_asigned" 
+          :stepValue="stepValue_team_linechart_assigned"        
         ></ChartLine>
-
+          <!-- " maxValue_team_linechart_assigned" -->
          <div style="clear: both"></div>
       </div>
 
@@ -580,7 +580,9 @@ export default {
         dataset: team_dataset_chart_line,
         dataset_assigned: team_dataset_chart_line_assigned,
         dataset_percent: team_dataset_percent_chart_line,
-        maxValue: Math.ceil(Math.max(...this.dataset_chart_line.datasets[5].data) / 100) *100
+        maxValue: Math.ceil(Math.max(...this.dataset_chart_line.datasets[5].data) / 100) *100,
+        maxValue_asigned: Math.ceil(Math.max(...team_dataset_chart_line_assigned.datasets[0].data) / 10) *10 >=30? Math.ceil(Math.max(...team_dataset_chart_line_assigned.datasets[0].data) / 10) *10 :20,
+     
       };
 
       this.Team_DateSet_Array.push(this.Team_DataSet);

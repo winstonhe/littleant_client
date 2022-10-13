@@ -43,8 +43,7 @@
 
         <TeamProfiles 
         @Load-Default-Profile="LoadDefaultProfile" 
-        @Open-Team-Profile="OpenTeamProfile" 
-        :lastUpdatedtoProfiles="lastUpdatedtoProfiles" 
+        @Open-Team-Profile="OpenTeamProfile"    
       
         >
         </TeamProfiles>
@@ -385,26 +384,9 @@ grouplead_alias(new_group) {
           timezone_offset: this.timezone_offset,
         };
         WebAPI_Helper("post", "upsertprofile", this.teamprofile);
-        Sleep(500);
-        this.lastUpdatedtoProfiles= Date.now();
-
-      
-        //reset value
-          this.TA_list="";
-          this.Bcc_list="";
-          this.MCEApproval_List="";     
-          this.Engineers_List="";
-          this.Enable_Engineer_Mode=false;    
-          this.Manager_Nickname="";   
-          this.Idle_Threshold_In_Days="";
-          this.Interval_Idle_Notification_In_Days="";        
-          this.Threshold_High_Backlog="";
-          this.Team_Name="";
-          this.DistributionGroupForTrendingIssue="";
-           this.Threshold_Active_Review="";
-         this.grouplead_alias=""; 
-         this.timezone_offset="";
-        //this.$emit("Close_TeamProfile_Modal"); // edit the message parent component to close the modal       
+        Sleep(500);        
+       
+         this.$emit("Close_TeamProfile_Modal"); // edit the message parent component to close the modal       
     },
 
   },

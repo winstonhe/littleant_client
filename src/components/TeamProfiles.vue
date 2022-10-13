@@ -64,7 +64,7 @@ import DeleteConfirmationModal from "./DeleteConfirmationModal";
 
 export default {
   name: "TeamProfiles",
-  props: ["card_Hovered","lastUpdatedtoProfiles"],
+  props: ["card_Hovered"],
   data() {
     return {
       profiles: [],
@@ -82,9 +82,6 @@ export default {
     TeamProfileCard,DeleteConfirmationModal
   },
 
- async updated() {
-   this.profiles = await this.teamprofiles();
-  },
 
   async created() {
     this.profiles = await this.teamprofiles();

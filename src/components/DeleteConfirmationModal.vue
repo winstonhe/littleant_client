@@ -47,7 +47,7 @@
             color: black;
             text-align: center;
           "
-          v-text="`Are you sure to delete this team profile?`"
+          v-text="`Are you sure you want to delete this team profile?`"
         ></div>
 
 
@@ -99,7 +99,7 @@ export default {
 
 .comment_button {
   width: 40%;
-  background-color: green;
+  background-color: darkred;
   height: 40px;
   padding: 5px;
   text-align: center;
@@ -114,7 +114,7 @@ export default {
 }
 
 .enabled {
-  background-color: green;
+  background-color: darkred;
 }
 
 .cancel_button {

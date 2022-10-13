@@ -102,6 +102,30 @@
               'title title_dark': appstylemode === 'DARK',
             }"
           >
+          <i class="far fa-object-ungroup"></i> DELTA
+          </p>
+          <p class="boardcontent">
+            {{ data.MetricsTeamLevel.delta }}
+          </p>
+          
+          <!-- <div v-show="appstylemode === 'DARK'" style="background:gray;height:2px;width:100%;margin-bottom:0px" ></div> -->
+        </div>
+
+        <div
+          id="display1530"
+          style="float: left"
+          :class="{
+              'displayboard display1530': appstylemode === 'DEFAULT',
+           
+            'displayboard dark': appstylemode === 'DARK',
+          }"
+        >
+          <p
+           :class="{
+              'title title_default': appstylemode === 'DEFAULT',
+              'title title_dark': appstylemode === 'DARK',
+            }"
+          >
             <i class="fas fa-user-alt"></i> ENGINEERS
           </p>
           <p class="boardcontent">
@@ -115,7 +139,7 @@
           id="display1530"
           style="float: left"
           :class="{
-            'displayboard display1530': appstylemode === 'DEFAULT',
+           'displayboard display15': appstylemode === 'DEFAULT',
             'displayboard dark': appstylemode === 'DARK',
           }"
         >
@@ -202,6 +226,7 @@ export default {
         cases_closed: 0,
         throughput_index: 0.0,
         load_index: 0.0,
+        delta:0
       },
       //dataset after analysis
       analyzed_ds_teams: [],
@@ -306,6 +331,10 @@ export default {
        const today = new Date();
       const today_day = String(today.getDate()).padStart(2, '0');
       this.metrics_of_team_level.days_elapsed = (today_day*0.7123).toFixed(2);
+
+      this.metrics_of_team_level.delta = this.metrics_of_team_level.cases_assigned - this.metrics_of_team_level.cases_closed >=0? 
+      "+"+ (this.metrics_of_team_level.cases_assigned - this.metrics_of_team_level.cases_closed).toString() :
+      this.metrics_of_team_level.cases_assigned - this.metrics_of_team_level.cases_closed ;
 
       let data_point = {
         manager: this.montlymetrics_teams[i].manager,
@@ -464,6 +493,7 @@ export default {
         this.metrics_of_team_level.load_index += metrics.load_index;
         this.metrics_of_team_level.cases_closed += metrics.cases_closed;
         this.metrics_of_team_level.throughput_index += metrics.throughput_index;
+        
       });
 
       this.dataset_chart_bar_monthly_metrics.labels = labels_engineers_alias;

@@ -46,7 +46,10 @@
     <div v-html="Computed_Program_Type"></div>
   </td>
   <td
-    :class="{ 'Sev-A': serviceticket.sr_severityCode === 'A' }"
+    :class="{
+       'Sev-A': serviceticket.sr_severityCode === 'A',
+       'caseclosed': serviceticket.sr_status === 'Resolved'            
+  }"
     style="text-align: left"
   >
     <a
@@ -79,9 +82,10 @@
   </td>
   <td>
     <a
-      :class="{
-        a_default: appstylemode === 'DEFAULT',
-        a_dark: appstylemode === 'DARK',
+    :class="{
+
+        'a_default': appstylemode === 'DEFAULT',
+        'a_dark': appstylemode === 'DARK',
       }"
       :href="`https://portal.microsofticm.com/imp/v3/incidents/details/${serviceticket.sr_icm}/home`"
       target="_blank"
@@ -517,5 +521,9 @@ td {
   height: 8px;
   border-radius: 50%;
   background: white;
+}
+
+.caseclosed {
+  text-decoration: line-through;
 }
 </style>

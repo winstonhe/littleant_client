@@ -86,13 +86,6 @@
         :appstylemode="appstylemode"
       ></Displayboard>
 
-      <ActionCards
-        :actions="actions"
-        :showAllActions="showAllActions"
-        @assign-mce-task="assignMceTask"
-      ></ActionCards>
-
-      <div style="float: auto"></div>
       <ChartPanel
         :DSBubble="dataset_chart_bubble"
         :DSPie="dataset_chart_pie_by_status"
@@ -104,7 +97,16 @@
         :Downloading="downloading"
         @E_FilterServiceTicketsFromChart="FilterServiceTicketsFromChart"
       ></ChartPanel>
+      
       <div style="float: auto"></div>
+      <ActionCards
+        :actions="actions"
+        :showAllActions="showAllActions"
+        @assign-mce-task="assignMceTask"
+      ></ActionCards>
+
+      <div style="float: auto"></div>
+   
 
       <Servicetickets
         :servicetickets="servicetickets_60"

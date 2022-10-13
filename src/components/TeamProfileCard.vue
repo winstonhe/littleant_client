@@ -17,7 +17,7 @@
       <p style="color: black; font-size: 14px; display:inline;text-transform: uppercase;" v-html="Computed_Profile_Name">       
        
       </p> 
-      <p style="display:inline;padding:8px"> <i class='fas fa-trash-alt' v-if="teamprofile.Manager_Nickname === selectedProfile" @click="$emit('showDeleteModal',teamprofile)" title='Delete this team profile'></i></p>
+      <p style="display:inline;padding:8px"> <i class='far fa-trash-alt' v-if="teamprofile.Manager_Nickname === selectedProfile" @click="$emit('showDeleteModal',teamprofile)" title='Delete this team profile'></i></p>
     </div> 
 
     

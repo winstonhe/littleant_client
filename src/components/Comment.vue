@@ -109,7 +109,7 @@
       style="position: absolute; right: 90px; top: 30px; cursor: pointer"
       @click="Show_ConfirmDialog"
     >
-      <i class="fas fa-trash-alt" title="Delete this review comment"></i>
+      <i class="far fa-trash-alt" title="Delete this review comment"></i>
     </h2>
     <h2
       v-show="showConfirmDialog"

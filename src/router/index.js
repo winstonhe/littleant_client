@@ -20,7 +20,7 @@ const routes=[
         path:'/ServiceTicketDetails',
         name:'Home',
         component:ServiceTicketDetails,
-        meta: { title: 'Little Ant - Review' }
+        meta: { title: 'Little Ant' }
     },
 
 
@@ -28,7 +28,7 @@ const routes=[
         path:'/Dashboard',
         name:'Dashboard',
         component:Dashboard,
-        meta: { title: 'Little Ant - Dashboard' }
+        meta: { title: 'Little Ant' }
     },
     {
         path:'/groupdashboard',
