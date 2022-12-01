@@ -20,7 +20,7 @@
           "
         ></p>
       </div>
-      <div id="textcontainer" >
+      <div id="textcontainer">
         <div>
           <textarea
             rows="50"
@@ -29,13 +29,12 @@
             name="comments"
             @change="HandleChange()"
             placeholder="Adding review comment is disabled. To  review the case , please open the DFM case directly and add a review note"
-           
             :readonly="comment_disable"
           ></textarea>
         </div>
 
         <div id="notifyemail_container" style="margin: 0px auto">
-          <div class="tooltip" style="display: inline-block; margin: 10px; float: left">
+          <!-- <div class="tooltip" style="display: inline-block; margin: 10px; float: left">
             <label class="container"
               > <i class="fas fa-envelope"></i> Send Notification Email
               <input
@@ -47,40 +46,147 @@
               <span class="checkmark"></span>
               <span class="tooltiptext" style="width:250%;">Send the comment to corresponding recepient for notification purpose</span>
             </label>
+          </div> -->
+
+          <!-- new line -->
+          <div class="clr"></div>
+
+          <div
+            class="tooltip"
+            style="display: inline-block; margin: 10px; float: left"
+          >
+            <table>
+              <!--email notificaton-->
+              <tr>
+                <td style="width: 98%;height:30px">
+                  <div style="display: inline-block; float: left">
+                    <label class="switch" style="display: inline-block">
+                      <input type="checkbox" v-model="sendemail" />
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div
+                    style="display: inline-block; float: left; padding-top: 5px"
+                  >
+                    &nbsp; &nbsp;<label>
+                      <i class="fas fa-handshake"></i> Send Notification
+                      Email</label
+                    >
+                  </div>
+                </td>
+              </tr>        
+
+
+              <tr
+                v-if="
+                  review_history === null ||
+                  review_history.latest_review_type !== 10
+                "
+              >
+                <td style="width: 98%;height:30px">
+                  <div style="display: inline-block; float: left">
+                    <label class="switch" style="display: inline-block">
+                      <input
+                        type="checkbox"
+                        v-model="backupRequired"
+                        @click="BackUpClicked"
+                      />
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div
+                    style="display: inline-block; float: left; padding-top: 5px"
+                  >
+                    &nbsp; &nbsp;<label>
+                      <i class="fas fa-handshake"></i> Need Backup Engineer
+                      During My Leave</label
+                    >
+                  </div>
+                </td>
+              </tr>
+
+              <tr
+                v-if="
+                  review_history !== null &&
+                  review_history.latest_review_type === 10
+                "
+              >
+                <td style="width: 98%">
+                  <div style="display: inline-block; float: left">
+                    <label class="switch" style="display: inline-block">
+                      <input
+                        type="checkbox"
+                        v-model="backupCompleted"
+                        @click="BackUpCompletedClicked"
+                      />
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+
+                  <div
+                    style="display: inline-block; float: left; padding-top: 5px"
+                  >
+                    &nbsp; &nbsp;<label>
+                      <i class="fas fa-handshake-slash"></i> Complete Backup
+                      Task</label
+                    >
+                  </div>
+                </td>
+              </tr>
+            </table>
           </div>
 
           <!-- new line -->
           <div class="clr"></div>
 
-          <div class="tooltip" style="display: inline-block; margin: 10px; float: left">
-            <label class="container"
-              > <i class="fas fa-chart-line"></i> Report It As Trending issue
+          <div
+            class="tooltip"
+            style="display: inline-block; margin-left: 10px; float: left"
+          >
+            <label class="container">
+              <i class="fas fa-chart-line"></i> Report It As Trending issue
               <input
                 type="checkbox"
                 v-model="istrendingissue"
                 value="0"
                 name="istrendingissue"
-                
               />
               <span class="checkmark"></span>
-              <span class="tooltiptext" style="width:200%;">Mark this case as trending issue and share a notification email to team.</span>
+              <span class="tooltiptext" style="width: 200%"
+                >Mark this case as trending issue and share a notification email
+                to team.</span
+              >
             </label>
           </div>
 
           <div class="input-w" v-show="istrendingissue">
-            <label>IcM ID</label><input style="width:15%" placeholder="Leave it empty if you don't have"  type="text" v-model="associatedicm_for_trendingissue" name="associatedicm_for_trendingissue"/>
-            <label>Bug URL</label><input style="width:40%" placeholder="Leave it empty if you don't have" v-model="associatedbug_for_trendingissue" name="associatedbug_for_trendingissue"/>
+            <label>IcM ID</label
+            ><input
+              style="width: 15%"
+              placeholder="Leave it empty if you don't have"
+              type="text"
+              v-model="associatedicm_for_trendingissue"
+              name="associatedicm_for_trendingissue"
+            />
+            <label>Bug URL</label
+            ><input
+              style="width: 40%"
+              placeholder="Leave it empty if you don't have"
+              v-model="associatedbug_for_trendingissue"
+              name="associatedbug_for_trendingissue"
+            />
           </div>
 
           <!-- new line -->
           <div class="clr"></div>
         </div>
-      
 
         <div id="cpe_container" style="margin: 0px auto">
-          <div  style="display: inline-block; margin: 10px; float: left">
-            <label class="container"
-              > <i class="fas fa-smile"></i> Low CPE Risk
+          <div style="display: inline-block; margin: 10px; float: left">
+            <label class="container">
+              <i class="fas fa-smile"></i> Low CPE Risk
               <input
                 type="radio"
                 v-model="cpe_assessment"
@@ -93,8 +199,8 @@
           </div>
 
           <div style="display: inline-block; margin: 10px; float: left">
-            <label class="container"
-              > <i class="fas fa-meh"></i> Neutral CPE Risk
+            <label class="container">
+              <i class="fas fa-meh"></i> Neutral CPE Risk
               <input
                 type="radio"
                 v-model="cpe_assessment"
@@ -106,8 +212,8 @@
           </div>
 
           <div style="display: inline-block; margin: 10px; float: left">
-            <label class="container"
-              > <i class="fas fa-frown"></i> High CPE Risk
+            <label class="container">
+              <i class="fas fa-frown"></i> High CPE Risk
               <input
                 type="radio"
                 v-model="cpe_assessment"
@@ -133,8 +239,9 @@
           "
         >
           <div style="display: inline-block; margin: 10px; float: left">
-            <label class="container"
-              > <i class="fas fa-phone-alt"></i> Need Customer Recovery Before Case Closure
+            <label class="container">
+              <i class="fas fa-phone-alt"></i> Need Customer Recovery Before
+              Case Closure
               <input
                 type="checkbox"
                 v-model="needmce"
@@ -159,8 +266,9 @@
           "
         >
           <div style="display: inline-block; margin: 10px; float: left">
-            <label class="container"
-              > <i class="fas fa-phone-slash"></i> Customer Recovery Has Been Completed
+            <label class="container">
+              <i class="fas fa-phone-slash"></i> Customer Recovery Has Been
+              Completed
               <input
                 type="checkbox"
                 v-model="mcedone"
@@ -199,17 +307,31 @@
         </div>
       </div>
     </form>
+
+    <div style="margin: 0px auto; width: 100%" v-show="showFilter">
+      <BackupEngineerSelectionModal
+        :engineers="engineers"
+        :showDialog="showFilter"
+        :EngineersFilterModalTitle="EngineersFilterModalTitle"
+        @Choose_Confirmed="Choose_Confirmed"
+        @Choose_Canceled="Choose_Canceled"
+      ></BackupEngineerSelectionModal>
+    </div>
   </div>
 </template>
 
 <script>
-import {
-   GetSettingFromSessionStorage
-} from "../common.js";
+import { GetSettingFromSessionStorage, WebAPI_Helper } from "../common.js";
+
+import BackupEngineerSelectionModal from "./BackupEngineerSelectionModal";
 
 export default {
   name: "AddReview",
   props: ["sr_number", "sr_owner", "sr_age"],
+  components: {
+    BackupEngineerSelectionModal,
+  },
+
   data() {
     return {
       comments: "",
@@ -230,11 +352,26 @@ export default {
       //trending issue
       istrendingissue: false,
 
-      //icm for trending issue
-      associatedicm_for_trendingissue:"",
+      //backup needed:
+      backupRequired: false,
 
-       //bug for trending issue
-      associatedbug_for_trendingissue:"",
+      //backupCompleted
+      backupCompleted: false,
+
+      //review history
+      review_history: {},
+
+      //backup engineer:
+      backupEngineer: "",
+
+      //show backup engineer filter
+      showFilter: false,
+
+      //icm for trending issue
+      associatedicm_for_trendingissue: "",
+
+      //bug for trending issue
+      associatedbug_for_trendingissue: "",
     };
   },
 
@@ -262,49 +399,42 @@ export default {
 
     needmce(new_needmce) {
       if (new_needmce == true) {
-        this.comments = "Customer recovery is needed";  
-        this.comment_disable = true;      
-      }    
-      else {
-        this.comments = "";  
-        this.comment_disable = false;      
-
-      }  
-    },
-    
-    cpe_assessment(new_cpeassessment){
-      if(new_cpeassessment === '1') { // low cpe risk, then enable comments.
-         this.comments = "";  
-        this.comment_disable = false;    
-        this.needmce = false; 
+        this.comments = "Customer recovery is needed";
+        this.comment_disable = true;
+      } else {
+        this.comments = "";
+        this.comment_disable = false;
       }
     },
 
-    istrendingissue(new_istrendingissue){
-      if(new_istrendingissue === true) {
+    cpe_assessment(new_cpeassessment) {
+      if (new_cpeassessment === "1") {
+        // low cpe risk, then enable comments.
+        this.comments = "";
+        this.comment_disable = false;
+        this.needmce = false;
+      }
+    },
 
-         this.comment_disable = false
-      
+    istrendingissue(new_istrendingissue) {
+      if (new_istrendingissue === true) {
+        this.comment_disable = false;
+
         this.header_text = "Trending Issue Report";
         this.button_text = "REPORT TRENDING ISSUE";
-        this.comments = "Symptom\n=======\n\n\nMitigation | Workaround\n=======\n\n\nCurrent Status\n=======\n\n\n"
+        this.comments =
+          "Symptom\n=======\n\n\nMitigation | Workaround\n=======\n\n\nCurrent Status\n=======\n\n\n";
 
         // email track set as true
         this.sendemail = true;
-       
-      }
-      else {
-     
-
+      } else {
         this.comment_disable = true;
-        this.comments=this.comments= 'You have a case review note by ' + this.review_owner +'. Please check your case note to get more review details.'
-
+        this.comments = this.comments =
+          "You have a case review note by " +
+          this.review_owner +
+          ". Please check your case note to get more review details.";
       }
-
     },
-
-
-
   },
 
   async created() {
@@ -319,19 +449,21 @@ export default {
     this.sendemail = false;
     this.mcedone = false;
 
-
     // add comment disabled interntinally due to compliance issue.
-    this.comment_disable = true; 
-    this.comments= 'You have a case review note by ' + this.review_owner +'. Please check your case note to get more review details.'
+    this.comment_disable = true;
+    this.comments =
+      "You have a case review note by " +
+      this.review_owner +
+      ". Please check your case note to get more review details.";
 
     //get mce status
-    const review_history = await this.fetch_review_history(
+    this.review_history = await this.fetch_review_history(
       this.$props.sr_number
     );
     this.mce_status =
-      review_history === null || review_history.mce_status === null
+      this.review_history === null || this.review_history.mce_status === null
         ? 0
-        : review_history.mce_status;
+        : this.review_history.mce_status;
   },
 
   methods: {
@@ -352,30 +484,57 @@ export default {
       if (this.istrendingissue === false) {
         this.header_text = "Trending Issue Report";
         this.button_text = "REPORT TRENDING ISSUE";
-        this.comments = "Symptom\n=======\n\n\nMitigation | Workaround\n=======\n\n\nCurrent Status\n=======\n\n\n"
+        this.comments =
+          "Symptom\n=======\n\n\nMitigation | Workaround\n=======\n\n\nCurrent Status\n=======\n\n\n";
 
         // email track set as true
         this.sendemail = true;
       } else this.InitButtonandHeader();
     },
 
+    async BackUpClicked() {
+      if (this.backupRequired === false) {
+        //before click it's false;
+        this.engineers = await WebAPI_Helper("get", "teammembers", null);
+        this.showFilter = true;
+      }
+    },
+
+    BackUpCompletedClicked() {
+      this.comments = "Case Backup Completed by " + this.review_owner;
+      this.backupCompleted = true;
+    },
+
+    Choose_Confirmed(backup_engineer_chosen) {
+      this.backupEngineer = backup_engineer_chosen;
+      this.comments =
+        "Case will be backup by " +
+        this.backupEngineer +
+        " requested by " +
+        this.review_owner;
+      this.showFilter = false;
+    },
+
+    Choose_Canceled() {
+      this.showFilter = false;
+    },
+
     ClearJob_Once_NeedMCE() {
       //this.needmce is the status before he click the checkbox
       if (!this.needmce) {
         // if Need MCE is set, then we never track to dfm
-        
+
         this.sendemail = true;
       }
     },
 
     ClearJob_Once_MCEDone() {
       if (!this.mcedone) {
-        this.comments="customer recovery completed."
-        this.comment_disable = true;  
+        this.comments = "customer recovery completed.";
+        this.comment_disable = true;
         this.sendemail = true;
-      }
-      else {
-        this.comment_disable = false;  
+      } else {
+        this.comment_disable = false;
       }
     },
 
@@ -394,10 +553,10 @@ export default {
       if (this.comments == "") return;
 
       this.review_owner = GetSettingFromSessionStorage("whoami");
-    console.log(this.review_owner);
+      console.log(this.review_owner);
 
       let emailstatus = this.sendemail === true ? true : false;
-      
+
       let newreview = {
         id: Math.floor(Math.random() * 65585),
         comments: this.comments, //.replaceAll("\n","<br>"),
@@ -405,18 +564,27 @@ export default {
         reviewed_on: new Date().toISOString(),
         reviewed_by: this.review_owner,
         cpe_assessment: this.cpe_assessment,
-        email_sent: emailstatus,       
+        email_sent: emailstatus,
         sr_owner: this.$props.sr_owner,
         needmce: this.cpe_assessment === "1" ? false : this.needmce,
         mcedone: this.mcedone,
         sr_age: this.$props.sr_age,
+        case_backup_owner: this.backupEngineer,
         istrendingissue: this.istrendingissue,
-        associatedicm_for_trendingissue:this.associatedicm_for_trendingissue.trim(),
-        associatedbug_for_trendingissue:this.associatedbug_for_trendingissue.trim(),
+        associatedicm_for_trendingissue:
+          this.associatedicm_for_trendingissue.trim(),
+        associatedbug_for_trendingissue:
+          this.associatedbug_for_trendingissue.trim(),
       };
 
       if (this.istrendingissue === true) {
         newreview.reviewtype = 8; // type 8 is for trending issue reporting.
+      } else if (this.backupRequired === true) {
+        // backup request
+        newreview.reviewtype = 10;
+      } else if (this.backupCompleted === true) {
+        // backup completed
+        newreview.reviewtype = 11;
       } else if (this.review_owner === this.sr_owner) {
         if (newreview.needmce === false)
           // MCE is not choose, then it's normal self review
@@ -444,29 +612,25 @@ export default {
   padding: 10px;
 }
 
-.input-w label
-{
-    float: none; 
-    display: inline-block;
-    vertical-align: middle;  
-     padding:5px;
-    font-size:14px;  
+.input-w label {
+  float: none;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 5px;
+  font-size: 14px;
 }
 
 .input-w input {
-    float: none; 
-    display: inline-block;
-    vertical-align: middle;    
-    height:30px;
-    margin-left:5px;
-    margin-left:10px;
-    padding:5px;
-    font-size:14px;
-    /* width:30% */
+  float: none;
+  display: inline-block;
+  vertical-align: middle;
+  height: 30px;
+  margin-left: 5px;
+  margin-left: 10px;
+  padding: 5px;
+  font-size: 14px;
+  /* width:30% */
 }
-
-
-
 
 .clr {
   clear: both;
@@ -515,8 +679,8 @@ export default {
 textarea {
   width: 100%;
   height: 200px;
-  font-size: 14px; 
-  font-family: Arial,Helvetica,sans-serif; 
+  font-size: 14px;
+  font-family: Arial, Helvetica, sans-serif;
   border: 1px solid black;
   padding: 5px;
 }
@@ -588,12 +752,10 @@ textarea {
   background: white;
 }
 
-
 /*tooltip*/
 
-
 .tooltip .tooltiptext {
-  visibility: hidden; 
+  visibility: hidden;
   background-color: rgb(131, 136, 131);
   color: #fff;
   text-align: center;
@@ -614,9 +776,7 @@ textarea {
   border-width: 5px;
   border-style: solid;
   border-color: transparent rgb(147, 155, 147) transparent transparent;
-
 }
-
 
 @keyframes fadeIn {
   0% {
@@ -632,7 +792,6 @@ textarea {
   position: relative;
   display: inline-block;
   border-bottom: 0px dotted rgb(131, 136, 131);
- 
 }
 
 .tooltip:hover .tooltiptext {
@@ -640,4 +799,123 @@ textarea {
   animation: 2s fadeIn;
 }
 
+/* style fo radio button */
+
+/*Modal style*/
+.dialog_mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+.dialog_container {
+  background: #fff;
+  /* width: 300px;
+    height: 120px;
+    position: absolute;
+    border-radius: 10px;
+    margin: 0 auto; */
+
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50%;
+  animation: 0.5s fadeIn;
+}
+
+.dialog_content {
+  text-align: center;
+  /* padding-top: 30px; */
+}
+
+.dialog_btn {
+  margin-top: 20px;
+}
+
+.dialog_btn a {
+  background: yellow;
+  padding: 2px 30px;
+  border-radius: 5px;
+  color: #fff;
+  text-decoration: none;
+  width: 50px;
+  display: inline-block;
+}
+
+.dialog_btn a:nth-child(2) {
+  margin-left: 20px;
+}
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 25px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+}
+
+input:checked + .slider {
+  background-color: #2196f3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(22px);
+  -ms-transform: translateX(22px);
+  transform: translateX(22px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 25px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
 </style>

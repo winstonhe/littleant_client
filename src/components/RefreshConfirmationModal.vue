@@ -20,7 +20,7 @@
               font-weight: lighter;
             "
           >
-            Refresh Confirmation
+             Confirmation Dialog
           </p>
           <p
             style="
@@ -40,14 +40,8 @@
         </div>
 
         <div
-          style="
-            font-size: 14px;
-            padding: 10px 30px;
-            margin:20px;
-            color: black;
-            text-align: center;
-          "
-          v-text="`Are you sure to refresh the cache to get the live data which could take seconds ?`"
+          style="   font-size: 14px;      padding: 10px 30px;  margin:20px;  color: black;   text-align: center; "
+          v-text="greetingMessage"
         ></div>
 
 
@@ -78,7 +72,7 @@
 <script>
 export default {
   name: "RefreshConfirmationModal",
-  props: ["showDialog"],
+  props: ["showDialog","greetingMessage"],
   data() {
     return {
     

@@ -74,7 +74,9 @@
         class="fas fa-phone-alt"
         title="MCE Requested"
         >MCE requested by {{comment.reviewed_by}}&nbsp;</i>
-
+        
+        <i  v-show="comment.reviewtype === 10" class="fas fa-handshake"> CASE BACKUP &nbsp;</i>
+        <i  v-show="comment.reviewtype === 11" class="fas fa-handshake-slash">  BACKUP COMPLETED &nbsp;</i> 
       <i
         v-show="comment.cpe_assessment === '1'"
         class="fas fa-smile"
@@ -94,7 +96,8 @@
         style="color: darkred"
         title="High CPE Risk"
         >&nbsp;</i
-      >
+      >     
+      
       <i
         class="fas fa-envelope"
         v-show="comment.email_sent === true"

@@ -10,6 +10,7 @@
         button_mce_pending: action.action_type === 3,
         button_mce_done: action.action_type === 4,
         button_aged_case: action.action_type === 5,
+        button_backup_case:action.action_type === 6
       }"
     ></div>
 
@@ -60,12 +61,14 @@
           button_mce_assign: action.action_type === 2,
           button_mce_pending: action.action_type === 3,
           button_mce_done: action.action_type === 4,
-          button_aged_case:  action.action_type === 5
+          button_aged_case:  action.action_type === 5,
+          button_backup_case:  action.action_type === 6
+          
         }"
       >
         <i
           :class="{
-            'fas fa-arrow-alt-circle-right': action.action_type === 1 || action.action_type === 5,
+            'fas fa-arrow-alt-circle-right': action.action_type === 1 || action.action_type === 5 || action.action_type === 6,
             'fas fa-phone-alt': action.action_type === 2,
             'fas fa-phone-square-alt': action.action_type === 3,
             'fas fa-check-circle': action.action_type === 4,
@@ -166,6 +169,7 @@ export default {
           );
           break;
         case 5:
+        case 6:
           window.open(
             "https://onesupport.crm.dynamics.com/main.aspx?appid=101acb62-8d00-eb11-a813-000d3a8b3117&forceUCI=1&pagetype=entityrecord&etn=incident&id=" +
               action.sr_record_guid +
@@ -219,6 +223,10 @@ export default {
 
 .button_aged_case {
  background-color :rgb(158, 16, 16) ;
+}
+
+.button_backup_case {
+ background-color :rgb(153, 9, 122) ;
 }
 
 a {

@@ -335,12 +335,7 @@ export default {
     ToggleNavBar(siteNivBar_expanded) {
       this.siteNivBar_expanded = siteNivBar_expanded;
     },
-
-    getDaysInCurrentMonth() {
-      const date = new Date();
-      return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-    },
-
+      
     async reportingm1manager(whoami) {
       return WebAPI_Helper("get", "reportingm1manager(" + whoami + ")");
     },
@@ -604,6 +599,10 @@ export default {
       this.loaded = true;
     },
 
+    getDaysInMonth(year, month) {
+          return new Date(year, month, 0).getDate();
+    },
+
     Generate_Dataset_For_Charts(metricsSnapshots) {
       //Initial the labels of date like 1,2,3,,,,31.
 
@@ -626,7 +625,8 @@ export default {
             labels_xAxis.push(i);
           }
         } else {
-          for (let i = date + 1; i <= 31; i++) {
+          let daysinMonth = this.getDaysInMonth(today.getFullYear().toString(),today.getMonth().toString())
+          for (let i = date + 1; i <= daysinMonth; i++) {
             let thatDay_string =
               today.getFullYear().toString() +
               "-" +

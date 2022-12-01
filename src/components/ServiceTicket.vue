@@ -12,12 +12,14 @@
       style="color: orange"
       title="Neutrul CPE Risk"
     ></i>
+    
     <i
       v-show="serviceticket.latest_cpe_assessment === 3"
       class="fas fa-frown"
       style="color: darkred"
       title="High CPE Risk"
     ></i>
+    &nbsp;<i  v-show="serviceticket.latest_review_type === 10" class="fas fa-handshake">&nbsp;{{serviceticket.case_backup_owner}}</i>
     <i
       v-show="serviceticket.mce_status === 1"
       class="fas fa-phone-alt"
@@ -142,7 +144,7 @@
     {{ serviceticket.sr_caseowner }}
   </td>
 
-  <td>{{ shorDate }}</td>
+  <!-- <td>{{ shorDate }}</td> -->
   <td>{{ serviceticket.sr_age }}</td>
   <td
     v-bind:class="{
@@ -176,7 +178,7 @@
   <td style="text-align: center">{{ computed_POD }}</td>
 
   <td style="text-align: left">{{ serviceticket.sr_title }}</td>
-  <!-- <td style="text-align: left">{{ serviceticket.sr_internaltitle }}</td> -->
+  <td v-show="showInternalTitle==='true'" style="text-align: left">{{ serviceticket.sr_internaltitle }}</td> 
 
   <td style="text-align: left">
     <button v-show="serviceticket.mce_status !== 1"
@@ -214,7 +216,7 @@ import AssignMCEModal from "./AssignMCEModal.vue";
 
 export default {
   name: "ServiceTicket",
-  props: ["serviceticket", "appstylemode"],
+  props: ["serviceticket", "appstylemode","showInternalTitle"],
 
   components: {
     AssignMCEModal,
@@ -225,6 +227,7 @@ export default {
       showDialog: false,
       modalTitle: "",
       isIdle: false,
+      //showInternalTitle:false,
     };
   },
 
@@ -245,6 +248,10 @@ export default {
         this.isIdle = true;
       } else return (this.isIdle = false);
     }
+
+    console.log(this.$props.showInternalTitle)
+   // this.showInternalTitle = GetSettingFromLocalStorage("showInternalTitle")===null? "false": GetSettingFromLocalStorage("showInternalTitle")
+     
   },
 
   methods: {

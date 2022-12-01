@@ -124,6 +124,43 @@
             >
           </div>
            <!-- action card setting end-->
+
+
+            <!-- show internal title -->
+          <div class="clr"></div>
+          <div
+            style="
+              display: inline-block;
+              margin: 5px;
+              float: left;
+              padding-left: 30px;
+            "
+          >
+            <label class="switch">
+              <input
+                type="checkbox"
+                v-model="showInternalTitle"
+                :value="true"
+                name="showInternalTitle"
+              />
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div
+            style="
+              display: inline-block;
+              margin: 5px;
+              float: left;
+              padding-top: 5px;
+            "
+          >
+            <label style="top: 5px"
+              >Show Internal Title In My Dashboard</label
+            >
+          </div>
+           <!-- show internal title setting end-->
+
         </div>
 
         <div class="clr"></div>
@@ -151,7 +188,7 @@
 
 <script>
 
-import { GetAppStyleMode} from "../common.js";
+import { GetAppStyleMode,SaveSettingToLocalStorage} from "../common.js";
 
 export default {
   name: "PersonalSettingModal",
@@ -159,16 +196,19 @@ export default {
   data() {
     return {
       showAllActions: false,
+      showInternalTitle:false,
     };
   },
 
   async created() {
     this.showAllActions = window.localStorage.getItem("showAllActions");
+    this.showInternalTitle = window.localStorage.getItem("showInternalTitle");
     this.appstylemode = GetAppStyleMode();
   },
 
   methods: {
     Save_Personal_Settings() {
+      SaveSettingToLocalStorage("showInternalTitle",this.showInternalTitle);
       this.$emit("Save_Personal_Settings", this.showAllActions,this.appstylemode);
     },
   },

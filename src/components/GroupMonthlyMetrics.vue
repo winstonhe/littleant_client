@@ -11,7 +11,8 @@
       <img src="../images/loading.jpg" />
     </div>
 
-  <RefreshConfirmationModal :showDialog="showDialog" @Refresh_Confirmed="RefreshConfirmed" @Refresh_Canceled="RefreshCanceled"></RefreshConfirmationModal>
+  <RefreshConfirmationModal :showDialog="showDialog" @Refresh_Confirmed="RefreshConfirmed" @Refresh_Canceled="RefreshCanceled"  greetingMessage="Are you sure to refresh the cache to get the live data which could take seconds ?">
+  </RefreshConfirmationModal>
 
     <ul v-show="loaded === true">
       <li style="float: left">

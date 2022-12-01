@@ -11,10 +11,12 @@
       </div>
 
     <RefreshConfirmationModal
-      :showDialog="showDialog"
+      :showDialog="showDialog"     
       @Refresh_Confirmed="RefreshConfirmed"
       @Refresh_Canceled="RefreshCanceled"
-    ></RefreshConfirmationModal>
+      greetingMessage="Are you sure to refresh the cache to get the live data which could take seconds ?"
+     >
+      </RefreshConfirmationModal>
 
     <div v-show="loaded">
       <ul>

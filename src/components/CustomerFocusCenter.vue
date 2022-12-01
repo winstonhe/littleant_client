@@ -28,6 +28,7 @@
       :showDialog="showDialog"
       @Refresh_Confirmed="RefreshConfirmed"
       @Refresh_Canceled="RefreshCanceled"
+      greetingMessage="Are you sure to refresh the cache to get the live data which could take seconds ?"
     ></RefreshConfirmationModal>
 
     <CustomerFocusProfileModal
@@ -496,7 +497,7 @@ export default {
 
     async openCaseList(focus) {
       this.showLoading = true ;// show loading modal
-      this.messageforloading= "Loading data in process. Please feel free to enjoy your coffee now  <i class='fas fa-mug-hot'></i> ...";
+      this.messageforloading= "Loading data in progress. Please feel free to enjoy your coffee now  <i class='fas fa-mug-hot'></i> ...";
       let loadingMessageInterval= setInterval(this.setTickWhenLoading,1000)
 
       this.showChart = false;

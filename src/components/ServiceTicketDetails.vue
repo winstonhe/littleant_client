@@ -248,8 +248,11 @@ export default {
       //update the is_trending_issue of review history
       if(newreview.reviewtype === 8 ) review_history_data.is_trending_issue = true
 
+      //update backup owner
+      else if(newreview.reviewtype === 10 ) review_history_data.case_backup_owner = newreview.case_backup_owner
+
       // set the proper mce status.
-      if (newreview.mcedone) review_history_data.mce_status = 3; //2 means mce done;
+      if (newreview.mcedone) review_history_data.mce_status = 3; //2 means mce done;     
 
       WebAPI_Helper("POST", "upsertreviewhistory", review_history_data);
     },

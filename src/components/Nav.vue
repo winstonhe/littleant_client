@@ -63,6 +63,15 @@
       </a>
     </li>
 
+    <li 
+      style="float: right"
+      @click="$emit('Complete-Backup')"
+    >
+      <a>
+        <i  class="fas fa-hands-helping" title="Complete all my backup tasks"></i>       
+      </a>
+    </li>
+
     
     <li
       style="float: right"
@@ -149,6 +158,7 @@ export default {
       whoami: "",
       appstylemode: "",
       latestFreshTime:"",
+   
   
     };
   },
@@ -181,7 +191,7 @@ export default {
     // this.isadministrator = await WebAPI_Helper("get", "isadministrator", null);
        this.userrole= GetSettingFromSessionStorage("userrole") === null? await WebAPI_Helper("get","currentuserrole",null):parseInt(GetSettingFromSessionStorage("userrole")); 
        SaveSettingToSessionStorage("userrole",this.userrole);
-
+   
 
     this.appstylemode = GetAppStyleMode();
 

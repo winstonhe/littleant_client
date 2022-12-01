@@ -28,6 +28,7 @@
       @Switch-ActionCards="SwitchActionCards"
       @Disable-Chart-Filter="DisableChartFilter"
       @Create-Snapshot="CreateSnapshot"
+      @Complete-Backup="CompleteBackup"
     ></Nav>
     <SettingModal
       :showSettingDialog="showSettingDialog"
@@ -70,6 +71,7 @@
         :showDialog="showDialog_Refresh"
         @Refresh_Confirmed="RefreshConfirmed"
         @Refresh_Canceled="RefreshCanceled"
+        greetingMessage="Are you sure to refresh the cache to get the live data which could take seconds ?"
       ></RefreshConfirmationModal>
 
       <SnapshotConfirmationModal
@@ -97,7 +99,7 @@
         :Downloading="downloading"
         @E_FilterServiceTicketsFromChart="FilterServiceTicketsFromChart"
       ></ChartPanel>
-      
+
       <div style="float: auto"></div>
       <ActionCards
         :actions="actions"
@@ -433,7 +435,7 @@ export default {
 
       // persist to cache;
       window.localStorage.setItem("showAllActions", this.showAllActions);
-      this.Generate_Actions();
+      this.Generate_Actions(this.servicetickets);
     },
 
     //Show | show Nav Bar of left panel
@@ -486,6 +488,7 @@ export default {
       this.showPersonalSettingDialog = false;
     },
 
+    
     setTickWhenCreatingSnapshot() {
       this.messageforsnapshot +="..";
     },
@@ -633,6 +636,14 @@ export default {
       }
     },
 
+   async CompleteBackup() {
+
+    await WebAPI_Helper("get","completebackup",null)
+    location.reload();
+
+    },
+
+
     SnapshotCanceled() {
       this.showDialog_Snapshot = false;
     },
@@ -660,6 +671,8 @@ export default {
       }
 
       this.Generate_Actions(); // Gerenate action cards based on personal settings
+      location.reload();
+
     },
 
     // Switch theme based on user's choice
@@ -680,6 +693,7 @@ export default {
     // clean server side cache of little ant and re-fetch live data from crmglobal
     CleanCache() {
       WebAPI_Helper("get", "cleancache(case)", null);
+      console.log("cleancache called")
       location.reload();
     },
 
@@ -1034,6 +1048,9 @@ export default {
 
       //generate chart dataset based on current service ticket list:
       this.Generate_Dataset_For_Charts();
+
+      //refresh action cards       
+       this.Generate_Actions(this.servicetickets);
     },
 
     // Apply filter to generate coreponding service ticket lists including total, 60,4560,3045,1530,15.
@@ -1180,6 +1197,10 @@ export default {
 
       this.Refresh_Default_Categarized_ServiceLists();
       this.Generate_Dataset_For_Charts();
+
+      //refersh the acton cards
+      this.Generate_Actions(this.backup_servicetickets);
+      
     },
 
     Refresh_Trending_Issues_Count(servicetickets) {
@@ -1419,14 +1440,15 @@ export default {
     // Web API ends.
 
     // Generat action card list
-    Generate_Actions() {
+    Generate_Actions(servicetickets) {
       //purge the original action card list
       this.actions = [];
 
-      if (this.backup_servicetickets === null) return;
+      //if (this.backup_servicetickets === null) return;
+      if (servicetickets === null || servicetickets === undefined) return;
 
-      for (let i = 0; i < this.backup_servicetickets.length; i++) {
-        let temp = this.backup_servicetickets[i];
+      for (let i = 0; i < servicetickets.length; i++) {
+        let temp = servicetickets[i];
 
         if (this.showAllActions === "false" || this.showAllActions === false) {
           if (
@@ -1492,29 +1514,60 @@ export default {
 
         this.actions = [...this.actions, new_action]; // append to actions array
       }
-      // create action card of idle case notification
-      else if (
-        this.teamprofile.Idle_Threshold_In_Days !== null &&
-        this.teamprofile.Idle_Threshold_In_Days !== "" &&
-        temp_serviceticket.sr_idle_days >
-          parseInt(this.teamprofile.Idle_Threshold_In_Days)
-      ) {
-        new_action.action_type = 1;
-        new_action.action_description =
-          "Case Idle For " + temp_serviceticket.sr_idle_days + " Days";
-        new_action.action_label = "OPEN CASE";
-        new_action.action_owner = temp_serviceticket.sr_caseowner;
-        this.actions = [...this.actions, new_action]; // append to actions array
-      }
-
-      // create action card for aged cases which age  > 60 days
-      else if (temp_serviceticket.sr_age >= 60) {
+        // create action card for aged cases which age  > 60 days
+        else if (temp_serviceticket.sr_age >= 60) {
         new_action.action_type = 5;
         new_action.action_description =
           "Long Age Case For " + temp_serviceticket.sr_age + " Days";
         new_action.action_label = "OPEN CASE";
         new_action.action_owner = temp_serviceticket.sr_caseowner;
         this.actions = [...this.actions, new_action]; // append to actions array
+      }
+
+      
+      // create action card of idle case notification
+      let idle_action = {
+        sr_number: temp_serviceticket.sr_number,
+        sr_idle_days: temp_serviceticket.sr_idle_days,
+        sr_age: temp_serviceticket.sr_age,
+        sr_caseowner: temp_serviceticket.sr_caseowner,
+        sr_record_guid: temp_serviceticket.sr_record_guid,
+        sr_country_code: temp_serviceticket.sr_country_code,
+      };
+
+      if (
+        this.teamprofile.Idle_Threshold_In_Days !== null &&
+        this.teamprofile.Idle_Threshold_In_Days !== "" &&
+        temp_serviceticket.sr_idle_days >
+          parseInt(this.teamprofile.Idle_Threshold_In_Days)
+      ) {
+        idle_action.action_type = 1;
+        idle_action.action_description =
+          "Case Idle For " + temp_serviceticket.sr_idle_days + " Days";
+          idle_action.action_label = "OPEN CASE";
+          idle_action.action_owner = temp_serviceticket.sr_caseowner;
+        this.actions = [...this.actions, idle_action]; // append to actions array
+      }
+
+    
+      //create backup action card
+      let seperated_action = {
+        sr_number: temp_serviceticket.sr_number,
+        sr_idle_days: temp_serviceticket.sr_idle_days,
+        sr_age: temp_serviceticket.sr_age,
+        sr_caseowner: temp_serviceticket.sr_caseowner,
+        sr_record_guid: temp_serviceticket.sr_record_guid,
+        sr_country_code: temp_serviceticket.sr_country_code,
+      };
+      if(temp_serviceticket.latest_review_type === 10) {
+
+        seperated_action.action_type = 6;
+        seperated_action.action_description =
+          "case backup by " + temp_serviceticket.case_backup_owner;
+        seperated_action.action_label = "OPEN CASE";
+        seperated_action.action_owner = temp_serviceticket.case_backup_owner;
+        this.actions = [...this.actions, seperated_action]; // append to actions array
+
       }
     },
 
@@ -1568,6 +1621,10 @@ export default {
                 allreview_data[j].review_times; //===0? 1: allreview_data[j].review_times
               this.servicetickets[i].mce_task_owner =
                 allreview_data[j].mce_task_owner;
+              
+              this.servicetickets[i].latest_review_type = allreview_data[j].latest_review_type;
+              this.servicetickets[i].case_backup_owner = allreview_data[j].case_backup_owner;
+              
 
               this.servicetickets[i].is_vip_notification_done =
                 allreview_data[j].is_vip_notification_done;
@@ -1586,7 +1643,7 @@ export default {
                   this.teamprofile.Threshold_Active_Review === null
                     ? 3
                     : this.teamprofile.Threshold_Active_Review;
-                if (days_diff <= parseInt(Threshold_Active_Review) && allreview_data[j].latest_review_type !==7)  //viewtype 7 is idle alert
+                if (days_diff <= parseInt(Threshold_Active_Review) && allreview_data[j].latest_review_type !==7 && allreview_data[j].latest_review_type !==10 && allreview_data[j].latest_review_type !==11 )  //viewtype 7 is idle alert
                   this.servicetickets[i].is_reviewed_today = true;
               }
 
@@ -1693,7 +1750,8 @@ export default {
       this.EngineersFilterModalTitle = "Please select engineers to display";
 
       // Cache the approver list if it's an admin
-      if (this.userrole >=2) {
+      //if (this.userrole >=2) 
+      {
         const approver_list = this.teamprofile.MCEApproval_List;
         SaveSettingToSessionStorage(
           "approver_list",
@@ -1717,7 +1775,7 @@ export default {
       this.Fillin_ServiceTickets_Basedon_ReviewHistory(allreview_data);
 
       //generate action cards:
-      this.Generate_Actions();
+      this.Generate_Actions(this.servicetickets);
 
       if (this.servicetickets !== null) {
         this.Refresh_Default_Categarized_ServiceLists();

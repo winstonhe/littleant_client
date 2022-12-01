@@ -14,7 +14,7 @@
           'head_dark':appstylemode === 'DARK',
         }"       
         >
-          <th width="6%" align="center">Review Status</th>
+          <th width="6%" align="center">Status</th>
           <th align="left"></th>
           <th width="10%" align="left">Case ID</th>
           <th width="2%" align="center">IcM</th>
@@ -28,7 +28,7 @@
           
           <th width="5%" align="center">Owner</th>
 
-          <th width="6%">Created On</th>
+          <!-- <th width="6%">Created On</th> -->
           <th width="3%">Age</th>
           <th width="3%">Idle</th>
 
@@ -36,7 +36,8 @@
           <th width="6%" align="center">POD</th>
 
           <!-- <th width="32%" align="center">Title</th> -->
-          <th width="36%" align="center">Title</th>
+          <th :class="{'internal_title_enabled':showInternalTitle==='true','internal_title_disabled':showInternalTitle!=='true'}" align="center">Title</th>
+          <th v-show="showInternalTitle==='true'" width="16%" align="center">Internal Title</th>
           <th width="8%" align="center"></th>
         </tr>
       </thead>
@@ -47,7 +48,9 @@
 
           @mouseover="MouseOver(serviceticket)"       
           @mouseleave="MouseLeave()"  
-          @dblclick="$emit('review-serviceticket', serviceticket)"    
+          @dblclick="$emit('review-serviceticket', serviceticket)" 
+          
+         
           
           :class="
           {          
@@ -68,6 +71,7 @@
               $emit('review-serviceticket', serviceticket)
             "
             :appstylemode="appstylemode"
+            :showInternalTitle="showInternalTitle"
           />
         </tr>
       </tbody>
@@ -77,6 +81,7 @@
 
 <script>
 import ServiceTicket from "./ServiceTicket";
+import { GetSettingFromLocalStorage } from "../common.js";
 
 export default {
   name: "ServiceTickets",
@@ -86,7 +91,8 @@ export default {
 
   date( ) {
     return {
-    hoveredId:""  
+    hoveredId:""  ,
+    showInternalTitle: false,
     }
     
   },
@@ -95,7 +101,7 @@ export default {
 
   created () {
      this.chartFilter_Enabled = true;
-
+    this.showInternalTitle = GetSettingFromLocalStorage("showInternalTitle")===null? "false":GetSettingFromLocalStorage("showInternalTitle")
      
   },
  
@@ -120,6 +126,15 @@ export default {
 </script>
 
 <style scoped>
+
+.internal_title_enabled {
+  width:25%
+}
+
+.internal_title_disabled {
+  width:40%
+}
+
 .caption_default {
   padding-left: 20px;
   background:lightgray;
