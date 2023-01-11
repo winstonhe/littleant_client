@@ -1495,8 +1495,7 @@ export default {
     },
 
     async fetchServiceTickets(alias) {
-      //return await [{'sr_number':'2204080030000154','sr_createdon':'4/8/2022 2:24:10 AM','sr_caseowner':'yiwcheng','sr_title':'[21V Escalation][Sev B][日立电梯（中国）有限公司]SR_20220406158454_excel数据导入也很慢，后台异步作业堆积比较多，执行较慢','sr_internaltitle':'[W] Follow to close | ICM 303974910 | 21V | SR_20220406158454_excel数据导入也很慢，后台异步作业堆积比较多，执行较慢','sr_casestatus':null,'sr_record_guid':'70dff8fa-e2b6-ec11-983f-0022482f5a51','sr_status':'Waiting for Confirmation','sr_country_code':'CN','sr_age':16,'sr_icm':'303974910','sr_idle_days':2,'sr_support_pod':'CE Application','VIP':null,'sr_TechBlockAssessment':0,'primaryAddress':'Microsoft','programType':'None','sr_severityCode':'B'}];
-      return await WebAPI_Helper(
+        return await WebAPI_Helper(
         "get",
         "servicetickets/teamoruser/" + alias,
         null
