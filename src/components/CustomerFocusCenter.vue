@@ -445,7 +445,7 @@ export default {
     },
 
     async GetFreshTime() {
-      return await WebAPI_Helper("get", "latestfreshtime(customerfocus)");
+      return await WebAPI_Helper("get", "latestfreshtime/cachetype/customerfocus/teamoruser/na");
     },
 
     async serviceticketsoffocus(focus) {
@@ -790,9 +790,9 @@ export default {
       this.showDialog = true;
     },
 
-    RefreshConfirmed() {
+   async RefreshConfirmed() {
       this.showDialog = false;
-      WebAPI_Helper("get", "cleancache(customerfocus)", null);
+    await  WebAPI_Helper("get", "cleancache/cachetype/customerfocus/teamoruser/na", null);
       location.reload();
     },
 

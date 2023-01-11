@@ -19,7 +19,7 @@
       style="color: darkred"
       title="High CPE Risk"
     ></i>
-    &nbsp;<i  v-show="serviceticket.latest_review_type === 10" class="fas fa-handshake">&nbsp;{{serviceticket.case_backup_owner}}</i>
+    &nbsp;<i  v-show="serviceticket.latest_review_type === 10 && serviceticket.case_backup_owner!== null" class="fas fa-handshake">&nbsp;{{serviceticket.case_backup_owner}}</i>
     <i
       v-show="serviceticket.mce_status === 1"
       class="fas fa-phone-alt"

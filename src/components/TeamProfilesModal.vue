@@ -194,6 +194,25 @@
                   name="DistributionGroupForTrendingIssue"
                 />
               </td>
+
+              <td>
+                <div style="display: inline-block; margin: 5px; float: left">
+                  <label class="switch" style="display: inline-block">
+                    <input
+                      type="checkbox"
+                      v-model="Enable_Idle_Notification"
+                      :value="true"
+                    />
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+
+                <div
+                  style="display: inline-block; float: left; padding-top: 10px"
+                >
+                  <label>Enable Idle Notification Email </label>
+                </div>
+              </td>          
              
             </tr>
 
@@ -315,7 +334,8 @@ export default {
       timezone_offset:"", //timezone_offset
 
       grouplead_alias:"", // group lead alias
-      
+
+      Enable_Idle_Notification: false , //swithc to enable idle notificaiton sent;      
 
       userRole: "",
       teamprofile:"",
@@ -360,6 +380,7 @@ grouplead_alias(new_group) {
       this.Threshold_Active_Review = teamprofile.Threshold_Active_Review;
       this.grouplead_alias = teamprofile.grouplead_alias;
       this.timezone_offset = teamprofile.timezone_offset;
+      this.Enable_Idle_Notification = teamprofile.Enable_Idle_Notification;
     },
 
  
@@ -382,6 +403,7 @@ grouplead_alias(new_group) {
           Threshold_Active_Review: this.Threshold_Active_Review,   
           grouplead_alias: this.grouplead_alias, 
           timezone_offset: this.timezone_offset,
+          Enable_Idle_Notification : this.Enable_Idle_Notification
         };
         WebAPI_Helper("post", "upsertprofile", this.teamprofile);
         Sleep(500);        

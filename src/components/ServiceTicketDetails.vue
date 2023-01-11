@@ -94,7 +94,7 @@
 </template>
 
 <script>
-import { GetAppStyleMode, WebAPI_Helper } from "../common.js";
+import { GetSettingFromLocalStorage,GetSettingFromSessionStorage,GetAppStyleMode, WebAPI_Helper } from "../common.js";
 import AddReview from "./AddReview.vue";
 import Comments from "../components/Comments";
 
@@ -182,7 +182,8 @@ export default {
 
    async GetCaseDetails () {
     //get service ticket
-      const returnedCase = await this.fetchServiceTicketByCaseID(this.case_details.sr_number);
+    let  cachedteamforservicetickets =  GetSettingFromLocalStorage("cachedteamforservicetickets") === null? GetSettingFromSessionStorage("teammanagers_alias").split(",")[0]:GetSettingFromLocalStorage("cachedteamforservicetickets"); 
+      const returnedCase = await this.fetchServiceTicketByCaseID(this.case_details.sr_number,cachedteamforservicetickets);
 
     if (returnedCase === null || returnedCase === undefined) {
       this.no_case = true;
@@ -210,10 +211,10 @@ export default {
       );
     },
 
-    async fetchServiceTicketByCaseID(caseId) {
+    async fetchServiceTicketByCaseID(caseId,teamalias) {
       const data = await WebAPI_Helper(
         "get",
-        "serviceticket(" + caseId + ")",
+        "serviceticket/caseid/" + caseId + "/teamalias/"+teamalias,
         null
       );
       if (data.length > 0) { 

@@ -472,13 +472,13 @@ export default {
     },
 
     async GetFreshTime() {
-      return await WebAPI_Helper("get", "latestfreshtime(assignment)");
+      return await WebAPI_Helper("get", "latestfreshtime/cachetype/assignment/teamoruser/na)");
     },
 
-    RefreshConfirmed() {
+    async RefreshConfirmed() {
       this.showDialog = false;
       this.loaded = false;
-      WebAPI_Helper("get", "cleancache(assignment)", null);
+      await WebAPI_Helper("get", "cleancache/cachetype/assignment/teamoruser/na", null);
       location.reload();
     },
 

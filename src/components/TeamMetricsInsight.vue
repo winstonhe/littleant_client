@@ -674,8 +674,12 @@ export default {
           }
         } else if (month <= 5) {
           // generate labels of month if month <=5
-          for (let i = 5 - month; i > 0; i--) {
-            let month = (12 - i).toString();
+          for (let i = 5 - month; i >= 0; i--) {
+            let month = "";
+            if((12 - i).toString().length === 1) {
+              month = "0" + (12 - i).toString();
+            } else month = (12 - i).toString();
+
             let yearmonth = (year - 1).toString() + month;
             labels_xAxis.push(yearmonth);
           }

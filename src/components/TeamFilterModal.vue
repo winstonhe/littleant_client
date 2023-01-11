@@ -1,5 +1,5 @@
 <template>
-  <div class="dialog" v-if="showDialog">
+  <div class="dialog" v-if="showTeamDialog">
     <div class="dialog_mask"></div>
     <div class="dialog_container">
       <div class="dialog_content">
@@ -20,7 +20,7 @@
               font-weight: lighter;
             "
           >
-            Engineers Filter
+           Switch Team 
           </p>
           <p
             style="
@@ -46,7 +46,7 @@
             color: black;
             text-align: left;
           "
-          v-text="EngineersFilterModalTitle"
+          v-text="teamFilterModalTitle"
         ></div>
 
         <div id="cpe_container" style="margin: 0px auto">
@@ -57,8 +57,8 @@
               float: left;
               padding-left: 20px;
             "
-            v-bind:key="engineer"
-            v-for="engineer in engineers"
+            v-bind:key="team"
+            v-for="team in teams"
           >
             <label
               class="container"
@@ -67,18 +67,13 @@
                 display: inline-block;
                 width: 205px;
               "
-              v-bind:class="{
-                overload: parseInt(engineer.backlog) >= Threshold_High_Backlog, lowload:parseInt(engineer.backlog) ==0 ||isNaN(parseInt(engineer.backlog))
-              }"
-              ><i class="fas fa-user-alt"></i> {{ engineer.engineer_name }} ({{
-                engineer.backlog
-              }})
+             
+              ><i class='fas fa-address-card'></i> {{ team }} 
               <input
-                type="checkbox"
-                v-model="engineers_chosen"
-                :value="engineer.engineer_name"
-                name="engineers_list"
-                :disabled = "parseInt(engineer.backlog) ==0"
+                type="radio"
+                v-model="team_chosen"
+                :value="team"
+                name="team_chosen"               
               />
               <span class="checkmark"></span>
             </label>
@@ -97,14 +92,14 @@
             }"
             @click="apply_filter"
           >
-            <i class="fas fa-check"></i> Apply Filter
+          <i class="fas fa-random"></i> Proceed To Switch
           </button>
           <button
             type="button"
             class="cancelfilter_button"
-            @click="$emit('Cancel_Filter')"
+            @click="$emit('CancelTeamFilter')"
           >
-            <i class="fas fa-eraser"></i> Clean Filter
+            <i class="fas fa-times"></i> Cancel 
           </button>
         </div>
       </div>
@@ -115,68 +110,55 @@
 </template>
 
 <script>
-import { GetSettingFromSessionStorage } from '../common';
+import { GetSettingFromLocalStorage ,SaveSettingToSessionStorage,WebAPI_Helper } from '../common';
+
 export default {
-  name: "EngineerFilterModal",
+  name: "TeamFilterModal",
   data() {
     return {
-      engineers_chosen: [],
-      filter_enabled: false,
-      Threshold_High_Backlog: 1000,
+      team_chosen: [],
+      filter_enabled: false,    
     };
   },
 
-  props: ["engineers", "showDialog", "EngineersFilterModalTitle"],
+  props: ["teams", "showTeamDialog", "teamFilterModalTitle"],
 
   watch: {
-    engineers_chosen(new_engineerslist) {
-      if (new_engineerslist != "") this.filter_enabled = true;
+    team_chosen(new_team) {
+      if (new_team != "") this.filter_enabled = true;
       else this.filter_enabled = false;
     },
   },
- 
- updated(){
-  let Threshold_High_Backlog = GetSettingFromSessionStorage("Threshold_High_Backlog");
-    if (
-      Threshold_High_Backlog === null ||
-      Threshold_High_Backlog === undefined ||
-      Threshold_High_Backlog === ""
-    ) {
-      this.Threshold_High_Backlog = 1000;
-    } else {
-      this.Threshold_High_Backlog = parseInt(Threshold_High_Backlog);
-    }
- },
 
-  created() {
+  async created() {
+
+      let team_chosen;
+      if(GetSettingFromLocalStorage("cachedteamforservicetickets") === null){
+        const setting = await WebAPI_Helper("get", "getsetting", null);
+        SaveSettingToSessionStorage("teammanagers_alias",setting.teammanagers_alias);
+        team_chosen = setting.teammanagers_alias.split(",")[0];
+      }  else {
+        team_chosen = GetSettingFromLocalStorage("cachedteamforservicetickets");
+      }
+    this.team_chosen = team_chosen;
    
-    let Threshold_High_Backlog = GetSettingFromSessionStorage("Threshold_High_Backlog");
-    if (
-      Threshold_High_Backlog === null ||
-      Threshold_High_Backlog === undefined ||
-      Threshold_High_Backlog === ""
-    ) {
-      this.Threshold_High_Backlog = 1000;
-    } else {
-      this.Threshold_High_Backlog = parseInt(Threshold_High_Backlog);
-    }
   },
 
   methods: {
     apply_filter() {
-      if (this.engineers_chosen.length !== 0) {
+      if (this.team_chosen.length !== 0) {
         //this.engineers_chosen = this.engineers_chosen.sort(); // why i sort the selection? am I crazy?
-        this.$emit("ApplyFilter", this.engineers_chosen, "engineerfilter");
+        this.$emit("ApplyTeamFilter", this.team_chosen);
       }
     },
 
     cancal_filter() {
       this.engineers_chosen = null;
-      this.$emit("Cancel_Filter");
+      this.$emit("CancelTeamFilter");
     },
 
     CloseModal() {
-      this.$emit("CloseEngineerFilterModal");
+      this.$emit("CloseTeamFilterModal");
     },
   },
 };

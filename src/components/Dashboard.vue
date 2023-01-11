@@ -1,5 +1,8 @@
 <template>
-  <SiteNav @ToggleNavBar="ToggleNavBar" :siteNivBar_expanded="siteNivBar_expanded"></SiteNav>
+  <SiteNav
+    @ToggleNavBar="ToggleNavBar"
+    :siteNivBar_expanded="siteNivBar_expanded"
+  ></SiteNav>
   <div
     :class="{
       NavBarCollapsed: siteNivBar_expanded === 'false',
@@ -13,12 +16,13 @@
       v-show="loaded === true"
       @Show-Filter="ShowFilterModal"
       @Switch-Chart="SwitchChart"
-    
       :filterApplied="filterApplied"
+      :isTeamSwitched="isTeamSwitched"
       :chartEnabled="chartEnabled"
       :showAllActions="showAllActions"
       :chartFilter_Enabled="chartFilter_Enabled"
       :chart_Filters_Description="chart_Filters_Description"
+      :showIdleCasesOnly="showIdleCasesOnly"
       @ShowPersonalSettingModal="ShowPersonalSettingModal"
       @ShowSettingModal="ShowSettingModal"
       @ShowFeedbackModal="ShowFeedbackModal"
@@ -29,33 +33,30 @@
       @Disable-Chart-Filter="DisableChartFilter"
       @Create-Snapshot="CreateSnapshot"
       @Complete-Backup="CompleteBackup"
+      @Switch-Team="SwitchTeam"
+      @Show-Idle-Cases="ShowIdleCases"
     ></Nav>
     <SettingModal
       :showSettingDialog="showSettingDialog"
       @Close_Setting_Modal="Close_Setting_Modal"
     ></SettingModal>
     <FeedbackModal
-     :showFeedbackDialog="showFeedbackDialog"
+      :showFeedbackDialog="showFeedbackDialog"
       @Close_Feedback_Modal="Close_Feedback_Modal"
     >
-      </FeedbackModal>
+    </FeedbackModal>
     <TeamProfilesModal
-       :showTeamProfileDialog="showTeamProfileDialog"
-      @Close_TeamProfile_Modal="Close_TeamProfile_Modal">
-      </TeamProfilesModal>
+      :showTeamProfileDialog="showTeamProfileDialog"
+      @Close_TeamProfile_Modal="Close_TeamProfile_Modal"
+    >
+    </TeamProfilesModal>
     <PersonalSettingModal
       :showPersonalSettingDialog="showPersonalSettingDialog"
       @Save_Personal_Settings="SavePersonalSettings"
       @Close_Personal_Setting_Modal="Close_Personal_Setting_Modal"
     ></PersonalSettingModal>
 
-    <div
-      id="middle_container"
-      style="margin-left: 0px"
-      v-show="servicetickets.length > 0 && loaded === true"
-    >
-
-      <div style="margin: 0px auto; width: 100%" v-show="showFilter">
+    <div style="margin: 0px auto; width: 100%" v-if="showFilter&& userrole >= 2">
         <EngineerFilterModal
           :engineers="backup_engineers"
           :showDialog="showFilter"
@@ -67,7 +68,26 @@
         ></EngineerFilterModal>
       </div>
 
-     <RefreshConfirmationModal
+      <div
+        style="margin: 0px auto; width: 100%"
+        v-if="showTeamFilter & (userrole > 2)"
+      >
+        <TeamFilterModal
+          :teams="teams"
+          :showTeamDialog="showTeamFilter"
+          @ApplyTeamFilter="Apply_Team_Filter"
+          @CancelTeamFilter="Close_Team_Fitler_Modal"
+          @CloseTeamFilterModal="Close_Team_Fitler_Modal"
+        ></TeamFilterModal>
+      </div>
+
+    <div
+      id="middle_container"
+      style="margin-left: 0px"
+      v-show="servicetickets.length > 0 && loaded === true "
+    >    
+
+      <RefreshConfirmationModal
         :showDialog="showDialog_Refresh"
         @Refresh_Confirmed="RefreshConfirmed"
         @Refresh_Canceled="RefreshCanceled"
@@ -108,7 +128,6 @@
       ></ActionCards>
 
       <div style="float: auto"></div>
-   
 
       <Servicetickets
         :servicetickets="servicetickets_60"
@@ -168,22 +187,19 @@
     </div>
   </div>
 
-   <div v-show="ErrorRaised"
-            style="
-              display: inline-block;
-              margin: 50px;            
-              padding-top: 5px;
-
-            "
-          >
-            <label style="top: 5px" 
-            :class="{
+  <div
+    v-show="ErrorRaised"
+    style="display: inline-block; margin: 50px; padding-top: 5px"
+  >
+    <label
+      style="top: 5px"
+      :class="{
         switch_black: appstylemode === 'DEFAULT',
         switch_white: appstylemode === 'DARK',
       }"
-              >Something wrong happened , or you are not a user of little ant!</label
-            >
-          </div>
+      >Something wrong happened , or you are not a user of little ant!</label
+    >
+  </div>
   <Footer :appstylemode="appstylemode" />
   <div id="right" style="background-color: #eee"></div>
   <router-view></router-view>
@@ -197,7 +213,6 @@ import {
   Days_Diff,
   GetSettingFromLocalStorage,
   SaveSettingToLocalStorage,
-
   GetSettingFromSessionStorage,
   SaveSettingToSessionStorage,
   Sleep,
@@ -214,13 +229,13 @@ import PersonalSettingModal from "../components/PersonalSettingModal";
 import SnapshotConfirmationModal from "../components/SnapshotConfirmationModal";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
 import FeedbackModal from "./FeedbackModal";
-
+import TeamFilterModal from "../components/TeamFilterModal";
 
 import Footer from "../components/layout/Footer";
 // import SearchCase from '../components/SearchCase'
 
 import ChartPanel from "../components/ChartPanel.vue";
-import TeamProfilesModal from "./TeamProfilesModal"
+import TeamProfilesModal from "./TeamProfilesModal";
 
 //site nav
 import SiteNav from "../components/SiteNav";
@@ -231,6 +246,7 @@ export default {
     Servicetickets,
     Displayboard,
     EngineerFilterModal,
+    TeamFilterModal,
     Nav,
     ActionCards,
     ChartPanel,
@@ -239,10 +255,10 @@ export default {
     SnapshotConfirmationModal,
     RefreshConfirmationModal,
     TeamProfilesModal,
+
     FeedbackModal,
     Footer,
     SiteNav,
-
   },
   data() {
     return {
@@ -279,12 +295,13 @@ export default {
 
       summary: {},
       engineers: [], // current engineers list
+      teams: [], //teams list
       backup_engineers: [], // the backup of engineers list
 
       loaded: false, //  a bool to see if the data is loaded completely
       showFilter: false, // a bool to determine if filter modal show or hide
 
-      showDialog_Refresh:false,
+      showDialog_Refresh: false,
 
       filterApplied: false, // a bool to check if enginer filter is applied or not.
 
@@ -292,15 +309,19 @@ export default {
 
       issuperuser: false, // a bool to judge is current user is a super user ( more data will be shown and some config settings will be visiable)
 
+      showIdleCasesOnly: "false", // show idle cases only
+
       //show all action cards
       showAllActions: "false", // a bool to determin if all action card should be displayed.
 
       //show setting Modal
       showSettingDialog: false,
 
-      showFeedbackDialog : false,
+      showFeedbackDialog: false,
 
-     
+      //swith team status
+      isTeamSwitched: false,
+
       //show team profile Modal
       showTeamProfileDialog: false,
 
@@ -309,6 +330,9 @@ export default {
 
       // show personal settign modal
       showPersonalSettingDialog: false,
+
+      //show team filter modal
+      showTeamFilter: false,
 
       // download status for chart;
       downloading: "false",
@@ -319,8 +343,8 @@ export default {
       chartFilter_Enabled: false,
 
       //bug count:
-      bug_count:0,
-      bug_count_percentage:0.0,
+      bug_count: 0,
+      bug_count_percentage: 0.0,
 
       // Site Nav Bar status:
       siteNivBar_expanded: "true",
@@ -337,7 +361,7 @@ export default {
       setting: "",
 
       //profile
-      teamprofile:"",
+      teamprofile: "",
 
       //application theme
       appstylemode: "DEFAULT",
@@ -448,30 +472,28 @@ export default {
       this.showSettingDialog = true;
     },
 
-     // Disaply Team Profile  Modal
-    ShowTeamProfileModal() {     
+    // Disaply Team Profile  Modal
+    ShowTeamProfileModal() {
       this.showTeamProfileDialog = true;
     },
 
     // Hide settings Modal
     Close_Setting_Modal() {
-      this.showSettingDialog = false;     
+      this.showSettingDialog = false;
     },
-
 
     // Disaply Settings Modal
     ShowFeedbackModal() {
       this.showFeedbackDialog = true;
     },
-      // Hide settings Modal
+    // Hide settings Modal
     Close_Feedback_Modal() {
-      this.showFeedbackDialog = false;     
+      this.showFeedbackDialog = false;
     },
-       // Hide settings Modal
+    // Hide settings Modal
     Close_TeamProfile_Modal() {
-      this.showTeamProfileDialog = false;     
+      this.showTeamProfileDialog = false;
     },
-
 
     // Hide the set
     SaveSettings() {
@@ -488,13 +510,63 @@ export default {
       this.showPersonalSettingDialog = false;
     },
 
-    
     setTickWhenCreatingSnapshot() {
-      this.messageforsnapshot +="..";
+      this.messageforsnapshot += "..";
+    },
+
+    ShowIdleCases(){
+
+      let showIdleCasesOnly = GetSettingFromSessionStorage("showIdleCasesOnly")!== null ? GetSettingFromSessionStorage("showIdleCasesOnly") : "false";
+
+      if(showIdleCasesOnly === 'true') {
+        this.showIdleCasesOnly = "false"
+        
+      } else if(showIdleCasesOnly==='false') {
+        this.showIdleCasesOnly = 'true';
+      }
+
+      //persist current status to session storage;
+      SaveSettingToSessionStorage("showIdleCasesOnly",this.showIdleCasesOnly)
+ 
+      // Apply filter
+        const engineers_chosen = JSON.parse(
+          GetSettingFromLocalStorage("engineers_chosen")
+        );
+       
+       //disable chart filter
+       this.DisableChartFitler_UI();
+
+       this.Apply_Filter_Internal(engineers_chosen); 
+
+       //generate chart dataset based on current service ticket list:
+      this.Generate_Dataset_For_Charts();
+
+           //refresh action cards
+           this.Generate_Actions(this.servicetickets);
+    },
+
+    Apply_Team_Filter(team_chosen) {
+      // clean engineer filter which was for previous team, and now we switch to another team.
+      window.localStorage.removeItem("filterApplied");
+      window.localStorage.removeItem("engineers_chosen");
+      window.sessionStorage.removeItem("showIdleCasesOnly");
+
+      // the chosen team is not team current user belongs to.
+      if (
+        team_chosen !==
+        GetSettingFromSessionStorage("teammanagers_alias").split(",")[0]
+      ) {
+        this.isTeamSwitched = true;
+      } else {
+        this.isTeamSwitched = false;
+      }
+
+      SaveSettingToLocalStorage("cachedteamforservicetickets", team_chosen);
+      location.reload();
+      //this.Init();
     },
 
     async SnapshotConfirmed() {
-
       let today = new Date();
       let month = new Date().getMonth() + 1;
       let currentdate = today.getDate();
@@ -507,23 +579,30 @@ export default {
         return;
       }
 
-      this.messageforsnapshot ="Creating snapshot in process. Please feel free to enjoy your coffee now  <i class='fas fa-mug-hot'></i> ...";
-      let snapshotMessageInterval= setInterval(this.setTickWhenCreatingSnapshot,1000)
+      this.messageforsnapshot =
+        "Creating snapshot in process. Please feel free to enjoy your coffee now  <i class='fas fa-mug-hot'></i> ...";
+      let snapshotMessageInterval = setInterval(
+        this.setTickWhenCreatingSnapshot,
+        1000
+      );
       this.processingforsnapshot = true;
-      
+
       //clean cache
       //await WebAPI_Helper("get", "cleancache(case)", null);
 
-     //  const whoami = GetSettingFromSessionStorage("whoami");
-      let manager_alias = await this.reportingm1manager(this.currentuser);
-      
+      //  const whoami = GetSettingFromSessionStorage("whoami");
+      let manager_alias =
+        GetSettingFromLocalStorage("cachedteamforservicetickets") === null
+          ? GetSettingFromSessionStorage("teammanagers_alias").split(",")[0]
+          : GetSettingFromLocalStorage("cachedteamforservicetickets");
+
       // retrieve today's assignment
       let assignments = await this.RetrieveAssignment(manager_alias);
       //retrieve service tickets:
 
-      this.backup_servicetickets = await this.fetchServiceTickets();
-
-      
+      this.backup_servicetickets = await this.fetchServiceTickets(
+        manager_alias
+      );
 
       let yearmonthdate_string = today.getFullYear();
       yearmonthdate_string +=
@@ -539,7 +618,7 @@ export default {
       let yearmonth = parseInt(yearmonthdate_string.slice(0, 6));
       let date = parseInt(yearmonthdate_string.slice(6, 8));
 
-      this.backup_engineers.forEach(engineer => {
+      this.backup_engineers.forEach((engineer) => {
         let temp_list_for_current_engineer = this.backup_servicetickets.filter(
           (item) => item.sr_caseowner == engineer.engineer_name
         );
@@ -568,7 +647,6 @@ export default {
         let assigned = assignments.filter(
           (assignment) => assignment.sr_caseowner === engineer.engineer_name
         ).length;
-       
 
         let total =
           lessthan15days +
@@ -606,10 +684,9 @@ export default {
           yearmonth: yearmonth,
           date: date,
         };
-       
+
         this.AddMetricsSnapshot(engineerMetricsSnapshot);
-         Sleep(1000);
-      
+        Sleep(1000);
       });
 
       //snapshot completed:
@@ -620,8 +697,7 @@ export default {
         "Are you sure to create team operation snapshot of today now ?  You can create today's snapshot for multiples times within one day.";
 
       //reload the page
-       // location.reload();
-
+      // location.reload();
     },
 
     CreateSnapshot() {
@@ -636,20 +712,20 @@ export default {
       }
     },
 
-   async CompleteBackup() {
-
-    await WebAPI_Helper("get","completebackup",null)
-    location.reload();
-
+    async CompleteBackup() {
+      await WebAPI_Helper("get", "completebackup", null);
+      location.reload();
     },
-
 
     SnapshotCanceled() {
       this.showDialog_Snapshot = false;
     },
 
     async RetrieveAssignment(manager_alias) {
-      return WebAPI_Helper("get", "assignments/manager/" + manager_alias + "/mode/1");
+      return WebAPI_Helper(
+        "get",
+        "assignments/manager/" + manager_alias + "/mode/1"
+      );
     },
 
     //Persist personal setting to local broswer storage
@@ -672,7 +748,6 @@ export default {
 
       this.Generate_Actions(); // Gerenate action cards based on personal settings
       location.reload();
-
     },
 
     // Switch theme based on user's choice
@@ -691,23 +766,46 @@ export default {
     },
 
     // clean server side cache of little ant and re-fetch live data from crmglobal
-    CleanCache() {
-      WebAPI_Helper("get", "cleancache(case)", null);
-      console.log("cleancache called")
+    async CleanCache() {
+      let cachedteamforservicetickets;
+      if (this.userrole < 2) {
+        await WebAPI_Helper(
+          "get",
+          "cleancache/cachetype/case/teamoruser/" + this.currentuser,
+          null
+        );
+      } else {
+        cachedteamforservicetickets =
+          GetSettingFromLocalStorage("cachedteamforservicetickets") === null
+            ? GetSettingFromSessionStorage("teammanagers_alias").split(",")[0]
+            : GetSettingFromLocalStorage("cachedteamforservicetickets");
+
+        await WebAPI_Helper(
+          "get",
+          "cleancache/cachetype/case/teamoruser/" + cachedteamforservicetickets,
+          null
+        );
+      }
       location.reload();
     },
 
-    RefreshConfirmed(){
+    RefreshConfirmed() {
       this.showDialog_Refresh = false;
       this.CleanCache();
     },
 
-    RefreshCanceled(){
+    RefreshCanceled() {
       this.showDialog_Refresh = false;
     },
 
-    ShowRefreshModal () {
+    ShowRefreshModal() {
       this.showDialog_Refresh = true;
+    },
+
+    async SwitchTeam() {
+      this.teams =
+        GetSettingFromSessionStorage("teammanagers_alias").split(",");
+      this.showTeamFilter = true;
     },
 
     // Navitate to service ticekt details component to review comments or add new comment
@@ -851,7 +949,7 @@ export default {
           sr_region: sr_region,
           sr_customer: sr_customer,
           sr_record_guid: sr_record_guid,
-          sr_age:sr_age,
+          sr_age: sr_age,
         };
 
         if (serviceticket.sr_age < 15) {
@@ -1029,19 +1127,23 @@ export default {
       //disable chart filter
       this.DisableChartFitler_UI();
 
+      //remove showidlecasesonly switch
+      window.sessionStorage.removeItem("showIdleCasesOnly");
+      this.showIdleCasesOnly = 'false';
+
       //toggle the filter
       this.showFilter = false; // !this.showFilter;
+     
+    if(engineers_chosen !==null) {
+      SaveSettingToLocalStorage("filterApplied", "true");
 
-      //let myStorage = window.sessionStorage;
-      //myStorage.setItem("filterApplied", "true");
-      SaveSettingToLocalStorage("filterApplied","true");
-      
-      this.filterApplied = "true" ;//GetSettingFromSessionStorage("filterApplied");
+      this.filterApplied = "true"; 
       // persist the chosen engineers list to local storage.
       SaveSettingToLocalStorage(
         "engineers_chosen",
         JSON.stringify(engineers_chosen)
       );
+    }
 
       //apply filter to generate the coresponding service ticket list and summary
       this.Apply_Filter_Internal(engineers_chosen);
@@ -1049,8 +1151,8 @@ export default {
       //generate chart dataset based on current service ticket list:
       this.Generate_Dataset_For_Charts();
 
-      //refresh action cards       
-       this.Generate_Actions(this.servicetickets);
+      //refresh action cards
+      this.Generate_Actions(this.servicetickets);
     },
 
     // Apply filter to generate coreponding service ticket lists including total, 60,4560,3045,1530,15.
@@ -1092,7 +1194,9 @@ export default {
       );
 
       //bug
-      this.bug_count = this.servicetickets.filter(ticket => ticket.sr_bugurl!=="" && ticket.sr_bugurl!==null).length;
+      this.bug_count = this.servicetickets.filter(
+        (ticket) => ticket.sr_bugurl !== "" && ticket.sr_bugurl !== null
+      ).length;
       this.Refresh_Summary();
     },
 
@@ -1102,6 +1206,9 @@ export default {
 
       if (servicetickets === null) return null;
 
+      if(engineers_chosen === null) {
+        temp_list = servicetickets
+      } else {
       for (let i = 0; i < servicetickets.length; i++) {
         if (
           this.IsCaseOwner_In_Chosen_List(servicetickets[i], engineers_chosen)
@@ -1110,7 +1217,16 @@ export default {
           temp_list = [...temp_list, servicetickets[i]];
         }
       }
+    }
 
+      // Just choose idle cases if showidlecasesonly is applied.
+      if( GetSettingFromSessionStorage("showIdleCasesOnly") === "true") {
+        let idle_threshold =  GetSettingFromSessionStorage("Idle_Threshold_In_Days") !== null? parseInt(GetSettingFromSessionStorage("Idle_Threshold_In_Days")) : 7;       
+        
+        temp_list= temp_list.filter((item) => item.sr_idle_days > idle_threshold)
+        
+      }
+     
       return temp_list;
     },
 
@@ -1123,7 +1239,8 @@ export default {
       this.summary.backlog = this.servicetickets.length;
       this.summary.bug_count = this.bug_count;
       this.summary.engineers = this.Refresh_Engieers_Number();
-      this.summary.trendingissues_count = this.Refresh_Trending_Issues_Count(this.servicetickets
+      this.summary.trendingissues_count = this.Refresh_Trending_Issues_Count(
+        this.servicetickets
       );
 
       const total =
@@ -1132,8 +1249,8 @@ export default {
         this.summary.count3045 +
         this.summary.count4560 +
         this.summary.count60;
-      
-        this.summary.bug_count_percentage = 0.0;
+
+      this.summary.bug_count_percentage = 0.0;
 
       if (total !== 0) {
         this.summary.count15_percentage =
@@ -1148,8 +1265,9 @@ export default {
           (100 * (this.summary.count60 / total)).toFixed(1) + "%";
         this.summary.trendingissues_count_percentage =
           (100 * (this.summary.trendingissues_count / total)).toFixed(1) + "%";
-          //bug statistics        
-        this.summary.bug_count_percentage =   (100 * (this.summary.bug_count / total)).toFixed(1) + "%";
+        //bug statistics
+        this.summary.bug_count_percentage =
+          (100 * (this.summary.bug_count / total)).toFixed(1) + "%";
       }
     },
 
@@ -1161,7 +1279,9 @@ export default {
           this.filterApplied === false ||
           this.filterApplied === undefined
         ) {
-          return this.backup_engineers.length;
+           if(this.showIdleCasesOnly ==='false' || this.showIdleCasesOnly === false) {
+             return this.backup_engineers.length;
+              }
         }
       }
 
@@ -1186,11 +1306,11 @@ export default {
       //disable chart filter
       this.DisableChartFitler_UI();
 
-      //set filterAplied status as false   
-      SaveSettingToLocalStorage("filterApplied","false");
-      this.filterApplied = 'false';
+      //set filterAplied status as false
+      SaveSettingToLocalStorage("filterApplied", "false");
+      this.filterApplied = "false";
 
-      //clean the chosen engineers list so that all service tickets will be loaded.   
+      //clean the chosen engineers list so that all service tickets will be loaded.
       ClearSettingFromLocalStorage("engineers_chosen");
 
       this.showFilter = false; // !this.showFilter;
@@ -1200,7 +1320,6 @@ export default {
 
       //refersh the acton cards
       this.Generate_Actions(this.backup_servicetickets);
-      
     },
 
     Refresh_Trending_Issues_Count(servicetickets) {
@@ -1234,7 +1353,9 @@ export default {
       this.servicetickets_15 = this.backup_servicetickets_15 =
         this.servicetickets.filter((ticket) => ticket.sr_age < 15);
 
-      this.bug_count = this.servicetickets.filter(ticket => ticket.sr_bugurl!=="" && ticket.sr_bugurl!==null).length;
+      this.bug_count = this.servicetickets.filter(
+        (ticket) => ticket.sr_bugurl !== "" && ticket.sr_bugurl !== null
+      ).length;
 
       this.Refresh_Summary();
     },
@@ -1247,6 +1368,11 @@ export default {
 
     DisableChartFilter() {
       this.DisableChartFitler_UI();
+
+      //turn off showilecases switch 
+     window.sessionStorage.removeItem("showIdleCasesOnly");
+      this.showIdleCasesOnly = 'false';
+
       const engineers_chosen = JSON.parse(
         window.localStorage.getItem("engineers_chosen")
       );
@@ -1260,6 +1386,11 @@ export default {
 
       //generate chart dataset based on current service ticket list:
       this.Generate_Dataset_For_Charts();
+
+          //refresh action cards
+          this.Generate_Actions(this.servicetickets);
+
+      
     },
 
     FilterServiceTicketsFromChart(parameter, value) {
@@ -1336,17 +1467,26 @@ export default {
         (ticket) => ticket.sr_age < 15
       );
 
-      this.bug_count = this.servicetickets.filter(ticket => ticket.sr_bugurl!=="" && ticket.sr_bugurl!==null).length;
+      this.bug_count = this.servicetickets.filter(
+        (ticket) => ticket.sr_bugurl !== "" && ticket.sr_bugurl !== null
+      ).length;
 
       this.chartFilter_Enabled = true;
 
       //refresh the staticis
       this.Refresh_Summary();
       this.Generate_Dataset_For_Charts();
+
+         //refresh action cards
+         this.Generate_Actions(this.servicetickets);
     },
 
     Close_EngineerFitler_Modal() {
       this.showFilter = false;
+    },
+
+    Close_Team_Fitler_Modal() {
+      this.showTeamFilter = false;
     },
 
     // Web API Methods
@@ -1354,17 +1494,17 @@ export default {
       return await WebAPI_Helper("post", "reviews", newreview);
     },
 
-    async fetchServiceTickets() {
+    async fetchServiceTickets(alias) {
       //return await [{'sr_number':'2204080030000154','sr_createdon':'4/8/2022 2:24:10 AM','sr_caseowner':'yiwcheng','sr_title':'[21V Escalation][Sev B][日立电梯（中国）有限公司]SR_20220406158454_excel数据导入也很慢，后台异步作业堆积比较多，执行较慢','sr_internaltitle':'[W] Follow to close | ICM 303974910 | 21V | SR_20220406158454_excel数据导入也很慢，后台异步作业堆积比较多，执行较慢','sr_casestatus':null,'sr_record_guid':'70dff8fa-e2b6-ec11-983f-0022482f5a51','sr_status':'Waiting for Confirmation','sr_country_code':'CN','sr_age':16,'sr_icm':'303974910','sr_idle_days':2,'sr_support_pod':'CE Application','VIP':null,'sr_TechBlockAssessment':0,'primaryAddress':'Microsoft','programType':'None','sr_severityCode':'B'}];
-
-      return await WebAPI_Helper("get", "servicetickets", null);
+      return await WebAPI_Helper(
+        "get",
+        "servicetickets/teamoruser/" + alias,
+        null
+      );
     },
 
     async reportingm1manager(whoami) {
-    return WebAPI_Helper(
-        "get",
-        "reportingm1manager(" + whoami + ")");
-      
+      return WebAPI_Helper("get", "reportingm1manager(" + whoami + ")");
     },
 
     async is_superuser() {
@@ -1375,12 +1515,9 @@ export default {
       return await WebAPI_Helper("get", "isadministrator", null);
     },
 
- 
-    async CurrentUserRole(){
-      return  await WebAPI_Helper("get","currentuserrole");
+    async CurrentUserRole() {
+      return await WebAPI_Helper("get", "currentuserrole");
     },
-
-
 
     async fetch_review_history() {
       return await WebAPI_Helper("get", "allreviewhistory", null);
@@ -1429,8 +1566,12 @@ export default {
       WebAPI_Helper("get", "notifyengineer(" + commentId + ")", null);
     },
 
-    async getteammembers() {
-      return await WebAPI_Helper("get", "teammembers", null);
+    async getteammembers(team_alias) {
+      return await WebAPI_Helper(
+        "get",
+        "teammembers(" + team_alias + ")",
+        null
+      );
     },
 
     async pendingaces() {
@@ -1454,8 +1595,7 @@ export default {
           if (
             (this.currentuser !== temp.sr_caseowner &&
               (temp.mce_status === 0 || temp.mce_status === undefined)) || //not current user's case and mce is not raised, no show
-            (temp.mce_status === 1 &&
-              (this.userrole === 1)) || // mce pending and not admin, no show
+            (temp.mce_status === 1 && this.userrole === 1) || // mce pending and not admin, no show
             (temp.mce_status === 2 &&
               temp.mce_task_owner !== this.currentuser) || // mce assigned and the mce owner is not current user, no show
             (this.currentuser !== temp.sr_caseowner && temp.mce_status == 3) // mce done and good to close. no show
@@ -1514,8 +1654,8 @@ export default {
 
         this.actions = [...this.actions, new_action]; // append to actions array
       }
-        // create action card for aged cases which age  > 60 days
-        else if (temp_serviceticket.sr_age >= 60) {
+      // create action card for aged cases which age  > 60 days
+      else if (temp_serviceticket.sr_age >= 60) {
         new_action.action_type = 5;
         new_action.action_description =
           "Long Age Case For " + temp_serviceticket.sr_age + " Days";
@@ -1524,7 +1664,6 @@ export default {
         this.actions = [...this.actions, new_action]; // append to actions array
       }
 
-      
       // create action card of idle case notification
       let idle_action = {
         sr_number: temp_serviceticket.sr_number,
@@ -1544,12 +1683,11 @@ export default {
         idle_action.action_type = 1;
         idle_action.action_description =
           "Case Idle For " + temp_serviceticket.sr_idle_days + " Days";
-          idle_action.action_label = "OPEN CASE";
-          idle_action.action_owner = temp_serviceticket.sr_caseowner;
+        idle_action.action_label = "OPEN CASE";
+        idle_action.action_owner = temp_serviceticket.sr_caseowner;
         this.actions = [...this.actions, idle_action]; // append to actions array
       }
 
-    
       //create backup action card
       let seperated_action = {
         sr_number: temp_serviceticket.sr_number,
@@ -1559,15 +1697,13 @@ export default {
         sr_record_guid: temp_serviceticket.sr_record_guid,
         sr_country_code: temp_serviceticket.sr_country_code,
       };
-      if(temp_serviceticket.latest_review_type === 10) {
-
+      if (temp_serviceticket.latest_review_type === 10 && temp_serviceticket.case_backup_owner !==null) {
         seperated_action.action_type = 6;
         seperated_action.action_description =
           "case backup by " + temp_serviceticket.case_backup_owner;
         seperated_action.action_label = "OPEN CASE";
         seperated_action.action_owner = temp_serviceticket.case_backup_owner;
         this.actions = [...this.actions, seperated_action]; // append to actions array
-
       }
     },
 
@@ -1621,19 +1757,19 @@ export default {
                 allreview_data[j].review_times; //===0? 1: allreview_data[j].review_times
               this.servicetickets[i].mce_task_owner =
                 allreview_data[j].mce_task_owner;
-              
-              this.servicetickets[i].latest_review_type = allreview_data[j].latest_review_type;
-              this.servicetickets[i].case_backup_owner = allreview_data[j].case_backup_owner;
-              
+
+              this.servicetickets[i].latest_review_type =
+                allreview_data[j].latest_review_type;
+              this.servicetickets[i].case_backup_owner =
+                allreview_data[j].case_backup_owner;
 
               this.servicetickets[i].is_vip_notification_done =
                 allreview_data[j].is_vip_notification_done;
 
               if (
                 allreview_data[j].latest_update_date !== null &&
-                allreview_data[j].latest_update_date !== undefined &&              
-                parseInt(allreview_data[j].latest_review_type) !==0 // 7 is idle scan notification.
-               
+                allreview_data[j].latest_update_date !== undefined &&
+                parseInt(allreview_data[j].latest_review_type) !== 0 // 7 is idle scan notification.
               ) {
                 const days_diff = Days_Diff(
                   allreview_data[j].latest_update_date
@@ -1643,7 +1779,13 @@ export default {
                   this.teamprofile.Threshold_Active_Review === null
                     ? 3
                     : this.teamprofile.Threshold_Active_Review;
-                if (days_diff <= parseInt(Threshold_Active_Review) && allreview_data[j].latest_review_type !==7 && allreview_data[j].latest_review_type !==10 && allreview_data[j].latest_review_type !==11 )  //viewtype 7 is idle alert
+                if (
+                  days_diff <= parseInt(Threshold_Active_Review) &&
+                  allreview_data[j].latest_review_type !== 7 &&
+                  allreview_data[j].latest_review_type !== 10 &&
+                  allreview_data[j].latest_review_type !== 11
+                )
+                  //viewtype 7 is idle alert
                   this.servicetickets[i].is_reviewed_today = true;
               }
 
@@ -1668,41 +1810,79 @@ export default {
       document.title = this.$route.meta.title;
 
       //set dashboard menu as selected item
-      SaveSettingToSessionStorage('selectedMenu','1')
+      SaveSettingToSessionStorage("selectedMenu", "1");
 
       this.siteNivBar_expanded =
         GetSettingFromLocalStorage("siteNivBar_expanded") === null
           ? "false"
           : GetSettingFromLocalStorage("siteNivBar_expanded");
 
-
-
       //Init the app theme
-      this.appstylemode = GetAppStyleMode();   
+      this.appstylemode = GetAppStyleMode();
+
+    
+      //initialize whoami
+      if (GetSettingFromSessionStorage("whoami") !== null)
+        this.currentuser = GetSettingFromSessionStorage("whoami");
+      else {
+        const whoami = await this.fetch_reviewer();
+        SaveSettingToSessionStorage("whoami", whoami);
+        this.currentuser = whoami;
+      }
 
       //When the app is provisoned for the first time, advanced setting modal will show up for initial configuration.
-      //const isadministrator = await this.isadministrator();
-      const setting = this.setting= await this.getsetting();
-     
-      
-      this.userrole= GetSettingFromSessionStorage("userrole") === null? await WebAPI_Helper("get","currentuserrole",null):parseInt(GetSettingFromSessionStorage("userrole")); 
-      SaveSettingToSessionStorage("userrole",this.userrole);
+    
+      const setting = (this.setting = await this.getsetting());
 
-  
+      this.userrole =
+        GetSettingFromSessionStorage("userrole") === null
+          ? await WebAPI_Helper("get", "currentuserrole", null)
+          : parseInt(GetSettingFromSessionStorage("userrole"));
+      SaveSettingToSessionStorage("userrole", this.userrole);
 
-      if (this.userrole>=4 && setting ===null) {
+      let cachedteamforservicetickets;
+      if (this.userrole >= 2) {
+        if (
+          GetSettingFromLocalStorage("cachedteamforservicetickets") === null
+        ) {
+          SaveSettingToSessionStorage(
+            "teammanagers_alias",
+            setting.teammanagers_alias
+          );
+          cachedteamforservicetickets =
+            setting.teammanagers_alias.split(",")[0];
+        } else {
+          cachedteamforservicetickets = GetSettingFromLocalStorage(
+            "cachedteamforservicetickets"
+          );
+        }
+      } else { 
+        cachedteamforservicetickets =await this.reportingm1manager(this.currentuser);
+        SaveSettingToLocalStorage(
+          "cachedteamforservicetickets",
+          cachedteamforservicetickets
+        );
+      }
+
+      //get team profile
+      if (this.userrole >= 4 && setting === null) {
         this.ShowSettingModal();
         this.loaded = true;
         return;
       } else {
-         this.teamprofile = await WebAPI_Helper("get","myteamprofile","");     
-        
-      if(this.teamprofile === null) { // unregister user trying to access, just return;
-       // this.ErrorRaised = true;
-       this.showFeedbackDialog = true;
-        this.loaded = true;
-        return;
-      }
+        this.teamprofile = await WebAPI_Helper(
+          "get",
+          "teamprofile/manager/" + cachedteamforservicetickets,
+          ""
+        );
+
+        if (this.teamprofile === null) {
+          // unregister user trying to access, just return;
+          // this.ErrorRaised = true;
+          this.showFeedbackDialog = true;
+          this.loaded = true;
+          return;
+        }
         SaveSettingToSessionStorage(
           "Idle_Threshold_In_Days",
           this.teamprofile.Idle_Threshold_In_Days
@@ -1710,7 +1890,7 @@ export default {
         SaveSettingToSessionStorage(
           "Threshold_High_Backlog",
           this.teamprofile.Threshold_High_Backlog
-        );       
+        );
       }
 
       //save managers' list to storage
@@ -1738,38 +1918,43 @@ export default {
       // this.issuperuser = await this.is_superuser();
       // SaveSettingToSessionStorage("issuperuser", this.issuperuser);
 
-      //initialize whoami
-      if (GetSettingFromSessionStorage("whoami") !== null)
-        this.currentuser = GetSettingFromSessionStorage("whoami");
-      else {
-        const whoami = await this.fetch_reviewer();
-        SaveSettingToSessionStorage("whoami", whoami);
-        this.currentuser = whoami;
-      }
-
+    
+      
       this.EngineersFilterModalTitle = "Please select engineers to display";
 
       // Cache the approver list if it's an admin
-      //if (this.userrole >=2) 
+      //if (this.userrole >=2)
       {
         const approver_list = this.teamprofile.MCEApproval_List;
-        SaveSettingToSessionStorage(
-          "approver_list",
-          approver_list
-        );
+        SaveSettingToSessionStorage("approver_list", approver_list);
       }
 
       //Get the full service tickets list
-      this.servicetickets = await this.fetchServiceTickets();
 
+      if (this.userrole ==1 ) {
+        this.servicetickets = await this.fetchServiceTickets(this.currentuser);
+      } else {
+        this.servicetickets = await this.fetchServiceTickets(
+          cachedteamforservicetickets
+        );
+
+        //set isTeamSwitched status
+        this.isTeamSwitched =
+          cachedteamforservicetickets !==
+          GetSettingFromSessionStorage("teammanagers_alias").split(",")[0];
+     
+        }
       //Save the primitive full service ticket to backup, which will be used once engineer filters is removed.
       this.backup_servicetickets = this.servicetickets;
 
       // Init the team member  list from server
-      const teammembers = await this.getteammembers();
+      const teammembers = await this.getteammembers(
+        cachedteamforservicetickets
+      );
 
       //Init engineers list  and backlog
       this.Refresh_EngineersAndBacklog(teammembers);
+  
 
       const allreview_data = await this.fetch_review_history();
       this.Fillin_ServiceTickets_Basedon_ReviewHistory(allreview_data);
@@ -1921,12 +2106,11 @@ input {
 }
 
 .switch_white {
-    color:white
+  color: white;
 }
 
 .switch_black {
-    color:black;
+  color: black;
 }
-
 </style>
 

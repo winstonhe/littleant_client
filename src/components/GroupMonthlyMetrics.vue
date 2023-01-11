@@ -16,7 +16,7 @@
 
     <ul v-show="loaded === true">
       <li style="float: left">
-        <a> Group Monthly Metrics </a>
+        <a>Monthly Metrics </a>
       </li>
 
       <li style="float: right;padding-right:30px" @click="CleanCache">
@@ -362,12 +362,12 @@ export default {
     },
 
     async GetFreshTime() {
-      return await WebAPI_Helper("get","latestfreshtime(metrics)");
+      return await WebAPI_Helper("get","latestfreshtime/cachetype/metrics/teamoruser/na");
     },
 
-    RefreshConfirmed(){
+    async RefreshConfirmed(){
       this.showDialog=false;
-      WebAPI_Helper("get", "cleancache(metrics)", null);
+      await WebAPI_Helper("get", "cleancache/cachetype/metrics/teamoruser/na", null);
       location.reload();
 
     },

@@ -19,7 +19,7 @@
         </div>
 
         <div
-          v-show="userrole >=5"
+          v-show="userrole >5"
           @click="$emit('ShowSettingModal')"
         >
           <a><i class="fas fa-cog"></i> Global Settings</a>
@@ -73,6 +73,8 @@
     </li>
 
     
+   
+    
     <li
       style="float: right"
       v-bind:class="{
@@ -119,6 +121,19 @@
       v-show="userrole >=2"
       style="float: right"
       v-bind:class="{
+        filter_applied: showIdleCasesOnly === 'true' || showIdleCasesOnly===true,
+        darkmode:
+        showIdleCasesOnly === 'false' || showIdleCasesOnly === undefined,
+      }"
+      @click="$emit('Show-Idle-Cases')"
+    >
+      <a><i class="fas fa-bed" title="Show Idle Cases Only"></i> </a>
+    </li>
+
+    <li
+      v-show="userrole >=2"
+      style="float: right"
+      v-bind:class="{
         filter_applied: filterApplied === 'true' || filterApplied===true,
         filter_canceled:
           filterApplied === 'false' || filterApplied === undefined,
@@ -126,6 +141,21 @@
       @click="$emit('Show-Filter')"
     >
       <a><i class="fas fa-filter" title="Filter Engineers"></i> </a>
+    </li>
+
+    <li  v-show="userrole >2"   
+      style="float: right"
+      v-bind:class="{
+        filter_applied: isTeamSwitched === 'true' || isTeamSwitched===true,
+        filter_canceled:
+        isTeamSwitched === 'false' ||isTeamSwitched === false|| isTeamSwitched === undefined,
+      }"
+      @click="$emit('Switch-Team')"
+    >
+      <a>
+        <!-- <i class="fas fa-random"></i> -->
+        <i class="fas fa-sitemap" title="Switch To Another Team"></i>
+      </a>
     </li>
 
     
@@ -143,19 +173,19 @@
   </ul>
 </template>
 <script>
-import { GetAppStyleMode, SetAppStyleMode, WebAPI_Helper ,GetSettingFromSessionStorage,SaveSettingToSessionStorage } from "../common.js";
+import { GetAppStyleMode, SetAppStyleMode, WebAPI_Helper ,GetSettingFromLocalStorage,GetSettingFromSessionStorage,SaveSettingToSessionStorage } from "../common.js";
 import SearchCase from "../components/SearchCase";
 
 export default {
   name: "Nav",
-  props: ["filterApplied", "chartEnabled","showAllActions","chartFilter_Enabled","chart_Filters_Description"],
+  props: ["filterApplied","isTeamSwitched", "chartEnabled","showAllActions","chartFilter_Enabled","chart_Filters_Description","showIdleCasesOnly"],
 
   data() {
     return {
       isadministrator: false,
       userrole:1,
       teamname: "",
-      whoami: "",
+      currentuser: "",
       appstylemode: "",
       latestFreshTime:"",
    
@@ -184,18 +214,30 @@ export default {
 
   },
 
+  async updated(){
+    this.userrole= GetSettingFromSessionStorage("userrole") === null? await WebAPI_Helper("get","currentuserrole",null):parseInt(GetSettingFromSessionStorage("userrole")); 
+  },
+
   async created() {
 
-     this.latestFreshTime = await this.GetFreshTime();
+     //initialize whoami
+     if (GetSettingFromSessionStorage("whoami") !== null)
+        this.currentuser = GetSettingFromSessionStorage("whoami");
+      else {
+        const whoami = await this.fetch_reviewer();
+        SaveSettingToSessionStorage("whoami", whoami);
+        this.currentuser = whoami;
+      }
 
+    this.latestFreshTime = await this.GetFreshTime();
     // this.isadministrator = await WebAPI_Helper("get", "isadministrator", null);
        this.userrole= GetSettingFromSessionStorage("userrole") === null? await WebAPI_Helper("get","currentuserrole",null):parseInt(GetSettingFromSessionStorage("userrole")); 
        SaveSettingToSessionStorage("userrole",this.userrole);
    
+    this.appstylemode = GetAppStyleMode();   
+      
 
-    this.appstylemode = GetAppStyleMode();
-
-    this.whoami = GetSettingFromSessionStorage("whoami");
+   
   },
 
   components: {
@@ -214,7 +256,23 @@ export default {
     // },
 
     async GetFreshTime() {
-      return await WebAPI_Helper("get","latestfreshtime(case)");
+      let userrole = parseInt(GetSettingFromSessionStorage("userrole"));
+      if(userrole <2) {
+       return await WebAPI_Helper("get", "latestfreshtime/cachetype/case/teamoruser/"+this.currentuser , null);
+      }
+      else {
+
+      let cachedteamforservicetickets;
+      if(GetSettingFromLocalStorage("cachedteamforservicetickets") === null){
+        const setting = await WebAPI_Helper("get", "getsetting", null);
+        SaveSettingToSessionStorage("teammanagers_alias",setting.teammanagers_alias);
+        cachedteamforservicetickets = setting.teammanagers_alias.split(",")[0];
+      }  else {
+        cachedteamforservicetickets = GetSettingFromLocalStorage("cachedteamforservicetickets"); 
+      }   
+    
+      return await WebAPI_Helper("get","latestfreshtime/cachetype/case/teamoruser/"+cachedteamforservicetickets,null);
+    }
     },
 
     SwithTheme() {

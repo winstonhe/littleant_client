@@ -386,7 +386,7 @@ export default {
     },
 
     async GetFreshTime() {
-      return await WebAPI_Helper("get","latestfreshtime(dashboard)");
+      return await WebAPI_Helper("get","latestfreshtime/cachetype/dashboard/teamoruser/na");
     },
 
     async getteammembers(manager_alias) {
@@ -401,10 +401,10 @@ export default {
       this.showDialog = true;
     },
 
-    RefreshConfirmed() {
+    async RefreshConfirmed() {
       this.showDialog = false;
       // this.latestRefreshTime = new Date().toISOString().split("T")[1].slice(0, 8) + " UTC";
-      WebAPI_Helper("get", "cleancache(dashboard)", null);
+      await WebAPI_Helper("get", "cleancache/cachetype/dashboard/teamoruser/na", null);
       location.reload();
     },
 

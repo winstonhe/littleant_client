@@ -201,7 +201,7 @@ export default {
     },
 
     async GetFreshTime() {
-      return await WebAPI_Helper("get", "latestfreshtime(bookableresource)");
+      return await WebAPI_Helper("get", "latestfreshtime/cachetype/bookableresource/teamoruser/na");
     },
 
     Generate_Dataset_For_Charts(online, offline) {
@@ -242,9 +242,9 @@ export default {
       this.showDialog = true;
     },
 
-    RefreshConfirmed() {
+   async RefreshConfirmed() {
       this.showDialog = false;
-      WebAPI_Helper("get", "cleancache(bookableresource)", null);
+     await WebAPI_Helper("get", "cleancache/cachetype/bookableresource/teamoruser/na", null);
       location.reload();
     },
 

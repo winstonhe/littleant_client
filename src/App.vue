@@ -36,12 +36,8 @@ export default {
     
     this.userRole = await WebAPI_Helper("get", "currentuserrole", null);
 
-    if (window.location.href.length < 30) {
-     
-      if(this.userRole === 5 || this.userRole === 6) {
-         this.$router.push("groupassignment");
-      }
-      else     this.$router.push("dashboard");
+    if (window.location.href.length < 30) {     
+       this.$router.push("dashboard");
     }
 
      //this.$router.push("dashboard");

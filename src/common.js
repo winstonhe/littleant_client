@@ -16,7 +16,7 @@ let WebAPI_Helper = async (method, method_name, body) => {
 
   else { // POST
 
-     await fetch('api/' + method_name, {
+    await fetch('api/' + method_name, {
       'credential': 'include',
       method: 'POST',
       headers: {
@@ -27,7 +27,7 @@ let WebAPI_Helper = async (method, method_name, body) => {
     })
 
     //await res.json()
-   // return data
+    // return data
   }
 
 }
@@ -91,6 +91,11 @@ let Process_Country = (region) => {
     case "GH":
     case "GR":
     case "JP":
+    case "CR":
+    case "CO":
+    case "MX":
+    case "BR":
+    case "GT":
       return "<img src='../img/regions/" + region + ".png' :title=${region}></img>";
     default:
       return "<label style='color:white;background-color:#2196F3'>" + region + "</label>";
@@ -129,54 +134,54 @@ let Days_Diff = (start) => {
   return Math.abs(Math.ceil(difference / (1000 * 3600 * 24)));
 }
 
-let DataLabelFormatter =(value,ctx) => {
+let DataLabelFormatter = (value, ctx) => {
   let sum = 0;
   let dataArr = ctx.chart.data.datasets[0].data;
 
   dataArr.map(data => {
-      sum += data;
+    sum += data;
   });
 
-  let percentage = (value*100 / sum).toFixed(0);
- 
-  return  percentage >=8 ? percentage+"%":"";    
+  let percentage = (value * 100 / sum).toFixed(0);
+
+  return percentage >= 8 ? percentage + "%" : "";
 
 }
 
-let GetSettingFromLocalStorage =(setting_name) =>{
+let GetSettingFromLocalStorage = (setting_name) => {
 
-  return window.localStorage.getItem(setting_name); 
+  return window.localStorage.getItem(setting_name);
 
-  
+
 
 }
 
-let SaveSettingToLocalStorage =(setting_name,value) => {
+let SaveSettingToLocalStorage = (setting_name, value) => {
 
   window.localStorage.setItem(setting_name, value);
 
 }
 
-let GetSettingFromSessionStorage =(setting_name) =>{
+let GetSettingFromSessionStorage = (setting_name) => {
 
-  return window.sessionStorage.getItem(setting_name); 
+  return window.sessionStorage.getItem(setting_name);
 
-  
+
 
 }
 
-let SaveSettingToSessionStorage =(setting_name,value) => {
+let SaveSettingToSessionStorage = (setting_name, value) => {
 
   window.sessionStorage.setItem(setting_name, value);
 
 }
 
-let ClearSettingFromLocalStorage=(setting_name)=> {
+let ClearSettingFromLocalStorage = (setting_name) => {
   window.localStorage.removeItem(setting_name);
 }
 
 //Shuffle the array so that we will get top items randomly
-let  Shuffle = (backgroundColor_Array)=> {
+let Shuffle = (backgroundColor_Array) => {
   for (let i = backgroundColor_Array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [backgroundColor_Array[i], backgroundColor_Array[j]] = [
@@ -186,9 +191,9 @@ let  Shuffle = (backgroundColor_Array)=> {
   }
   return backgroundColor_Array;
 }
-   
-export { 
-  WebAPI_Helper, Process_Country, Sleep, SetAppStyleMode, GetAppStyleMode, Days_Diff ,
-  DataLabelFormatter,GetSettingFromLocalStorage,GetSettingFromSessionStorage,SaveSettingToSessionStorage,
-  SaveSettingToLocalStorage,ClearSettingFromLocalStorage,Shuffle
+
+export {
+  WebAPI_Helper, Process_Country, Sleep, SetAppStyleMode, GetAppStyleMode, Days_Diff,
+  DataLabelFormatter, GetSettingFromLocalStorage, GetSettingFromSessionStorage, SaveSettingToSessionStorage,
+  SaveSettingToLocalStorage, ClearSettingFromLocalStorage, Shuffle
 }
