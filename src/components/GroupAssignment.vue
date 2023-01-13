@@ -245,6 +245,29 @@ export default {
       //to store the assignmen count after cleanup
       assignment_number_after_cleanup: 0,
 
+      //generated background colors for PODs
+      genereated_backgourndcolors_for_pods:{},
+
+      //backgorund color buffers
+      backgroundColor_buffer : [
+        "#1f7115",
+        "#e28743",
+        "#873e23",
+        "#76b5c5",
+        "#7943e2",
+        "#063970",
+        "#880e4f",
+        "#2596be",
+        "#be4d25",
+        "#e243bb",
+        "#11381a",
+        "#e2b943",
+        "#e2435c",
+        "#301b5a",
+        "#eb7bb6",
+      ],
+
+
       //dataset for barchat of assignment
       dataset_chart_bar_assignment: {
         labels: [],
@@ -570,7 +593,37 @@ export default {
         Number_pod: Number_pod,
       };
     },
+  
+    //Generate the background color based on POD name
+    Generate_backgroundColors_for_Pods(labels_pod) {
+      let backgroundColor_pod = [];
+      labels_pod.forEach((pod,index) =>{
+        // check if the pod color exists or not.
+        if(this.genereated_backgourndcolors_for_pods[pod] !== undefined) { //exists already
+          backgroundColor_pod[index] =  this.genereated_backgourndcolors_for_pods[pod];
+        } else { // didn't exists , then get a random one
+         let pod_color = Shuffle(this.backgroundColor_buffer).slice(0,1)[0];
+         backgroundColor_pod[index] =  pod_color;
 
+         console.log(pod_color);
+         console.log(pod);
+
+         //update this.genereated_backgourndcolors_for_pods[pod]
+         this.genereated_backgourndcolors_for_pods[pod]=pod_color;
+         
+         //remove current color from buffer to avoid being selected again.
+         this.backgroundColor_buffer = this.backgroundColor_buffer.filter(color =>
+            color !== pod_color
+         )
+
+         console.log(this.backgroundColor_buffer);
+        }      
+      })
+
+      return  backgroundColor_pod;
+      
+    }
+    ,
     Generate_Dataset_For_Charts(assignments, manager_alias, engineers) {
       //background Color buffer which will be used by all charts.
       const backgroundColor_buffer = [
@@ -712,10 +765,12 @@ export default {
 
       //Initial stacked dataset.
       let backgroundColor_pod = [];
-      backgroundColor_pod = Shuffle(backgroundColor_buffer).slice(
-        0,
-        labels_pod.length
-      );
+      // backgroundColor_pod = Shuffle(backgroundColor_buffer).slice(
+      //   0,
+      //   labels_pod.length
+      // );
+
+      backgroundColor_pod = this.Generate_backgroundColors_for_Pods(labels_pod);
 
       let stacked_dataset_chart_bar = [];
 
