@@ -605,18 +605,15 @@ export default {
          let pod_color = Shuffle(this.backgroundColor_buffer).slice(0,1)[0];
          backgroundColor_pod[index] =  pod_color;
 
-         console.log(pod_color);
-         console.log(pod);
-
+        
          //update this.genereated_backgourndcolors_for_pods[pod]
          this.genereated_backgourndcolors_for_pods[pod]=pod_color;
-         
+
          //remove current color from buffer to avoid being selected again.
          this.backgroundColor_buffer = this.backgroundColor_buffer.filter(color =>
             color !== pod_color
          )
 
-         console.log(this.backgroundColor_buffer);
         }      
       })
 
