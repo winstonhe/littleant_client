@@ -150,7 +150,7 @@
         <div v-show="data.totalAssignment_count != 0">
           <ChartStackedBarByEngineer
             :chartData="data.DSBarAssignment"
-            :height="146.5"
+            :height="230"
           ></ChartStackedBarByEngineer>
           <ChartPieByPod
             :chartData="data.DSPiePod"
@@ -169,6 +169,10 @@
             :chartData="data.DSPieAssignmentMethod"
             :height="70.99"
           ></ChartPieByAssignmentMethod>
+          <ChartPieByProgramType
+            :chartData="data.DSPieProgramType"
+            :height="70.99"
+          ></ChartPieByProgramType>
         </div>
 
         <div style="clear: both"></div>
@@ -195,6 +199,7 @@ import ChartPieByRegion from "./ChartPieByRegion.vue";
 import ChartPieByBandwidth from "./ChartPieByBandwidth.vue";
 import ChartStackedBarByEngineer from "./ChartStackedBarByEngineer";
 import ChartPieByAssignmentMethod from "./ChartPieByAssignmentMethod";
+import ChartPieByProgramType from "./ChartPieByProgramType";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
 
 import Footer from "../components/layout/Footer";
@@ -212,6 +217,7 @@ export default {
     ChartPieByBandwidth,
     ChartStackedBarByEngineer,
     ChartPieByAssignmentMethod,
+    ChartPieByProgramType,
     SiteNav,
     RefreshConfirmationModal,
     LoadingModal,
@@ -244,6 +250,9 @@ export default {
 
       //to store the assignmen count after cleanup
       assignment_number_after_cleanup: 0,
+
+          //generated background colors for regions
+          genereated_backgourndcolors_for_regions:{},
 
       //generated background colors for PODs
       genereated_backgourndcolors_for_pods:{},
@@ -323,6 +332,18 @@ export default {
           },
         ],
       },
+
+      //dataset for piechar by assignment method
+      dataset_chart_pie_by_programtype: {
+        labels: [],
+        datasets: [
+          {
+            data: [],
+            backgroundColor: [],
+          },
+        ],
+      },
+
     };
   },
   beforeUnmount() {
@@ -475,7 +496,8 @@ export default {
           DSPiePod: this.dataset_chart_pie_by_pod,
           DSPieRegion: this.dataset_chart_pie_by_region,
           DSPieAssignmentMethod: this.dataset_chart_pie_by_assignmentmethod,
-          totalAssignment_count: this.assignment_number_after_cleanup, //this.assignment_teams[i].assignments.length,
+          DSPieProgramType: this.dataset_chart_pie_by_programtype,
+          totalAssignment_count: this.assignment_number_after_cleanup,
         };
 
         this.analyzed_ds_teams = [...this.analyzed_ds_teams, data_point];
@@ -619,31 +641,38 @@ export default {
 
       return  backgroundColor_pod;
       
+    },
+
+    Generate_backgroundColors_for_Regions(labels_region) {
+      let backgroundColor_region = [];
+      labels_region.forEach((region,index) =>{
+        // check if the pod color exists or not.
+        if(this.genereated_backgourndcolors_for_regions[region] !== undefined) { //exists already
+          backgroundColor_region[index] =  this.genereated_backgourndcolors_for_regions[region];
+        } else { // didn't exists , then get a random one
+         let randomColor = "#"+Math.floor(Math.random()*16777215).toString(16);
+         backgroundColor_region[index] =  randomColor;
+
+        
+         //update this.genereated_backgourndcolors_for_regions[pod]
+         this.genereated_backgourndcolors_for_regions[region]=randomColor;        
+
+        }      
+      })
+
+      return  backgroundColor_region;
+      
     }
     ,
     Generate_Dataset_For_Charts(assignments, manager_alias, engineers) {
-      //background Color buffer which will be used by all charts.
-      const backgroundColor_buffer = [
-        "#1f7115",
-        "#e28743",
-        "#873e23",
-        "#76b5c5",
-        "#7943e2",
-        "#063970",
-        "#880e4f",
-        "#2596be",
-        "#be4d25",
-        "#e243bb",
-        "#11381a",
-        "#e2b943",
-        "#e2435c",
-        "#301b5a",
-        "#eb7bb6",
-      ];
-
+     
       // Variables for piechart by pod
       let labels_pod = [];
       let Number_pod = []; // An array to store the number of each pod
+
+       // Variables for piechart by program
+       let labels_programtype = ["S500","None"];
+      let Number_programtype = [0,0]; // An array to store the number of each program
 
       //Variables for piechart by region
       let labels_region = [];
@@ -755,10 +784,12 @@ export default {
      } else {
         backgroundColor_assignmentmothod = ["#2596be"];
      }
-      // backgroundColor_assignmentmothod = Shuffle(backgroundColor_buffer).slice(
-      //   0,
-      //   labels_assignmentmethod.length
-      // );
+  
+     
+      //initial background color for assignmnet mthod
+      let backgroundColor_programtype = [];    
+      backgroundColor_programtype = ["#873e23","darkgray"];   
+  
 
       //Initial stacked dataset.
       let backgroundColor_pod = [];
@@ -812,6 +843,12 @@ export default {
           temp_index !== -1 ? temp_index : labels_pod.indexOf("Unknown");
         Number_pod[pod_index] += 1; //increase the number of corresponding pod
 
+         //Search the labels of programtype, and increase the number if matched.
+         let item_programtype = assignment.programType;        
+        let programtype_index = labels_programtype.indexOf(item_programtype);        
+        Number_programtype[programtype_index] += 1; //increase the number of corresponding programtype
+
+
         //Search the labels of region, and increase the number if matched.
         let item_region = assignment.sr_regioncode;
         temp_index = labels_region.indexOf(item_region);
@@ -848,12 +885,7 @@ export default {
       this.dataset_chart_pie_by_pod.labels = labels_pod_shortened;
       //end
 
-      //generate dataset for pie chart by bandwidth
-      // let backgroundColor_bandwidth = [];
-      // backgroundColor_bandwidth = Shuffle(backgroundColor_buffer).slice(
-      //   0,
-      //   labels_bandwidth.length
-      // );
+      //generate dataset for pie chart by bandwidth    
       let backgroundColor_bandwidth=["darkgray","green"];
       let dataitem_bandwidth = [];
       let datasets_bandwidth = [];
@@ -868,10 +900,13 @@ export default {
 
       //generate dataset for pie chart by region
       let backgroundColor_region = [];
-      backgroundColor_region = Shuffle(backgroundColor_buffer).slice(
-        0,
-        labels_region.length
-      );
+      // backgroundColor_region = Shuffle(backgroundColor_buffer).slice(
+      //   0,
+      //   labels_region.length
+      // );
+
+      backgroundColor_region = this.Generate_backgroundColors_for_Regions(labels_region);
+
       let dataitem_region = [];
       let datasets_region = [];
 
@@ -883,12 +918,7 @@ export default {
       this.dataset_chart_pie_by_region.labels = labels_region;
       //end
 
-      //generate dataset for pie chart by assignmethod
-      // let backgroundColor_assignmentmothod = [];
-      // backgroundColor_assignmentmothod = Shuffle(backgroundColor_buffer).slice(
-      //   0,
-      //   labels_assignmentmethod.length
-      // );
+      //generate dataset for pie chart by assignmethod    
       let dataitem_assignmentmethod = [];
       let datasets_assignmentmethod = [];
 
@@ -904,6 +934,26 @@ export default {
         datasets_assignmentmethod;
       this.dataset_chart_pie_by_assignmentmethod.labels =
         labels_assignmentmethod;
+      //end
+
+      //generate dataset for pie chart by program type    
+      let dataitem_programtype = [];
+      let datasets_programtype = [];
+
+      dataitem_programtype.data = Number_programtype;
+      dataitem_programtype.backgroundColor =
+        backgroundColor_programtype;
+
+      datasets_programtype = [
+        ...datasets_programtype,
+        dataitem_programtype,
+      ];
+      this.dataset_chart_pie_by_programtype.datasets =
+        datasets_programtype;
+      this.dataset_chart_pie_by_programtype.labels =
+        labels_programtype;
+
+       // console.log(datasets_programtype)
       //end
     },
 
@@ -963,6 +1013,18 @@ export default {
           },
         ],
       };
+
+      //dataset for piechar by programtype
+       this.dataset_chart_pie_by_programtype = {
+        labels: [],
+        datasets: [
+          {
+            data: [],
+            backgroundColor: [],
+          },
+        ],
+      };
+
     },
   },
 };

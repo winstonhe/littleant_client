@@ -32,7 +32,7 @@ import {
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale);
 
 export default {
-  name: "ChartPieByAssignmentMethod",
+  name: "ChartPieByProgramType",
   components: { Doughnut },
   props: {
     chartId: {
@@ -97,7 +97,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: ["Assignment By Method"],
+            text: ["Distribution By Program"],
           },
 
           legend: {

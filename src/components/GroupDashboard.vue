@@ -190,6 +190,56 @@ export default {
 
       showdetailsPanelofGroupDashboard: "false",
 
+      //generated background colors for regions
+      generated_backgourndcolors_for_regions:{},
+
+       //generated background colors for regions
+       generated_backgourndcolors_for_status:{},
+         //backgorund color buffers for status
+      backgroundColor_buffer_for_status : [
+        "#1f7115",
+        "#e28743",
+        "#873e23",
+        "#76b5c5",    
+        "#063970",
+        "#880e4f",
+        "#2596be",
+        "#be4d25",
+        "#e243bb",
+        "#11381a",
+        "#e2b943",
+        "#e2435c",
+        "#301b5a",
+        "#eb7bb6",
+        "#439A97",
+        "#97DECE",
+        "#CBEDD5"
+      ],
+       //generated background colors for PODs
+       generated_backgourndcolors_for_pods:{},     
+
+      //backgorund color buffers
+      backgroundColor_buffer : [
+        "#1f7115",
+        "#e28743",
+        "#873e23",
+        "#76b5c5",
+        "#7943e2",
+        "#063970",
+        "#880e4f",
+        "#2596be",
+        "#be4d25",
+        "#e243bb",
+        "#11381a",
+        "#e2b943",
+        "#e2435c",
+        "#301b5a",
+        "#eb7bb6",
+        "#439A97",
+        "#97DECE",
+        "#CBEDD5"
+      ],
+
       //dataset for charts
       dataset_chart_bubble: {
         datasets: [],
@@ -656,6 +706,64 @@ export default {
       };
     },
 
+      //Generate the background color based on POD name
+      Generate_backgroundColors_basedon_labels(backgroundColor_buffer,generated_backgourndcolors,labels) {
+      let backgroundColors = [];
+      labels.forEach((label,index) =>{
+        // check if the pod color exists or not.
+        if(generated_backgourndcolors[label] !== undefined) { //exists already
+          backgroundColors[index] =  generated_backgourndcolors[label];
+        } else { // didn't exists , then get a random one
+        
+
+         let item_color 
+         if(backgroundColor_buffer.length>0) {
+          item_color= Shuffle(backgroundColor_buffer).slice(0,1)[0];
+
+           //remove current color from buffer to avoid being selected again.
+         backgroundColor_buffer = backgroundColor_buffer.filter(color =>
+            color !== item_color
+         )
+         }
+         else { // no available pool
+          item_color = "#"+Math.floor(Math.random()*16777215).toString(16);
+         }
+
+         backgroundColors[index] =  item_color;          
+       
+        
+         //update this.genereated_backgourndcolors_for_pods[pod]
+         generated_backgourndcolors[label]=item_color;        
+
+        }      
+      })
+
+      return  backgroundColors;
+      
+    },
+
+    Generate_backgroundColors_for_Regions(labels_region) {
+      let backgroundColor_region = [];
+      labels_region.forEach((region,index) =>{
+        // check if the pod color exists or not.
+        if(this.genereated_backgourndcolors_for_regions[region] !== undefined) { //exists already
+          backgroundColor_region[index] =  this.genereated_backgourndcolors_for_regions[region];
+        } else { // didn't exists , then get a random one
+         let randomColor = "#"+Math.floor(Math.random()*16777215).toString(16);
+         backgroundColor_region[index] =  randomColor;
+
+        
+         //update this.genereated_backgourndcolors_for_regions[pod]
+         this.genereated_backgourndcolors_for_regions[region]=randomColor;        
+
+        }      
+      })
+
+      return  backgroundColor_region;
+      
+    }
+    ,
+
    async Generate_Dataset_For_Charts(servicetickets, team_manager) {
       // Variables for piechart of icm status
       let Number_IcMRaised = 0;
@@ -837,23 +945,27 @@ export default {
       this.dataset_chart_bubble.datasets = dataset_for_bubble_chart;
 
       //background Color buffer which will be used by all charts.
-      const backgroundColor_buffer = [
-        "#1f7115",
-        "#e28743",
-        "#873e23",
-        "#76b5c5",
-        "#7943e2",
-        "#063970",
-        "#880e4f",
-        "#2596be",
-        "#be4d25",
-        "#e243bb",
-        "#11381a",
-        "#e2b943",
-        "#e2435c",
-        "#301b5a",
-        "#eb7bb6",
-      ];
+      // const backgroundColor_buffer = [
+      //   "#1f7115",
+      //   "#e28743",
+      //   "#873e23",
+      //   "#76b5c5",
+      //   "#7943e2",
+      //   "#063970",
+      //   "#880e4f",
+      //   "#2596be",
+      //   "#be4d25",
+      //   "#e243bb",
+      //   "#11381a",
+      //   "#e2b943",
+      //   "#e2435c",
+      //   "#301b5a",
+      //   "#eb7bb6",
+      //   "#FF6E31",
+      //   "#AD8E70",
+      //   "#FFBF00",
+      //   "#540375"
+      // ];
 
       //generate dataset for pie chart by icm
       let data_icm = [];
@@ -884,10 +996,12 @@ export default {
 
       //generate dataset for pie chart by pod
       let backgroundColor_pod = [];
-      backgroundColor_pod = Shuffle(backgroundColor_buffer).slice(
-        0,
-        labels_pod.length
-      );
+      // backgroundColor_pod = Shuffle(backgroundColor_buffer).slice(
+      //   0,
+      //   labels_pod.length
+      // );
+
+      backgroundColor_pod = this.Generate_backgroundColors_basedon_labels(this.backgroundColor_buffer,this.generated_backgourndcolors_for_pods,labels_pod);
 
       let dataitem_pod = [];
       let datasets_pod = [];
@@ -908,10 +1022,11 @@ export default {
 
       //generate dataset for pie chart by region
       let backgroundColor_region = [];
-      backgroundColor_region = Shuffle(backgroundColor_buffer).slice(
-        0,
-        labels_region.length
-      );
+      // backgroundColor_region = Shuffle(backgroundColor_buffer).slice(
+      //   0,
+      //   labels_region.length
+      // );
+      backgroundColor_region = this.Generate_backgroundColors_basedon_labels([],this.generated_backgourndcolors_for_regions,labels_region);
       let dataitem_region = [];
       let datasets_region = [];
 
@@ -955,10 +1070,12 @@ export default {
       let datasets = [];
       let dataitem = {};
 
-      backgroundColor_status = Shuffle(backgroundColor_buffer).slice(
-        0,
-        labels_status.length
-      );
+      // backgroundColor_status = Shuffle(backgroundColor_buffer).slice(
+      //   0,
+      //   labels_status.length
+      // );
+
+      backgroundColor_status = this.Generate_backgroundColors_basedon_labels(this.backgroundColor_buffer_for_status, this.generated_backgourndcolors_for_status, labels_status);
       dataitem.data = Number_status;
       dataitem.backgroundColor = backgroundColor_status;
       datasets = [...datasets, dataitem];

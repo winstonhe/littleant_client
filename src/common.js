@@ -32,6 +32,9 @@ let WebAPI_Helper = async (method, method_name, body) => {
 
 }
 
+
+
+
 let Process_Country = (region) => {
   switch (region) {
     case "SG":
@@ -195,5 +198,5 @@ let Shuffle = (backgroundColor_Array) => {
 export {
   WebAPI_Helper, Process_Country, Sleep, SetAppStyleMode, GetAppStyleMode, Days_Diff,
   DataLabelFormatter, GetSettingFromLocalStorage, GetSettingFromSessionStorage, SaveSettingToSessionStorage,
-  SaveSettingToLocalStorage, ClearSettingFromLocalStorage, Shuffle
+  SaveSettingToLocalStorage, ClearSettingFromLocalStorage, Shuffle,
 }
