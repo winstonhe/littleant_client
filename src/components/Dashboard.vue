@@ -113,6 +113,7 @@
         :DSPie="dataset_chart_pie_by_status"
         :DSPieIcM="dataset_chart_pie_by_icm"
         :DSPiePod="dataset_chart_pie_by_pod"
+        :DSPieProgramType="dataset_chart_pie_by_programtype"
         :DSPieRegion="dataset_chart_pie_by_region"
         v-show="chartEnabled === 'true'"
         @DownLoad_Chart="DownloadChart"
@@ -406,6 +407,18 @@ export default {
           },
         ],
       },
+
+      //dataset for piechar by program type
+      dataset_chart_pie_by_programtype: {
+        labels: [],
+        datasets: [
+          {
+            data: [],
+            backgroundColor: [],
+          },
+        ],
+      },
+
 
       //dataset for piechar by region
       dataset_chart_pie_by_region: {
@@ -845,6 +858,11 @@ export default {
       let labels_pod = [];
       let Number_pod = []; // An array to store the number of each pod
 
+      // Variables for piechart by program
+      let labels_programtype = ["S500","None"];
+      let Number_programtype = [0,0]; // An array to store the number of each program
+
+
       // Variables for piechart by status
       let labels_status = [];
       let Number_status = [];
@@ -938,6 +956,7 @@ export default {
         let status = serviceticket.sr_status;
         let sr_icm = serviceticket.sr_icm;
         let sr_record_guid = serviceticket.sr_record_guid;
+        let programType=serviceticket.programType;
 
         //generate dataset for bubble chart
         let data_point = {
@@ -978,6 +997,11 @@ export default {
         //Search the labels of icm, and increase the number if matched.
         if (sr_icm !== null) Number_IcMRaised += 1;
         else Number_NoIcM += 1;
+
+         //Search the labels of programtype, and increase the number if matched.
+         temp_index = labels_programtype.indexOf(programType)
+         if (temp_index!== -1) Number_programtype[temp_index] += 1;
+        
 
         //Search the labels of pod, and increase the number if matched.
         let item_pod = serviceticket.sr_support_pod;
@@ -1043,6 +1067,8 @@ export default {
 
       background_icm = ["#880e4f", "darkgray"];
 
+    
+
       dataitem_icm.data = data_icm;
       dataitem_icm.backgroundColor = background_icm;
       datasets_icm = [...datasets_icm, dataitem_icm];
@@ -1073,6 +1099,22 @@ export default {
       });
 
       this.dataset_chart_pie_by_pod.labels = labels_pod_shortened;
+      //end
+
+      //generate dataset for pie chart by programtype
+        //initial background color for programtype
+      let backgroundColor_programtype = [];    
+      backgroundColor_programtype = ["#873e23","darkgray"];           
+
+      let dataitem_programtype = [];
+      let datasets_programtype = [];
+
+      dataitem_programtype.data = Number_programtype;
+      dataitem_programtype.backgroundColor = backgroundColor_programtype;
+
+      datasets_programtype = [...datasets_programtype, dataitem_programtype];
+      this.dataset_chart_pie_by_programtype.datasets = datasets_programtype;   
+      this.dataset_chart_pie_by_programtype.labels = labels_programtype;
       //end
 
       //generate dataset for pie chart by region
@@ -1398,6 +1440,7 @@ export default {
 
       let servicetickets_filteredfromchart = [];
       let filter;
+      //console.log(value);
       switch (parameter) {
         case "ICM":
           if (value === "Cases with IcM Raised") {
@@ -1436,6 +1479,15 @@ export default {
 
           servicetickets_filteredfromchart = this.servicetickets.filter(
             (ticket) => ticket.sr_status.startsWith(value)
+          );
+          break;
+        
+        case "PROGRAMTYPE":
+          filter = "programtype eq '" + value + "'";
+         
+
+          servicetickets_filteredfromchart = this.servicetickets.filter(
+            (ticket) => ticket.programType.startsWith(value)
           );
 
           break;
@@ -1477,8 +1529,8 @@ export default {
       this.Refresh_Summary();
       this.Generate_Dataset_For_Charts();
 
-         //refresh action cards
-         this.Generate_Actions(this.servicetickets);
+      //refresh action cards
+      this.Generate_Actions(this.servicetickets);
     },
 
     Close_EngineerFitler_Modal() {

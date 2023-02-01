@@ -1,6 +1,6 @@
 <template>
   <div
-    style="float: left; background-color: lightgray; margin: 2px; width: 14.6%"
+    style="float: left; background-color: lightgray; margin: 2px; width: 12%"
   >
     <Doughnut
       :chart-options="chartOptions"
@@ -70,7 +70,16 @@ export default {
     
   },
 
-  methods: {    
+  methods: {  
+    Filter_ServiceTickets_FromChart(evt, item) {    
+
+     // get the selected label which will be conditiion to filter
+       if(this.$props.chartData.labels.length==1) return; // only one label, then do nothing
+      let selectedIndex=item[0].index;
+      let selectedLabel= this.$props.chartData.labels[selectedIndex] 
+      this.$emit("E_FilterServiceTicketsFromChart", "PROGRAMTYPE", selectedLabel);    
+  
+    },  
   },
 
   data() {
@@ -78,7 +87,8 @@ export default {
     // store the orginal background color
       original_backgroundColor:"",
       chartOptions: {
-        responsive: true,       
+        responsive: true,  
+        onClick: this.Filter_ServiceTickets_FromChart, 
         layout: {
           padding: 10,
         },

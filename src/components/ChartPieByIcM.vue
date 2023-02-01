@@ -1,6 +1,6 @@
 <template>
   <div
-    style="float: left; background-color: lightgray; margin: 2px; width: 14.6%"
+    style="float: left; background-color: lightgray; margin: 2px; width: 12%"
   >
     <Doughnut
       :chart-options="chartOptions"

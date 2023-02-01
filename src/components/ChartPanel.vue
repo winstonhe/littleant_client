@@ -1,8 +1,9 @@
 <template>
     <div id="chart_container" style="float:left;width:100%; margin-bottom:2px">      
-        <ChartBubble :chartData="DSBubble" :height="146.5" v-on:E_FilterServiceTicketsFromChart="Filter_ServiceTickets_FromChart"></ChartBubble>
+        <ChartBubble :chartData="DSBubble" :width_param="38.4"  :height="125" v-on:E_FilterServiceTicketsFromChart="Filter_ServiceTickets_FromChart"></ChartBubble>
         <ChartPieByPod :chartData="DSPiePod" :height="70.99"  v-on:E_FilterServiceTicketsFromChart="Filter_ServiceTickets_FromChart"></ChartPieByPod>
         <ChartPieByRegion :chartData="DSPieRegion" :height="70.99" v-on:E_FilterServiceTicketsFromChart="Filter_ServiceTickets_FromChart"></ChartPieByRegion>
+        <ChartPieByProgramType :chartData="DSPieProgramType" :height="70.99" v-on:E_FilterServiceTicketsFromChart="Filter_ServiceTickets_FromChart"></ChartPieByProgramType>
         <ChartPieByStatus :chartData="DSPie" :height="70.99" v-on:E_FilterServiceTicketsFromChart="Filter_ServiceTickets_FromChart"></ChartPieByStatus>   
         <ChartPieByIcM :chartData="DSPieIcM" :height="70.99"  v-on:E_FilterServiceTicketsFromChart="Filter_ServiceTickets_FromChart"></ChartPieByIcM>
         <!-- <div v-show="Downloading === 'false'">
@@ -25,16 +26,18 @@ import ChartPieByStatus from '../components/ChartPieByStatus.vue'
 import ChartPieByIcM from '../components/ChartPieByIcM.vue'
 import ChartPieByPod from '../components/ChartPieByPod.vue'
 import ChartPieByRegion from '../components/ChartPieByRegion.vue'
+import ChartPieByProgramType from '../components/ChartPieByProgramType.vue'
 
 export default {
     name: "ChartPanel",
-    props: ["DSBubble","DSPie","DSPieIcM","DSPiePod","DSPieRegion","Downloading"],   
+    props: ["DSBubble","DSPie","DSPieIcM","DSPiePod","DSPieRegion","DSPieProgramType","Downloading"],   
     components:{
         ChartBubble,
         ChartPieByStatus,
         ChartPieByIcM,
         ChartPieByPod,
-        ChartPieByRegion
+        ChartPieByRegion,
+        ChartPieByProgramType
     },
 
     // data(){

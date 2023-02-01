@@ -4,7 +4,7 @@
       float: left;
       background-color: lightgray;
       margin: 2px;
-      width: 25.4%;
+      width: 38.4%;
       height: 8%;
     "
   >

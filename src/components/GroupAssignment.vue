@@ -150,29 +150,31 @@
         <div v-show="data.totalAssignment_count != 0">
           <ChartStackedBarByEngineer
             :chartData="data.DSBarAssignment"
-            :height="230"
+            :height="125"
           ></ChartStackedBarByEngineer>
           <ChartPieByPod
             :chartData="data.DSPiePod"
             :height="70.99"
-          ></ChartPieByPod>
-          <ChartPieByBandwidth
-            :chartData="data.DSPieBandwidth"
-            :height="70.99"
-          ></ChartPieByBandwidth>
+          ></ChartPieByPod>        
 
           <ChartPieByRegion
             :chartData="data.DSPieRegion"
             :height="70.99"
           ></ChartPieByRegion>
-          <ChartPieByAssignmentMethod
-            :chartData="data.DSPieAssignmentMethod"
-            :height="70.99"
-          ></ChartPieByAssignmentMethod>
           <ChartPieByProgramType
             :chartData="data.DSPieProgramType"
             :height="70.99"
           ></ChartPieByProgramType>
+          <ChartPieByBandwidth
+            :chartData="data.DSPieBandwidth"
+            :height="70.99"
+          ></ChartPieByBandwidth>
+          <ChartPieByAssignmentMethod
+            :chartData="data.DSPieAssignmentMethod"
+            :height="70.99"
+          ></ChartPieByAssignmentMethod>
+         
+          
         </div>
 
         <div style="clear: both"></div>
@@ -678,7 +680,7 @@ export default {
       let labels_region = [];
       let Number_region = []; // An array to store the number of each region
 
-      //Variables for piechart by region
+      //Variables for piechart by assignmentmethod
       let labels_assignmentmethod = [];
       let Number_assignmentmethod = []; // An array to store the number of each assignmentmethod
 
@@ -786,7 +788,7 @@ export default {
      }
   
      
-      //initial background color for assignmnet mthod
+      //initial background color for programtype
       let backgroundColor_programtype = [];    
       backgroundColor_programtype = ["#873e23","darkgray"];   
   

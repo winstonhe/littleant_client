@@ -112,7 +112,8 @@
         <ChartBarByEngineer
           :title="`Backlog By Engineer`"
           :chartData="data.DSBarBacklog"
-          :height="146.5"
+          :width_param="50.4"
+          :height="95.99"
         ></ChartBarByEngineer>
         <ChartPieByPod
           :chartData="data.DSPiePod"
