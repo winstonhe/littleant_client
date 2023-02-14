@@ -370,6 +370,9 @@ export default {
       //Hovered on cases
       hovered: false,
 
+      //AutoSnapshotTimeInternal
+      autosnapshottimeinterval: 0,
+
       //dataset for charts
       dataset_chart_bubble: {
         datasets: [],
@@ -579,6 +582,26 @@ export default {
       //this.Init();
     },
 
+    async AutoSnapshotCreation() {    
+        if (this.userrole < 2) return; // snapshot creation appliable for TA or above role.
+        let Now = new Date();
+        if((Now.getHours()>=17 && Now.getHours()<18) || Now.getHours()>=12 && Now.getHours()<13 ) { // create snapshot during 11AM and 12:00PM , 5:00 PM and 6:00 PM local time.
+          let latestSnapshotCreatedOn =  GetSettingFromLocalStorage("latestSnapshotCreatedOn");
+          
+          if(latestSnapshotCreatedOn !== null && latestSnapshotCreatedOn == Now.getDate()) { // created alerady, just return
+              return ;
+          }
+          else {
+            SaveSettingToLocalStorage("latestSnapshotCreatedOn", Now.getDate());
+            this.SnapshotConfirmed();
+          }
+
+
+        }
+
+    },
+
+
     async SnapshotConfirmed() {
       let today = new Date();
       let month = new Date().getMonth() + 1;
@@ -600,14 +623,15 @@ export default {
       );
       this.processingforsnapshot = true;
 
-      //clean cache
-      //await WebAPI_Helper("get", "cleancache(case)", null);
-
+    
       //  const whoami = GetSettingFromSessionStorage("whoami");
       let manager_alias =
         GetSettingFromLocalStorage("cachedteamforservicetickets") === null
           ? GetSettingFromSessionStorage("teammanagers_alias").split(",")[0]
           : GetSettingFromLocalStorage("cachedteamforservicetickets");
+
+            //clean cache of case backlog
+      await WebAPI_Helper("get", "cleancache/cachetype/case/teamoruser/"+manager_alias, null);    
 
       // retrieve today's assignment
       let assignments = await this.RetrieveAssignment(manager_alias);
@@ -708,9 +732,10 @@ export default {
       this.processingforsnapshot = false;
       this.messageforsnapshot =
         "Are you sure to create team operation snapshot of today now ?  You can create today's snapshot for multiples times within one day.";
-
+      
+     
       //reload the page
-      // location.reload();
+      location.reload();
     },
 
     CreateSnapshot() {
@@ -1055,8 +1080,8 @@ export default {
       let dataitem_icm = {};
 
       this.dataset_chart_pie_by_icm.labels = [
-        "Cases with IcM Raised",
-        "Cases without IcM",
+        "IcM Raised",
+        "No IcM",
       ];
 
       data_icm = [Number_IcMRaised, Number_NoIcM];
@@ -2045,7 +2070,14 @@ export default {
 
       // Data Loaded completely, loading image hidden now.
       this.loaded = true;
+
+      //register the task of auto snapshot creation
+      this.autosnapshottimeinterval = setInterval(this.AutoSnapshotCreation, 15*60*1000); // check task for each 15 mins.
     },
+  },
+
+  beforeUnmount() {
+    clearInterval(this.autosnapshottimeinterval);
   },
 
   async created() {

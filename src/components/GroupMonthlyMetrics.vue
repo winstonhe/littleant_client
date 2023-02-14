@@ -232,6 +232,9 @@ export default {
       //dataset after analysis
       analyzed_ds_teams: [],
 
+      //background color for metrics
+      backgroundColor_metrics:[],
+
       //dataset for barchat of assignment
       dataset_chart_bar_monthly_metrics: {
         labels: [],
@@ -303,6 +306,27 @@ export default {
     }
 
     //Analyze the assignment of each team
+
+    const backgroundColor_buffer = [
+        "#1f7115",
+        "#e28743",
+        "#873e23",
+        "#76b5c5",
+        "#7943e2",
+        "#063970",
+        "#880e4f",
+        "#2596be",
+        "#be4d25",
+        "#e243bb",
+        "#11381a",
+        "#e2b943",
+        "#e2435c",
+        "#301b5a",
+        "#eb7bb6",
+      ];
+
+    this.backgroundColor_metrics=Shuffle(backgroundColor_buffer, 0, 2);
+
     for (let i = 0; i < this.montlymetrics_teams.length; i++) {
       let engineers =[];
       if( GetSettingFromSessionStorage(this.montlymetrics_teams[i].manager)!==null) {
@@ -315,6 +339,8 @@ export default {
           engineers
         );
       }
+
+
 
       this.Generate_Dataset_For_Charts(this.montlymetrics_teams[i].metricses);
 
@@ -404,30 +430,15 @@ export default {
 
     Generate_Dataset_For_Charts(metricses) {
       //background Color buffer which will be used by all charts.
-      const backgroundColor_buffer = [
-        "#1f7115",
-        "#e28743",
-        "#873e23",
-        "#76b5c5",
-        "#7943e2",
-        "#063970",
-        "#880e4f",
-        "#2596be",
-        "#be4d25",
-        "#e243bb",
-        "#11381a",
-        "#e2b943",
-        "#e2435c",
-        "#301b5a",
-        "#eb7bb6",
-      ];
-
+    
       //stacked starts
 
       //sort the metrics
       metricses = metricses.sort((a, b) => a.cases_closed - b.cases_closed);
 
       let labels_engineers_alias = [];
+      let backgroundColor_metrics = this.backgroundColor_metrics;
+      
       metricses.forEach((metrics) => {
         let engeineer_alias = metrics.engineer_alias;
         labels_engineers_alias.push(engeineer_alias);
@@ -438,7 +449,7 @@ export default {
       let stacked_dataset_chart_bar_index = [];
 
       //labels_engineers_alias.forEach((metrices)=>{
-      let backgroundColor_metrics=Shuffle(backgroundColor_buffer, 0, 2);
+    
       let dataset_item_cases_assigned = {
         label: "Cases Assigned",
         backgroundColor: backgroundColor_metrics[0],

@@ -158,7 +158,7 @@
     <div v-show="showChart" style="margin-top: 5px">
       <ChartStackedBarByEngineer
         :chartData="dataset_chart_bar_assignment"
-        :height="146.5"
+        :height="125"
       ></ChartStackedBarByEngineer>
       <ChartPieByPod
         :chartData="dataset_chart_pie_by_pod"

@@ -259,6 +259,7 @@ export default {
       //generated background colors for PODs
       genereated_backgourndcolors_for_pods:{},
 
+    
       //backgorund color buffers
       backgroundColor_buffer : [
         "#1f7115",
@@ -442,6 +443,8 @@ export default {
       if (teammanagers_alias_str === null) {
         const setting = await this.getsetting();
 
+        
+
         SaveSettingToSessionStorage(
           "teammanagers_alias",
           setting.teammanagers_alias
@@ -458,7 +461,23 @@ export default {
       for (let i = 0; i < teammanagers_alias.length; i++) {
         if (teammanagers_alias[i] === "" || teammanagers_alias[i] === null)
           continue;
-             
+        
+      
+      //retrieve bandwidth from each team;
+      let  Bandwidth_Per_Day =1.2;
+      if(GetSettingFromSessionStorage("Bandwidth_Per_Day"+"_Of_Team_"+teammanagers_alias[i].toLowerCase()) == null){
+     
+        let teamprofile = await WebAPI_Helper(
+          "get",
+          "teamprofile/manager/" + teammanagers_alias[i],
+          ""
+        );
+      
+        Bandwidth_Per_Day =teamprofile.Bandwidth_Per_Day == undefined|| teamprofile.Bandwidth_Per_Day == null  ? 1.2: teamprofile.Bandwidth_Per_Day;
+
+        SaveSettingToSessionStorage("Bandwidth_Per_Day"+"_Of_Team_"+teammanagers_alias[i],Bandwidth_Per_Day)
+
+      }    
 
         let data = await this.AssignmentByManager(teammanagers_alias[i], this.retrieveMode);
        
@@ -519,7 +538,7 @@ export default {
     },
 
     async GetFreshTime() {
-      return await WebAPI_Helper("get", "latestfreshtime/cachetype/assignment/teamoruser/na)");
+      return await WebAPI_Helper("get", "latestfreshtime/cachetype/assignment/teamoruser/na");
     },
 
     async RefreshConfirmed() {
@@ -666,7 +685,7 @@ export default {
       
     }
     ,
-    Generate_Dataset_For_Charts(assignments, manager_alias, engineers) {
+   async Generate_Dataset_For_Charts(assignments, manager_alias, engineers) {
      
       // Variables for piechart by pod
       let labels_pod = [];
@@ -707,10 +726,13 @@ export default {
       let Number_bandwidth = [0, 0];
 
       Number_bandwidth[0] = this.assignment_number_after_cleanup; // assigned count
+      
+
+      let Bandwidth_Per_Day = parseFloat(GetSettingFromSessionStorage("Bandwidth_Per_Day"+"_Of_Team_"+manager_alias));
 
       if(this.retrieveMode === 1){
 
-      let total_Bandwidth = engineers.length * 1.2;
+      let total_Bandwidth = engineers.length * Bandwidth_Per_Day;
       let available_buffer =
         total_Bandwidth - this.assignment_number_after_cleanup > 0
           ? parseInt(
@@ -723,7 +745,7 @@ export default {
       Number_bandwidth[1] = available_buffer;
       } else { // monthly mode
 
-        let total_Bandwidth = engineers.length * 1.2 * this.days_elapsed;
+        let total_Bandwidth = engineers.length * Bandwidth_Per_Day * this.days_elapsed;
       let available_buffer =
         total_Bandwidth - this.assignment_number_after_cleanup > 0
           ? parseInt(
@@ -745,6 +767,10 @@ export default {
 
       //end
 
+      labels_assignmentmethod = ["Service Request Assignment","Manual Service Request Assignment"];
+      Number_assignmentmethod = [0,0];
+     
+
       //Initial labels
       assignments_cleanedup.forEach((assignment) => {
         //initial labels for region
@@ -760,9 +786,7 @@ export default {
         }
 
         //initial labels for assignment method
-        let assignmentmethod =
-          assignment.bookingmethod !== null
-            ? assignment.bookingmethod
+        let assignmentmethod = assignment.bookingmethod !== null ? assignment.bookingmethod
             : "Unknown";
 
         if (
@@ -780,13 +804,7 @@ export default {
       });
 
       //initial background color for assignmnet mthod
-     let backgroundColor_assignmentmothod = [];
-     if ( labels_assignmentmethod.length === 2){
-        backgroundColor_assignmentmothod = ["#2596be","#be4d25",];
-     } else {
-        backgroundColor_assignmentmothod = ["#2596be"];
-     }
-  
+     let backgroundColor_assignmentmothod = ["#2596be","#be4d25"];     
      
       //initial background color for programtype
       let backgroundColor_programtype = [];    

@@ -196,6 +196,23 @@
               </td>
 
               <td>
+                <label class="container" style="display: inline-block">
+                 Bandwidth Per Day (Cases Assigned Per Day)</label
+                >
+                <input
+                  type="text"
+                  placeholder="1.2"
+                  v-model="Bandwidth_Per_Day"
+                  name="Bandwidth_Per_Day"
+                />
+              </td>          
+             
+            </tr>
+
+
+            <tr>             
+
+              <td>
                 <div style="display: inline-block; margin: 5px; float: left">
                   <label class="switch" style="display: inline-block">
                     <input
@@ -212,7 +229,9 @@
                 >
                   <label>Enable Idle Notification Email </label>
                 </div>
-              </td>          
+              </td>   
+              <td>               
+              </td>       
              
             </tr>
 
@@ -331,6 +350,8 @@ export default {
 
       Threshold_Active_Review: "", // threshold for active review
 
+      Bandwidth_Per_Day:"", // bandwidth per day
+
       timezone_offset:"", //timezone_offset
 
       grouplead_alias:"", // group lead alias
@@ -381,6 +402,7 @@ grouplead_alias(new_group) {
       this.grouplead_alias = teamprofile.grouplead_alias;
       this.timezone_offset = teamprofile.timezone_offset;
       this.Enable_Idle_Notification = teamprofile.Enable_Idle_Notification;
+      this.Bandwidth_Per_Day = teamprofile.Bandwidth_Per_Day;
     },
 
  
@@ -403,7 +425,8 @@ grouplead_alias(new_group) {
           Threshold_Active_Review: this.Threshold_Active_Review,   
           grouplead_alias: this.grouplead_alias, 
           timezone_offset: this.timezone_offset,
-          Enable_Idle_Notification : this.Enable_Idle_Notification
+          Enable_Idle_Notification : this.Enable_Idle_Notification,
+          Bandwidth_Per_Day : this.Bandwidth_Per_Day
         };
         WebAPI_Helper("post", "upsertprofile", this.teamprofile);
         Sleep(500);        

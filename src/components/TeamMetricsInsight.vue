@@ -111,7 +111,7 @@
           :width_param="49.75"
           :chartData="Team_DataSet.dataset"
           :height="200"
-          :title="`Team Case Distribution`"
+          :title="`Team Case Distribution By Age`"
           :minValue="0"
           :maxValue="Team_DataSet.maxValue"
           :stepValue="20"
@@ -122,7 +122,7 @@
           :width_param="49.75"
           :chartData="Team_DataSet.dataset_percent"
           :height="200"
-          :title="`Percentage of Team Case Distribution`"
+          :title="`Percentage of Team Case Distribution By Age`"
         ></ChartLinePercentage>
 
         <ChartLine

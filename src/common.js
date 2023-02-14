@@ -37,6 +37,7 @@ let WebAPI_Helper = async (method, method_name, body) => {
 
 let Process_Country = (region) => {
   switch (region) {
+    case "AR":
     case "SG":
     case "HK":
     case "AU":
