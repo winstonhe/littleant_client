@@ -40,17 +40,22 @@
   <td
     :class="{
       S500_default:
-        serviceticket.programType === 'S500' && appstylemode === 'DEFAULT',
+        serviceticket.programType !== 'None' && appstylemode === 'DEFAULT',
       S500_dark:
-        serviceticket.programType === 'S500' && appstylemode === 'DARK',
+        serviceticket.programType !== 'None' && appstylemode === 'DARK'
+     
     }"
   >
     <div v-html="Computed_Program_Type"></div>
   </td>
-  <td
+  <td :title="Computed_Title"
     :class="{
        'Sev-A': serviceticket.sr_severityCode === 'A',
-       'caseclosed': serviceticket.sr_status === 'Resolved'            
+       'caseclosed': serviceticket.sr_status === 'Resolved',
+       'Pro_dark':   serviceticket.sr_service_level === 'Pro' && appstylemode === 'DARK' ,
+       'Pro_default':   serviceticket.sr_service_level === 'Pro' && appstylemode === 'DEFAULT' ,
+       'MC_dark':   serviceticket.sr_service_level === 'MC' && appstylemode === 'DARK',
+       'MC_default':   serviceticket.sr_service_level === 'MC' && appstylemode === 'DEFAULT'
   }"
     style="text-align: left"
   >
@@ -79,9 +84,24 @@
         class="fas fa-chart-line"
         style="color: orangered"
         title="Trending Issue"
-      ></i>
+      ></i>     
     </a>
+   
   </td>
+
+  <td>
+    <a
+    :class="{
+    'a_default': appstylemode === 'DEFAULT',
+    'a_dark': appstylemode === 'DARK',
+    }"
+    :href="`https://unify.services.dynamics.com/CRM/Org/${serviceticket.org_ID}/Incident/ServiceDesk/${serviceticket.sr_number}/Home`"
+      target="_blank"
+      >
+      <i v-show="serviceticket.org_ID!==null" class="fab fa-gg"></i>
+        </a>
+  </td>
+
   <td>
     <a
     :class="{
@@ -155,7 +175,12 @@
     {{ serviceticket.sr_idle_days }}
   </td>
 
-  <td>
+  <td style="text-align: left"  v-bind:class="{
+      long_idle_solution_delivered_default: isIdleAfterSolutionDelivered && appstylemode === 'DEFAULT',
+      long_idle_solution_delivered_dark: isIdleAfterSolutionDelivered && appstylemode === 'DARK',
+    }"
+  >
+    
     <i
       v-bind:title="Computed_Case_Status"
       :class="{
@@ -173,7 +198,7 @@
         'fas fa-exchange-alt':serviceticket.sr_status === 'Transferred from External',
          'far fa-copy':serviceticket.sr_status === 'Duplicate',
       }"
-    ></i>
+    ></i> <label v-if="serviceticket.sr_status === 'Waiting for Confirmation' &&  serviceticket.sr_days_since_solutiondelivered >7">{{serviceticket.sr_days_since_solutiondelivered}}</label>
   </td>
   <td style="text-align: center">{{ computed_POD }}</td>
 
@@ -227,12 +252,19 @@ export default {
       showDialog: false,
       modalTitle: "",
       isIdle: false,
+      isIdleAfterSolutionDelivered:false
+     
       //showInternalTitle:false,
     };
   },
 
   created() {
 
+    let serviceticket = this.$props.serviceticket;
+
+    let Threshold_After_Solution_Delivered =  GetSettingFromSessionStorage("Threshold_After_Solution_Delivered") !== null? parseInt(GetSettingFromSessionStorage("Threshold_After_Solution_Delivered")) : 28; 
+
+    
     let Idle_Threshold_In_Days = GetSettingFromSessionStorage("Idle_Threshold_In_Days");
     if (
       Idle_Threshold_In_Days === null ||
@@ -242,14 +274,19 @@ export default {
       this.isIdle = false;
     } else {
       if (
-        this.$props.serviceticket.sr_idle_days >
+        serviceticket.sr_idle_days >
         parseInt(Idle_Threshold_In_Days)
       ) {
         this.isIdle = true;
-      } else return (this.isIdle = false);
+      } else this.isIdle = false;
     }
 
-    console.log(this.$props.showInternalTitle)
+    if(serviceticket.sr_days_since_solutiondelivered > Threshold_After_Solution_Delivered) {
+      this.isIdleAfterSolutionDelivered = true;
+    } else {
+      this.isIdleAfterSolutionDelivered = false;
+    }
+   
    // this.showInternalTitle = GetSettingFromLocalStorage("showInternalTitle")===null? "false": GetSettingFromLocalStorage("showInternalTitle")
      
   },
@@ -300,10 +337,13 @@ export default {
     },
 
     Computed_Case_Status: function () {
-      const status = this.$props.serviceticket.sr_status;
+      const ticket = this.$props.serviceticket;
+      const status = ticket.sr_status;
       switch (status) {
         case "Waiting for Information":
           return "Pending customer response";
+        case "Waiting for Confirmation":
+          return "Waiting for Confirmation for " + ticket.sr_days_since_solutiondelivered + " days";
         default:
           return status;
       }
@@ -319,13 +359,42 @@ export default {
       }
     },
 
+    Computed_Service_Level:function() {
+      const servicelevel = this.$props.serviceticket.sr_service_level;
+      switch (servicelevel) {
+        case "MC": return servicelevel; 
+        default:
+        return "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+         
+      }
+    },
+
     Computed_Country: function () {
       const region = this.$props.serviceticket.sr_country_code;
       return Process_Country(region);
     },
 
+    Computed_Title: function () {
+      const level = this.$props.serviceticket.sr_service_level;
+      const programType = this.$props.serviceticket.programType;
+      let title="";
+      if(!(level=== "None" || level === null) ){
+        switch(level) {
+         case "Premier" :  title +="Premier;" ; break;
+         case "Professional": title +="Professional;"; break;
+         case "MC": title +="Mission Critical;"; break;
+         default:"";
+        }
+      }    
+
+      if(!(programType ==="None" || programType === null))
+      title +="  Progam Type: " + programType;
+      return title;
+    },
+
     computed_POD: function () {
       const pod = this.$props.serviceticket.sr_support_pod;
+      if(pod === null) return;
       switch (pod) {
         case "CE Application":
           return "APP";
@@ -379,10 +448,35 @@ export default {
   color: #fff;
 }
 
+.MC_default {
+  border-left: 3px orange solid;
+  background-color: #f2f2f2;
+  color: black;
+}
+
+.MC_dark {
+  border-left: 3px orange solid;
+  background-color: #444;
+  color: #fff;
+}
+
 .Sev-A {
   border-left: 3px red solid;
   color: black;
 }
+
+.Pro_dark {
+  border-left: 3px rgb(153, 113, 132) solid;
+  background-color: #444;
+  color: #fff;
+  }
+
+
+  .Pro_default {
+  border-left: 3px rgb(153, 113, 132) solid;
+  background-color: #f2f2f2;
+  color: black;
+  }
 
 .reviewed {
   border-left: 5px green solid;
@@ -412,6 +506,20 @@ export default {
   color: #fff;
 }
 
+
+.long_idle_solution_delivered_default {
+  border-bottom: 3px #A99D00 solid;
+  background-color: #f2f2f2;
+  color: black;
+}
+
+.long_idle_solution_delivered_dark {
+  border-bottom: 3px #A99D00  solid;
+  background-color: #444;
+  color: #fff;
+}
+
+
 .reviewed_today {
   background-color: green;
 }
@@ -430,6 +538,12 @@ export default {
 .review:hover {
   background: green;
 }
+
+/* label {
+    background-color: #43AC6A;
+    color: #fff;
+    border-radius:50%;
+} */
 
 td,
 th {

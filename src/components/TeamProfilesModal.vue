@@ -210,7 +210,18 @@
             </tr>
 
 
-            <tr>             
+            <tr>   
+              <td> 
+                <label class="container" style="display: inline-block">
+                 Threshold of Case Open Days After Solution Delivered </label
+                >
+                <input
+                  type="text"
+                  placeholder="28 days by default"
+                  v-model="Threshold_After_Solution_Delivered"
+                  name="Threshold_After_Solution_Delivered"
+                />           
+              </td>             
 
               <td>
                 <div style="display: inline-block; margin: 5px; float: left">
@@ -230,8 +241,7 @@
                   <label>Enable Idle Notification Email </label>
                 </div>
               </td>   
-              <td>               
-              </td>       
+                 
              
             </tr>
 
@@ -275,6 +285,7 @@
                   style="width: 97.5%;"                    
                   v-model="Engineers_List"
                   name="Engineers_List"
+                  placeholder="Engineers seperated by ','. The engineers must belong to this team manager's members"
                 />
               </td>   
             </tr>    
@@ -346,6 +357,8 @@ export default {
 
       Threshold_High_Backlog: "", // threshold of high backlog
 
+      Threshold_After_Solution_Delivered:"",// Threshold_After_Solution_Delivered
+
       DistributionGroupForTrendingIssue: "", // DL for trending issue
 
       Threshold_Active_Review: "", // threshold for active review
@@ -403,6 +416,7 @@ grouplead_alias(new_group) {
       this.timezone_offset = teamprofile.timezone_offset;
       this.Enable_Idle_Notification = teamprofile.Enable_Idle_Notification;
       this.Bandwidth_Per_Day = teamprofile.Bandwidth_Per_Day;
+      this.Threshold_After_Solution_Delivered = teamprofile.Threshold_After_Solution_Delivered;
     },
 
  
@@ -426,7 +440,8 @@ grouplead_alias(new_group) {
           grouplead_alias: this.grouplead_alias, 
           timezone_offset: this.timezone_offset,
           Enable_Idle_Notification : this.Enable_Idle_Notification,
-          Bandwidth_Per_Day : this.Bandwidth_Per_Day
+          Bandwidth_Per_Day : this.Bandwidth_Per_Day,
+          Threshold_After_Solution_Delivered : this.Threshold_After_Solution_Delivered
         };
         WebAPI_Helper("post", "upsertprofile", this.teamprofile);
         Sleep(500);        

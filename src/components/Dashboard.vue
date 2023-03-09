@@ -15,8 +15,10 @@
     <Nav
       v-show="loaded === true"
       @Show-Filter="ShowFilterModal"
+      @Show-PodFilter="ShowPodFilterModal"
       @Switch-Chart="SwitchChart"
       :filterApplied="filterApplied"
+      :podfilterApplied="podfilterApplied"
       :isTeamSwitched="isTeamSwitched"
       :chartEnabled="chartEnabled"
       :showAllActions="showAllActions"
@@ -56,37 +58,54 @@
       @Close_Personal_Setting_Modal="Close_Personal_Setting_Modal"
     ></PersonalSettingModal>
 
-    <div style="margin: 0px auto; width: 100%" v-if="showFilter&& userrole >= 2">
-        <EngineerFilterModal
-          :engineers="backup_engineers"
-          :showDialog="showFilter"
-          :EngineersFilterModalTitle="EngineersFilterModalTitle"
-          ref="filter_button"
-          @ApplyFilter="Apply_Filter"
-          @Cancel_Filter="Cancel_Filter"
-          @CloseEngineerFilterModal="Close_EngineerFitler_Modal"
-        ></EngineerFilterModal>
-      </div>
+    <div
+      style="margin: 0px auto; width: 100%"
+      v-if="showFilter && userrole >= 2"
+    >
+      <EngineerFilterModal
+        :engineers="backup_engineers"
+        :showDialog="showFilter"
+        :EngineersFilterModalTitle="EngineersFilterModalTitle"
+        :PodsFilterModalTitle="PodsFilterModalTitle"    
+        ref="filter_button"
+        @ApplyFilter="Apply_Filter"
+        @Cancel_Filter="Cancel_Filter"
+        @CloseEngineerFilterModal="Close_EngineerFitler_Modal"
+      ></EngineerFilterModal>
+    </div>
 
-      <div
-        style="margin: 0px auto; width: 100%"
-        v-if="showTeamFilter & (userrole > 2)"
-      >
-        <TeamFilterModal
-          :teams="teams"
-          :showTeamDialog="showTeamFilter"
-          @ApplyTeamFilter="Apply_Team_Filter"
-          @CancelTeamFilter="Close_Team_Fitler_Modal"
-          @CloseTeamFilterModal="Close_Team_Fitler_Modal"
-        ></TeamFilterModal>
-      </div>
+    <div
+      style="margin: 0px auto; width: 100%"
+      v-if="showPodFilter && userrole >= 2"
+    >
+      <PODFilterModal
+        :pods="Pods"
+        :showDialog="showPodFilter"
+        :PodsFilterModalTitle="PodsFilterModalTitle"
+        @ApplyPodFilter="Apply_PodFilter"
+        @Cancel_PodFilter="Cancel_PodFilter"
+        @ClosePodFilterModal="showPodFilter = false"
+      ></PODFilterModal>
+    </div>
+
+    <div
+      style="margin: 0px auto; width: 100%"
+      v-if="showTeamFilter & (userrole > 2)"
+    >
+      <TeamFilterModal
+        :teams="teams"
+        :showTeamDialog="showTeamFilter"
+        @ApplyTeamFilter="Apply_Team_Filter"
+        @CancelTeamFilter="Close_Team_Fitler_Modal"
+        @CloseTeamFilterModal="Close_Team_Fitler_Modal"
+      ></TeamFilterModal>
+    </div>
 
     <div
       id="middle_container"
       style="margin-left: 0px"
-      v-show="servicetickets.length > 0 && loaded === true "
-    >    
-
+      v-show="servicetickets.length > 0 && loaded === true"
+    >
       <RefreshConfirmationModal
         :showDialog="showDialog_Refresh"
         @Refresh_Confirmed="RefreshConfirmed"
@@ -231,6 +250,7 @@ import SnapshotConfirmationModal from "../components/SnapshotConfirmationModal";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
 import FeedbackModal from "./FeedbackModal";
 import TeamFilterModal from "../components/TeamFilterModal";
+import PODFilterModal from "../components/PODFilterModal";
 
 import Footer from "../components/layout/Footer";
 // import SearchCase from '../components/SearchCase'
@@ -258,6 +278,7 @@ export default {
     TeamProfilesModal,
 
     FeedbackModal,
+    PODFilterModal,
     Footer,
     SiteNav,
   },
@@ -301,10 +322,12 @@ export default {
 
       loaded: false, //  a bool to see if the data is loaded completely
       showFilter: false, // a bool to determine if filter modal show or hide
+      showPodFilter: false, // a bool to deterin if pod filter modal sho or hide.
 
       showDialog_Refresh: false,
 
       filterApplied: false, // a bool to check if enginer filter is applied or not.
+      podfilterApplied: false, // a bool to check if pod filter is applied or not.
 
       chartEnabled: "false", // enable chart or now.
 
@@ -373,6 +396,9 @@ export default {
       //AutoSnapshotTimeInternal
       autosnapshottimeinterval: 0,
 
+      //Pods
+      Pods: [],
+
       //dataset for charts
       dataset_chart_bubble: {
         datasets: [],
@@ -422,7 +448,6 @@ export default {
         ],
       },
 
-
       //dataset for piechar by region
       dataset_chart_pie_by_region: {
         labels: [],
@@ -453,6 +478,11 @@ export default {
     //Display Filter Engineers Modal
     ShowFilterModal() {
       this.showFilter = true;
+    },
+
+    // Display POD Filter Modal
+    ShowPodFilterModal() {
+      this.showPodFilter = true;
     },
 
     SwitchChart() {
@@ -530,41 +560,62 @@ export default {
       this.messageforsnapshot += "..";
     },
 
-    ShowIdleCases(){
+    ShowIdleCases() {
+      let showIdleCasesOnly =
+        GetSettingFromSessionStorage("showIdleCasesOnly") !== null
+          ? GetSettingFromSessionStorage("showIdleCasesOnly")
+          : "false";
 
-      let showIdleCasesOnly = GetSettingFromSessionStorage("showIdleCasesOnly")!== null ? GetSettingFromSessionStorage("showIdleCasesOnly") : "false";
-
-      if(showIdleCasesOnly === 'true') {
-        this.showIdleCasesOnly = "false"
-        
-      } else if(showIdleCasesOnly==='false') {
-        this.showIdleCasesOnly = 'true';
+      if (showIdleCasesOnly === "true") {
+        this.showIdleCasesOnly = "false";
+      } else if (showIdleCasesOnly === "false") {
+        this.showIdleCasesOnly = "true";
       }
 
       //persist current status to session storage;
-      SaveSettingToSessionStorage("showIdleCasesOnly",this.showIdleCasesOnly)
- 
+      SaveSettingToSessionStorage("showIdleCasesOnly", this.showIdleCasesOnly);
+
       // Apply filter
-        const engineers_chosen = JSON.parse(
-          GetSettingFromLocalStorage("engineers_chosen")
-        );
+      let params={filtermode:""};
+      if(GetSettingFromLocalStorage("filterApplied") === true || GetSettingFromLocalStorage("filterApplied") === 'true') {
        
-       //disable chart filter
-       this.DisableChartFitler_UI();
+        const engineers_chosen = JSON.parse(
+        GetSettingFromLocalStorage("engineers_chosen")
+      );
+      params.filtermode ="engineerfilter";
+      params.data_chosen = engineers_chosen;
+      
+     
+      }
+      else if(GetSettingFromLocalStorage("podfilterApplied") === true || GetSettingFromLocalStorage("podfilterApplied") === 'true') {
+       
+       const pods_chosen = JSON.parse(
+       GetSettingFromLocalStorage("pods_chosen")
+     );
 
-       this.Apply_Filter_Internal(engineers_chosen); 
+     params.filtermode ="podfilter";
+     params.data_chosen = pods_chosen;    
+ 
 
-       //generate chart dataset based on current service ticket list:
+     }     
+
+      //disable chart filter
+      this.DisableChartFitler_UI();
+
+      this.Apply_Filter_Internal(params.data_chosen, params.filtermode);
+      //generate chart dataset based on current service ticket list:
       this.Generate_Dataset_For_Charts();
 
-           //refresh action cards
-           this.Generate_Actions(this.servicetickets);
+      //refresh action cards
+      this.Generate_Actions(this.servicetickets);
     },
 
     Apply_Team_Filter(team_chosen) {
       // clean engineer filter which was for previous team, and now we switch to another team.
       window.localStorage.removeItem("filterApplied");
       window.localStorage.removeItem("engineers_chosen");
+      window.localStorage.removeItem("podfilterApplied");
+      window.localStorage.removeItem("pods_chosen");
       window.sessionStorage.removeItem("showIdleCasesOnly");
 
       // the chosen team is not team current user belongs to.
@@ -582,25 +633,33 @@ export default {
       //this.Init();
     },
 
-    async AutoSnapshotCreation() {    
-        if (this.userrole < 2) return; // snapshot creation appliable for TA or above role.
-        let Now = new Date();
-        if((Now.getHours()>=17 && Now.getHours()<18) || Now.getHours()>=12 && Now.getHours()<13 ) { // create snapshot during 11AM and 12:00PM , 5:00 PM and 6:00 PM local time.
-          let latestSnapshotCreatedOn =  GetSettingFromLocalStorage("latestSnapshotCreatedOn");
-          
-          if(latestSnapshotCreatedOn !== null && latestSnapshotCreatedOn == Now.getDate()) { // created alerady, just return
-              return ;
-          }
-          else {
-            SaveSettingToLocalStorage("latestSnapshotCreatedOn", Now.getDate());
-            this.SnapshotConfirmed();
-          }
+    async AutoSnapshotCreation() {
+      if (this.userrole < 2) return; // snapshot creation appliable for TA or above role.
+      let Now = new Date();
+      if (
+        (Now.getHours() >= 17 && Now.getHours() < 18) ||
+        (Now.getHours() >= 12 && Now.getHours() < 13)
+      ) {
+        // create snapshot during 11AM and 12:00PM , 5:00 PM and 6:00 PM local time.
+        let latestSnapshotCreatedOn = GetSettingFromLocalStorage(
+          "latestSnapshotCreatedOn"
+        );
 
-
+        if (
+          latestSnapshotCreatedOn !== null &&
+          latestSnapshotCreatedOn == Now.getDate()
+        ) {
+          // created alerady, just return
+          return;
+        } else {
+          SaveSettingToLocalStorage("latestSnapshotCreatedOn", Now.getDate());
+          this.SnapshotConfirmed();
         }
-
+      }
+      else {  //not correct window, then clean the interval handle.
+        clearInterval(this.autosnapshottimeinterval);
+      }
     },
-
 
     async SnapshotConfirmed() {
       let today = new Date();
@@ -623,15 +682,25 @@ export default {
       );
       this.processingforsnapshot = true;
 
-    
       //  const whoami = GetSettingFromSessionStorage("whoami");
       let manager_alias =
         GetSettingFromLocalStorage("cachedteamforservicetickets") === null
           ? GetSettingFromSessionStorage("teammanagers_alias").split(",")[0]
           : GetSettingFromLocalStorage("cachedteamforservicetickets");
 
-            //clean cache of case backlog
-      await WebAPI_Helper("get", "cleancache/cachetype/case/teamoruser/"+manager_alias, null);    
+      //clean cache of case backlog
+      await WebAPI_Helper(
+        "get",
+        "cleancache/cachetype/case/teamoruser/" + manager_alias,
+        null
+      );
+
+      //clean cache of assignment
+      await WebAPI_Helper(
+        "get",
+        "cleancache/cachetype/assignment/teamoruser/na",
+        null
+      );
 
       // retrieve today's assignment
       let assignments = await this.RetrieveAssignment(manager_alias);
@@ -732,8 +801,7 @@ export default {
       this.processingforsnapshot = false;
       this.messageforsnapshot =
         "Are you sure to create team operation snapshot of today now ?  You can create today's snapshot for multiples times within one day.";
-      
-     
+
       //reload the page
       location.reload();
     },
@@ -869,6 +937,19 @@ export default {
       return false;
     },
 
+
+      // Judge if current service ticekt belongs to any chosen pods.
+      IsCasePod_In_Chosen_List(serviceticket, pods_chosen) {
+      for (let i = 0; i < pods_chosen.length; i++) {
+        if (
+          serviceticket.sr_support_pod!==null &&serviceticket.sr_support_pod.toLowerCase().startsWith(pods_chosen[i].toLowerCase())
+        )
+          return true;
+      }
+
+      return false;
+    },
+
     DownloadChart(downloading_status) {
       if (downloading_status === "true") this.downloading = "true";
       else this.downloading = "false";
@@ -884,9 +965,8 @@ export default {
       let Number_pod = []; // An array to store the number of each pod
 
       // Variables for piechart by program
-      let labels_programtype = ["S500","None"];
-      let Number_programtype = [0,0]; // An array to store the number of each program
-
+      let labels_programtype = ["S500","ACE","None"];
+      let Number_programtype = [0, 0,0]; // An array to store the number of each program
 
       // Variables for piechart by status
       let labels_status = [];
@@ -981,7 +1061,7 @@ export default {
         let status = serviceticket.sr_status;
         let sr_icm = serviceticket.sr_icm;
         let sr_record_guid = serviceticket.sr_record_guid;
-        let programType=serviceticket.programType;
+        let programType = serviceticket.programType;
 
         //generate dataset for bubble chart
         let data_point = {
@@ -1023,10 +1103,9 @@ export default {
         if (sr_icm !== null) Number_IcMRaised += 1;
         else Number_NoIcM += 1;
 
-         //Search the labels of programtype, and increase the number if matched.
-         temp_index = labels_programtype.indexOf(programType)
-         if (temp_index!== -1) Number_programtype[temp_index] += 1;
-        
+        //Search the labels of programtype, and increase the number if matched.
+        temp_index = labels_programtype.indexOf(programType);
+        if (temp_index !== -1) Number_programtype[temp_index] += 1;
 
         //Search the labels of pod, and increase the number if matched.
         let item_pod = serviceticket.sr_support_pod;
@@ -1079,10 +1158,7 @@ export default {
       let datasets_icm = [];
       let dataitem_icm = {};
 
-      this.dataset_chart_pie_by_icm.labels = [
-        "IcM Raised",
-        "No IcM",
-      ];
+      this.dataset_chart_pie_by_icm.labels = ["IcM Raised", "No IcM"];
 
       data_icm = [Number_IcMRaised, Number_NoIcM];
       // background_icm = this.Shuffle(backgroundColor_buffer).slice(
@@ -1091,8 +1167,6 @@ export default {
       // );
 
       background_icm = ["#880e4f", "darkgray"];
-
-    
 
       dataitem_icm.data = data_icm;
       dataitem_icm.backgroundColor = background_icm;
@@ -1127,9 +1201,9 @@ export default {
       //end
 
       //generate dataset for pie chart by programtype
-        //initial background color for programtype
-      let backgroundColor_programtype = [];    
-      backgroundColor_programtype = ["#873e23","darkgray"];           
+      //initial background color for programtype
+      let backgroundColor_programtype = [];
+      backgroundColor_programtype = ["green", "orange","darkgray"];
 
       let dataitem_programtype = [];
       let datasets_programtype = [];
@@ -1138,7 +1212,7 @@ export default {
       dataitem_programtype.backgroundColor = backgroundColor_programtype;
 
       datasets_programtype = [...datasets_programtype, dataitem_programtype];
-      this.dataset_chart_pie_by_programtype.datasets = datasets_programtype;   
+      this.dataset_chart_pie_by_programtype.datasets = datasets_programtype;
       this.dataset_chart_pie_by_programtype.labels = labels_programtype;
       //end
 
@@ -1188,7 +1262,8 @@ export default {
       return backgroundColor_Array;
     },
 
-    Apply_Filter(engineers_chosen) {
+    //event handler for pod filter
+    Apply_PodFilter(params) {
       if (this.servicetickets === null) return;
 
       //disable chart filter
@@ -1196,24 +1271,30 @@ export default {
 
       //remove showidlecasesonly switch
       window.sessionStorage.removeItem("showIdleCasesOnly");
-      this.showIdleCasesOnly = 'false';
-
-      //toggle the filter
-      this.showFilter = false; // !this.showFilter;
-     
-    if(engineers_chosen !==null) {
-      SaveSettingToLocalStorage("filterApplied", "true");
-
-      this.filterApplied = "true"; 
-      // persist the chosen engineers list to local storage.
-      SaveSettingToLocalStorage(
-        "engineers_chosen",
-        JSON.stringify(engineers_chosen)
-      );
-    }
+      this.showIdleCasesOnly = "false";
 
       //apply filter to generate the coresponding service ticket list and summary
-      this.Apply_Filter_Internal(engineers_chosen);
+      this.Apply_Filter_Internal(params.data_chosen, params.filtermode);
+
+      //generate chart dataset based on current service ticket list:
+      this.Generate_Dataset_For_Charts();
+
+      //refresh action cards
+      this.Generate_Actions(this.servicetickets);
+    },
+
+    Apply_Filter(params) {
+      if (this.servicetickets === null) return;
+
+      //disable chart filter
+      this.DisableChartFitler_UI();
+
+      //remove showidlecasesonly switch
+      window.sessionStorage.removeItem("showIdleCasesOnly");
+      this.showIdleCasesOnly = "false";
+
+      //apply filter to generate the coresponding service ticket list and summary
+      this.Apply_Filter_Internal(params.data_chosen, params.filtermode);
 
       //generate chart dataset based on current service ticket list:
       this.Generate_Dataset_For_Charts();
@@ -1223,41 +1304,96 @@ export default {
     },
 
     // Apply filter to generate coreponding service ticket lists including total, 60,4560,3045,1530,15.
-    Apply_Filter_Internal(engineers_chosen) {
+    Apply_Filter_Internal(data_chosen, filter_mode) {
+      let filter_callback = null; //=this.FilterByEngineers_Callback;
+      switch (filter_mode) {
+        case "engineerfilter":
+          //toggle the filter
+          this.showFilter = false; // !this.showFilter;
+
+           //remove pod filter once engineer filter is applied.
+          ClearSettingFromLocalStorage("pods_chosen");
+          this.podfilterApplied = false; 
+          SaveSettingToLocalStorage("podfilterApplied", "false");
+
+          if (data_chosen !== null) {
+            SaveSettingToLocalStorage("filterApplied", "true");
+
+            this.filterApplied = "true";
+            // persist the chosen engineers list to local storage.
+            SaveSettingToLocalStorage(
+              "engineers_chosen",
+              JSON.stringify(data_chosen)
+            );
+          }
+          filter_callback = this.FilterByEngineers_Callback;
+          break;
+
+        case "podfilter":
+          //toggle the filter
+          this.showPodFilter = false; 
+
+            //remove engineer  filter once pod filter is applied.
+          ClearSettingFromLocalStorage("engineers_chosen");
+          this.filterApplied = false; 
+          SaveSettingToLocalStorage("filterApplied", "false");
+
+          if (data_chosen !== null) {
+            SaveSettingToLocalStorage("podfilterApplied", "true");
+
+            this.podfilterApplied = "true";
+            // persist the chosen engineers list to local storage.
+            SaveSettingToLocalStorage(
+              "pods_chosen",
+              JSON.stringify(data_chosen)
+            );
+          }
+          filter_callback = this.FilterByPods_Callback;
+          break;
+          default:
+          filter_callback = this.FilterByEngineers_Callback;
+          break;
+      }
       //current total service ticket list
       this.servicetickets = this.Filter_ServiceTickets(
         this.backup_servicetickets,
-        engineers_chosen
+        data_chosen,
+        filter_callback
       );
 
       //current service ticket list of 60
       this.servicetickets_60 = this.Filter_ServiceTickets(
         this.backup_servicetickets_60,
-        engineers_chosen
+        data_chosen,
+        filter_callback
       );
 
       // current service ticekt list of 4560
       this.servicetickets_45_60 = this.Filter_ServiceTickets(
         this.backup_servicetickets_45_60,
-        engineers_chosen
+        data_chosen,
+        filter_callback
       );
 
       // curent service ticekt list of 3045
       this.servicetickets_30_45 = this.Filter_ServiceTickets(
         this.backup_servicetickets_30_45,
-        engineers_chosen
+        data_chosen,
+        filter_callback
       );
 
       //current service ticekt list of 1530
       this.servicetickets_15_30 = this.Filter_ServiceTickets(
         this.backup_servicetickets_15_30,
-        engineers_chosen
+        data_chosen,
+        filter_callback
       );
 
       //current service ticekt list of 15
       this.servicetickets_15 = this.Filter_ServiceTickets(
         this.backup_servicetickets_15,
-        engineers_chosen
+        data_chosen,
+        filter_callback
       );
 
       //bug
@@ -1268,32 +1404,80 @@ export default {
     },
 
     //Generate service ticekt lists from source service ticket lists  which owner belongs to one of engineers_chosen.
-    Filter_ServiceTickets(servicetickets, engineers_chosen) {
+    Filter_ServiceTickets(
+      servicetickets,
+      data_chosen,
+      filterServiceTicketsCallback
+    ) {
+      let temp_list = [];
+
+      temp_list = filterServiceTicketsCallback(servicetickets, data_chosen);
+      return temp_list;
+    },
+
+    FilterByEngineers_Callback(servicetickets, engineers_chosen) {
       let temp_list = [];
 
       if (servicetickets === null) return null;
 
-      if(engineers_chosen === null) {
-        temp_list = servicetickets
+      if (engineers_chosen === null|| engineers_chosen === undefined || engineers_chosen.length===0) {
+        temp_list = servicetickets;
       } else {
-      for (let i = 0; i < servicetickets.length; i++) {
-        if (
-          this.IsCaseOwner_In_Chosen_List(servicetickets[i], engineers_chosen)
-        ) {
-          //check if trendingissueonly switch is on or off
-          temp_list = [...temp_list, servicetickets[i]];
+        for (let i = 0; i < servicetickets.length; i++) {
+          if (
+            this.IsCaseOwner_In_Chosen_List(servicetickets[i], engineers_chosen)
+          ) {
+            //check if trendingissueonly switch is on or off
+            temp_list = [...temp_list, servicetickets[i]];
+          }
         }
       }
-    }
 
       // Just choose idle cases if showidlecasesonly is applied.
-      if( GetSettingFromSessionStorage("showIdleCasesOnly") === "true") {
-        let idle_threshold =  GetSettingFromSessionStorage("Idle_Threshold_In_Days") !== null? parseInt(GetSettingFromSessionStorage("Idle_Threshold_In_Days")) : 7;       
-        
-        temp_list= temp_list.filter((item) => item.sr_idle_days > idle_threshold)
-        
+      if (GetSettingFromSessionStorage("showIdleCasesOnly") === "true") {
+        let idle_threshold =
+          GetSettingFromSessionStorage("Idle_Threshold_In_Days") !== null
+            ? parseInt(GetSettingFromSessionStorage("Idle_Threshold_In_Days"))
+            : 7;
+
+        temp_list = temp_list.filter(
+          (item) => item.sr_idle_days > idle_threshold
+        );
       }
-     
+
+      return temp_list;
+    },
+
+    FilterByPods_Callback(servicetickets, pods_chosen) {
+      let temp_list = [];
+
+      if (servicetickets === null) return null;
+
+      if (pods_chosen === null || pods_chosen === undefined || pods_chosen.length===0) {
+        temp_list = servicetickets;
+      } else {
+        for (let i = 0; i < servicetickets.length; i++) {
+          if (
+            this.IsCasePod_In_Chosen_List(servicetickets[i], pods_chosen)
+          ) {
+            //check if trendingissueonly switch is on or off
+            temp_list = [...temp_list, servicetickets[i]];
+          }
+        }
+      }
+
+      // Just choose idle cases if showidlecasesonly is applied.
+      if (GetSettingFromSessionStorage("showIdleCasesOnly") === "true") {
+        let idle_threshold =
+          GetSettingFromSessionStorage("Idle_Threshold_In_Days") !== null
+            ? parseInt(GetSettingFromSessionStorage("Idle_Threshold_In_Days"))
+            : 7;
+
+        temp_list = temp_list.filter(
+          (item) => item.sr_idle_days > idle_threshold
+        );
+      }
+
       return temp_list;
     },
 
@@ -1342,13 +1526,14 @@ export default {
       // filter is not applied, just return the team members length
       if (this.chartFilter_Enabled !== true) {
         if (
-          this.filterApplied === "false" ||
-          this.filterApplied === false ||
-          this.filterApplied === undefined
+          (this.filterApplied === "false" ||    this.filterApplied === false ||     this.filterApplied === undefined) &&
+          (this.podfilterApplied === "false" ||          this.podfilterApplied === false || this.podfilterApplied === undefined)
         ) {
-           if(this.showIdleCasesOnly ==='false' || this.showIdleCasesOnly === false) {
-             return this.backup_engineers.length;
-              }
+          if (
+            this.showIdleCasesOnly === "false" ||  this.showIdleCasesOnly === false
+          ) {
+            return this.backup_engineers.length;
+          }
         }
       }
 
@@ -1379,7 +1564,6 @@ export default {
 
       //clean the chosen engineers list so that all service tickets will be loaded.
       ClearSettingFromLocalStorage("engineers_chosen");
-
       this.showFilter = false; // !this.showFilter;
 
       this.Refresh_Default_Categarized_ServiceLists();
@@ -1388,6 +1572,27 @@ export default {
       //refersh the acton cards
       this.Generate_Actions(this.backup_servicetickets);
     },
+
+    Cancel_PodFilter() {
+      //disable chart filter
+      this.DisableChartFitler_UI();
+
+      //set filterAplied status as false
+      SaveSettingToLocalStorage("podfilterApplied", "false");
+      this.podfilterApplied = "false";
+
+      //clean the chosen engineers list so that all service tickets will be loaded.
+      ClearSettingFromLocalStorage("pods_chosen");
+
+      this.showPodFilter = false; // !this.showFilter;
+
+      this.Refresh_Default_Categarized_ServiceLists();
+      this.Generate_Dataset_For_Charts();
+
+      //refersh the acton cards
+      this.Generate_Actions(this.backup_servicetickets);
+    },
+
 
     Refresh_Trending_Issues_Count(servicetickets) {
       let trending_number = 0;
@@ -1436,16 +1641,16 @@ export default {
     DisableChartFilter() {
       this.DisableChartFitler_UI();
 
-      //turn off showilecases switch 
-     window.sessionStorage.removeItem("showIdleCasesOnly");
-      this.showIdleCasesOnly = 'false';
+      //turn off showilecases switch
+      window.sessionStorage.removeItem("showIdleCasesOnly");
+      this.showIdleCasesOnly = "false";
 
       const engineers_chosen = JSON.parse(
         window.localStorage.getItem("engineers_chosen")
       );
 
       if (engineers_chosen !== null) {
-        this.Apply_Filter_Internal(engineers_chosen);
+        this.Apply_Filter_Internal(engineers_chosen, "engineerfilter");
         this.Refresh_Summary();
       } else {
         this.Refresh_Default_Categarized_ServiceLists();
@@ -1454,10 +1659,8 @@ export default {
       //generate chart dataset based on current service ticket list:
       this.Generate_Dataset_For_Charts();
 
-          //refresh action cards
-          this.Generate_Actions(this.servicetickets);
-
-      
+      //refresh action cards
+      this.Generate_Actions(this.servicetickets);
     },
 
     FilterServiceTicketsFromChart(parameter, value) {
@@ -1506,10 +1709,9 @@ export default {
             (ticket) => ticket.sr_status.startsWith(value)
           );
           break;
-        
+
         case "PROGRAMTYPE":
           filter = "programtype eq '" + value + "'";
-         
 
           servicetickets_filteredfromchart = this.servicetickets.filter(
             (ticket) => ticket.programType.startsWith(value)
@@ -1572,7 +1774,7 @@ export default {
     },
 
     async fetchServiceTickets(alias) {
-        return await WebAPI_Helper(
+      return await WebAPI_Helper(
         "get",
         "servicetickets/teamoruser/" + alias,
         null
@@ -1655,6 +1857,34 @@ export default {
     },
 
     // Web API ends.
+ 
+  
+    //Generate Pods for further filter
+    Generate_Pods(servicetickets) {       
+      
+     
+      servicetickets.forEach((ticket) => {
+        let pod_index = -1;
+        let pod_item = {pod:"",number:0};
+        pod_item.pod = ticket.sr_support_pod;
+       
+        if(pod_item.pod === null)  {
+            pod_item.pod = "Unknown";                 
+        }
+
+        pod_index = this.Pods.findIndex(function checkValue(element) {
+          return element.pod === ticket.sr_support_pod;
+        })
+
+        if (pod_index === -1) {
+          pod_item.number = 1;
+          this.Pods.push(pod_item);
+        }
+        else {
+          this.Pods[pod_index].number +=1;
+        }
+      });
+    },
 
     // Generat action card list
     Generate_Actions(servicetickets) {
@@ -1696,6 +1926,11 @@ export default {
         sr_record_guid: temp_serviceticket.sr_record_guid,
         sr_country_code: temp_serviceticket.sr_country_code,
       };
+
+      let Threshold_After_Solution_Delivered =
+        this.teamprofile.Threshold_After_Solution_Delivered !== null
+          ? this.teamprofile.Threshold_After_Solution_Delivered
+          : 28;
 
       if (temp_serviceticket.mce_status === 1) {
         // create action card of MCE assignment : 1 means pending on MCE
@@ -1740,6 +1975,21 @@ export default {
         this.actions = [...this.actions, new_action]; // append to actions array
       }
 
+      //creat action card for case pending on solution delivered for long time
+      else if (
+        temp_serviceticket.sr_days_since_solutiondelivered >
+        parseInt(Threshold_After_Solution_Delivered)
+      ) {
+        new_action.action_type = 7;
+        new_action.action_description =
+          "Pending On Confirmation For  " +
+          temp_serviceticket.sr_days_since_solutiondelivered +
+          " Days";
+        new_action.action_label = "OPEN CASE";
+        new_action.action_owner = temp_serviceticket.sr_caseowner;
+        this.actions = [...this.actions, new_action]; // append to actions array
+      }
+
       // create action card of idle case notification
       let idle_action = {
         sr_number: temp_serviceticket.sr_number,
@@ -1773,7 +2023,10 @@ export default {
         sr_record_guid: temp_serviceticket.sr_record_guid,
         sr_country_code: temp_serviceticket.sr_country_code,
       };
-      if (temp_serviceticket.latest_review_type === 10 && temp_serviceticket.case_backup_owner !==null) {
+      if (
+        temp_serviceticket.latest_review_type === 10 &&
+        temp_serviceticket.case_backup_owner !== null
+      ) {
         seperated_action.action_type = 6;
         seperated_action.action_description =
           "case backup by " + temp_serviceticket.case_backup_owner;
@@ -1896,7 +2149,6 @@ export default {
       //Init the app theme
       this.appstylemode = GetAppStyleMode();
 
-    
       //initialize whoami
       if (GetSettingFromSessionStorage("whoami") !== null)
         this.currentuser = GetSettingFromSessionStorage("whoami");
@@ -1907,7 +2159,7 @@ export default {
       }
 
       //When the app is provisoned for the first time, advanced setting modal will show up for initial configuration.
-    
+
       const setting = (this.setting = await this.getsetting());
 
       this.userrole =
@@ -1932,8 +2184,10 @@ export default {
             "cachedteamforservicetickets"
           );
         }
-      } else { 
-        cachedteamforservicetickets =await this.reportingm1manager(this.currentuser);
+      } else {
+        cachedteamforservicetickets = await this.reportingm1manager(
+          this.currentuser
+        );
         SaveSettingToLocalStorage(
           "cachedteamforservicetickets",
           cachedteamforservicetickets
@@ -1967,6 +2221,12 @@ export default {
           "Threshold_High_Backlog",
           this.teamprofile.Threshold_High_Backlog
         );
+        SaveSettingToSessionStorage(
+          "Threshold_After_Solution_Delivered",
+          this.teamprofile.Threshold_After_Solution_Delivered !== null
+            ? this.teamprofile.Threshold_After_Solution_Delivered
+            : 28
+        );
       }
 
       //save managers' list to storage
@@ -1994,9 +2254,8 @@ export default {
       // this.issuperuser = await this.is_superuser();
       // SaveSettingToSessionStorage("issuperuser", this.issuperuser);
 
-    
-      
-      this.EngineersFilterModalTitle = "Please select engineers to display";
+      this.EngineersFilterModalTitle = "Please select engineers";
+      this.PodsFilterModalTitle = "Please select PODs";
 
       // Cache the approver list if it's an admin
       //if (this.userrole >=2)
@@ -2007,7 +2266,7 @@ export default {
 
       //Get the full service tickets list
 
-      if (this.userrole ==1 ) {
+      if (this.userrole == 1) {
         this.servicetickets = await this.fetchServiceTickets(this.currentuser);
       } else {
         this.servicetickets = await this.fetchServiceTickets(
@@ -2018,8 +2277,7 @@ export default {
         this.isTeamSwitched =
           cachedteamforservicetickets !==
           GetSettingFromSessionStorage("teammanagers_alias").split(",")[0];
-     
-        }
+      }
       //Save the primitive full service ticket to backup, which will be used once engineer filters is removed.
       this.backup_servicetickets = this.servicetickets;
 
@@ -2030,13 +2288,13 @@ export default {
 
       //Init engineers list  and backlog
       this.Refresh_EngineersAndBacklog(teammembers);
-  
 
       const allreview_data = await this.fetch_review_history();
       this.Fillin_ServiceTickets_Basedon_ReviewHistory(allreview_data);
 
       //generate action cards:
       this.Generate_Actions(this.servicetickets);
+      this.Generate_Pods(this.servicetickets);
 
       if (this.servicetickets !== null) {
         this.Refresh_Default_Categarized_ServiceLists();
@@ -2048,6 +2306,13 @@ export default {
           ? "false"
           : GetSettingFromLocalStorage("filterApplied");
 
+           //initialize the pod filterApplied status
+      this.podfilterApplied =
+        GetSettingFromLocalStorage("podfilterApplied") === null
+          ? "false"
+          : GetSettingFromLocalStorage("podfilterApplied");
+
+
       //Apply the engineers filter if it's applied before.
       if (this.filterApplied === "true") {
         const engineers_chosen = JSON.parse(
@@ -2056,7 +2321,25 @@ export default {
 
         //hide the filter
         this.showFilter = true; // set it as true then apply_filter wil toggle the value as false
-        this.Apply_Filter(engineers_chosen);
+        let params = {
+          data_chosen: engineers_chosen,
+          filtermode: "engineerfilter",
+        };
+        this.Apply_Filter(params);
+      }
+      //check if pod filter is enabled 
+      else if(this.podfilterApplied === "true") {
+        const pods_chosen = JSON.parse(
+          GetSettingFromLocalStorage("pods_chosen")
+        );
+
+        //hide the filter
+        this.showPodFilter = true; // set it as true then apply_filter wil toggle the value as false
+        let params = {
+          data_chosen: pods_chosen,
+          filtermode: "podfilter",
+        };
+        this.Apply_Filter(params);
       }
 
       //gerenate ds for chart
@@ -2072,7 +2355,10 @@ export default {
       this.loaded = true;
 
       //register the task of auto snapshot creation
-      this.autosnapshottimeinterval = setInterval(this.AutoSnapshotCreation, 15*60*1000); // check task for each 15 mins.
+      this.autosnapshottimeinterval = setInterval(
+        this.AutoSnapshotCreation,
+        15 * 60 * 1000
+      ); // check task for each 15 mins.
     },
   },
 

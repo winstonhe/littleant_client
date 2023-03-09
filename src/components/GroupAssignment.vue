@@ -17,6 +17,15 @@
       >
     </LoadingModal>
 
+    <PODFilterModal
+        :pods="Pods"
+        :showDialog="showPodFilter"
+        :PodsFilterModalTitle="PodsFilterModalTitle"
+        @ApplyPodFilter="Apply_PodFilter"
+        @Cancel_PodFilter="Cancel_PodFilter"
+        @ClosePodFilterModal="showPodFilter = false"
+      ></PODFilterModal>
+
     <div v-show="loaded === true">
       <RefreshConfirmationModal
         :showDialog="showDialog"
@@ -30,16 +39,24 @@
       <ul>
         <li style="float: left">
           <a> Case Assignment </a>
-        </li>
-
-       
+        </li>       
 
           <li style="float: left">
           <a>{{ title }}</a>
         </li>
 
+        <li style="float: right;margin-right: 30px" @click="CleanCache">
+          <a>
+            <i
+              class="fas fa-sync-alt"
+              title="Clean server-side cache and re-fetch live data"
+            ></i>
+            &nbsp;{{ latestFreshTime }} UTC
+          </a>
+        </li>
+
         <li
-          style="float: right;margin-right: 30px"
+          style="float: right;"
           v-bind:class="{
             filter_applied: retrieveMode === 2,
             filter_canceled: retrieveMode !== 2,
@@ -58,17 +75,28 @@
           @click="DailyAssignments"
         >
           <a><i class="fas fa-th" title="Daily Assignments"></i> </a>
-        </li>
+        </li>       
+   
 
-         <li style="float: right;" @click="CleanCache">
-          <a>
-            <i
-              class="fas fa-sync-alt"
-              title="Clean server-side cache and re-fetch live data"
-            ></i>
-            &nbsp;{{ latestFreshTime }} UTC
-          </a>
-        </li>
+        <li        
+         style="float: right"
+         v-bind:class="{
+          filter_applied: assignmentFilterByPod === 'true' || assignmentFilterByPod===true,
+          filter_canceled:
+          assignmentFilterByPod === 'false' ||  assignmentFilterByPod === false ||assignmentFilterByPod === undefined,
+        }"
+        @click="ShowPodFilter"
+      >
+        <a><i class="fas fa-filter" title="Filter By PODs"></i> </a>
+      </li>
+          
+          <li   v-show="assignmentFilterByPod"  
+          style="float: right"
+        class=cahrtfilter_applied
+          @click="Cancel_PodFilter"    
+        >
+          <a>[{{pod_Filters_Description_assignment}}]    <i class="fas fa-eraser"></i></a>
+        </li>  
 
       </ul>
 
@@ -191,6 +219,7 @@ import {
   SaveSettingToSessionStorage,
   GetSettingFromSessionStorage,
   GetSettingFromLocalStorage,
+  ClearSettingFromLocalStorage,
    SaveSettingToLocalStorage,
    GetAppStyleMode,
   Shuffle,
@@ -203,6 +232,7 @@ import ChartStackedBarByEngineer from "./ChartStackedBarByEngineer";
 import ChartPieByAssignmentMethod from "./ChartPieByAssignmentMethod";
 import ChartPieByProgramType from "./ChartPieByProgramType";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
+import PODFilterModal from "./PODFilterModal";
 
 import Footer from "../components/layout/Footer";
 //site nav
@@ -223,6 +253,7 @@ export default {
     SiteNav,
     RefreshConfirmationModal,
     LoadingModal,
+    PODFilterModal,
  
     Footer,
   },
@@ -240,6 +271,8 @@ export default {
       //assignments for teams
       assignment_teams: [],
 
+      pod_Filters_Description_assignment:'',
+
       refreshtimeInterval: 0,
       userRole:1,
       days_elapsed:0,
@@ -253,11 +286,24 @@ export default {
       //to store the assignmen count after cleanup
       assignment_number_after_cleanup: 0,
 
-          //generated background colors for regions
-          genereated_backgourndcolors_for_regions:{},
+      //generated background colors for regions
+      genereated_backgourndcolors_for_regions:{},
 
       //generated background colors for PODs
       genereated_backgourndcolors_for_pods:{},
+
+      //Pods
+      Pods: [],
+
+      // Entire Assignment:
+      backup_entire_assignment :[],
+
+      //All Pods      
+
+      showPodFilter: false,
+
+      assignmentFilterByPod : false,
+
 
     
       //backgorund color buffers
@@ -277,6 +323,10 @@ export default {
         "#e2435c",
         "#301b5a",
         "#eb7bb6",
+        "#df682e",
+        "#126da2",
+        "#361909",
+        "#516f57"
       ],
 
 
@@ -356,6 +406,9 @@ export default {
   async created() {
     this.loaded = false;
     this.showDialog = false;
+    this.assignmentFilterByPod = false;
+
+    this.pod_Filters_Description_assignment = GetSettingFromLocalStorage("pod_Filters_Description_assignment");
 
      //set assignment menu as selected item
       SaveSettingToSessionStorage('selectedMenu','4')
@@ -382,6 +435,31 @@ export default {
       return (data.totalAssignment_count / data.engineers/ this.days_elapsed).toFixed(2);
       }
     },
+
+    ShowPodFilter(){
+      this.showPodFilter = true;
+    },
+
+    Apply_PodFilter(params){
+
+      this.showPodFilter = false;
+      this.pod_Filters_Description_assignment = "PODS In (' "+ params.data_chosen +" ')";
+      SaveSettingToLocalStorage("pod_Filters_Description_assignment",this.pod_Filters_Description_assignment)
+      SaveSettingToLocalStorage("podsSelectedForAssignment",params.data_chosen)
+      SaveSettingToLocalStorage("assignmentFilterByPod",true);
+      this.Init();
+    },
+
+    Cancel_PodFilter(){
+      this.showPodFilter = false;
+      this.assignmentFilterByPod = false;
+      this.podsSelectedForAssignment="";
+      this.pod_Filters_Description_assignment ="";
+      ClearSettingFromLocalStorage("pod_Filters_Description_assignment");
+      ClearSettingFromLocalStorage("assignmentFilterByPod");
+      ClearSettingFromLocalStorage("podsSelectedForAssignment");
+      this.Init();
+    },    
 
     CleanCache() {
       this.showDialog = true;
@@ -458,6 +536,7 @@ export default {
 
       //initial backlog for each team before we are going to analyze the data;
        this.assignment_teams = [];
+       this.Pods=[];
       for (let i = 0; i < teammanagers_alias.length; i++) {
         if (teammanagers_alias[i] === "" || teammanagers_alias[i] === null)
           continue;
@@ -480,7 +559,17 @@ export default {
       }    
 
         let data = await this.AssignmentByManager(teammanagers_alias[i], this.retrieveMode);
-       
+        let team_assignments= {"team":teammanagers_alias[i],"assignments":data};
+        this.backup_entire_assignment.push(team_assignments);
+        //clean pods.
+        
+        this.Generate_Pods(data);
+        SaveSettingToSessionStorage("AllPods",this.Pods.map(item => item.pod));
+        this.assignmentFilterByPod =  GetSettingFromLocalStorage("assignmentFilterByPod") !== null ? GetSettingFromLocalStorage("assignmentFilterByPod") : false;
+        if(this.assignmentFilterByPod === true ||this.assignmentFilterByPod === "true"){
+          const podsSelectedForAssignment = GetSettingFromLocalStorage("podsSelectedForAssignment");
+          data = data.filter((item) => item.support_pod !== null && podsSelectedForAssignment !== null && podsSelectedForAssignment.includes(item.support_pod))
+        }       
 
         let item = {
           manager: teammanagers_alias[i],
@@ -531,6 +620,32 @@ export default {
       clearInterval(loadingMessageInterval); //release interval
 
       return true;
+    },
+
+     //Generate Pods for further filter
+     Generate_Pods(assignments) {            
+     
+      assignments.forEach((assignment) => {
+        let pod_index = -1;
+        let pod_item = {pod:"",number:0};
+        pod_item.pod = assignment.support_pod;
+       
+        if(pod_item.pod === null)  {
+            pod_item.pod = "Unknown";                 
+        }
+
+        pod_index = this.Pods.findIndex(function checkValue(element) {
+          return element.pod === assignment.support_pod;
+        })
+
+        if (pod_index === -1) {
+          pod_item.number = 1;
+          this.Pods.push(pod_item);
+        }
+        else {
+          this.Pods[pod_index].number +=1;
+        }
+      });
     },
 
     async getRefreshTime() {
@@ -767,7 +882,7 @@ export default {
 
       //end
 
-      labels_assignmentmethod = ["Service Request Assignment","Manual Service Request Assignment"];
+      labels_assignmentmethod = ["Premier","Professional"];  // this is a placement for assignment method.
       Number_assignmentmethod = [0,0];
      
 
@@ -786,8 +901,8 @@ export default {
         }
 
         //initial labels for assignment method
-        let assignmentmethod = assignment.bookingmethod !== null ? assignment.bookingmethod
-            : "Unknown";
+        let assignmentmethod = assignment.servicelevel !== null ? assignment.servicelevel
+            : "Professional";
 
         if (
           labels_assignmentmethod.find(
@@ -876,7 +991,7 @@ export default {
           temp_index !== -1 ? temp_index : labels_region.indexOf("Unknown");
         Number_region[region_index] += 1; //increase the number of corresponding region
 
-        let item_assignmentmethod = assignment.bookingmethod;
+        let item_assignmentmethod = assignment.servicelevel;
         temp_index = labels_assignmentmethod.indexOf(item_assignmentmethod);
         let assignmentmethod_index =
           temp_index !== -1

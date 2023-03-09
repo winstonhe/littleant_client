@@ -17,6 +17,7 @@
           <th width="6%" align="center">Status</th>
           <th align="left"></th>
           <th width="10%" align="left">Case ID</th>
+          <th width="2%" align="center">Unify</th>
           <th width="2%" align="center">IcM</th>
            <th width="2%" align="center">Bug</th>
            <!-- <th width="2%" align="center">Bug</th> -->

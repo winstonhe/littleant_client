@@ -87,6 +87,7 @@
           <div class="clr"></div>
         </div>
 
+       
         <div style="margin: 30px">
         
           <button
@@ -126,7 +127,7 @@ export default {
     };
   },
 
-  props: ["engineers", "showDialog", "EngineersFilterModalTitle"],
+  props: ["engineers","pods", "showDialog", "EngineersFilterModalTitle","PodsFilterModalTitle"],
 
   watch: {
     engineers_chosen(new_engineerslist) {
@@ -166,7 +167,11 @@ export default {
     apply_filter() {
       if (this.engineers_chosen.length !== 0) {
         //this.engineers_chosen = this.engineers_chosen.sort(); // why i sort the selection? am I crazy?
-        this.$emit("ApplyFilter", this.engineers_chosen, "engineerfilter");
+        let params = {
+          data_chosen:this.engineers_chosen,
+          filtermode: "engineerfilter"
+        }
+        this.$emit("ApplyFilter", params);
       }
     },
 

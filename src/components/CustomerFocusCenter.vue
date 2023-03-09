@@ -15,14 +15,14 @@
 
     
 
-    <CustomerFocusFilterModal
+    <PODFilterModal
       :pods="pods"
       :showDialog="showFilter"
       :PodsFilterModalTitle="PodsFilterModalTitle"
-      @ApplyFilter="ApplyFilter"
-      @Cancel_Filter="CancelFilter"
-      @CloseEngineerFilterModal="showFilter = false"
-    ></CustomerFocusFilterModal>
+      @ApplyPodFilter="ApplyFilter"
+      @Cancel_PodFilter="CancelFilter"
+      @ClosePodFilterModal="showFilter = false"
+    ></PODFilterModal>
 
     <RefreshConfirmationModal
       :showDialog="showDialog"
@@ -72,7 +72,7 @@
           filter_applied: filterApplied === true,
           filter_canceled: filterApplied === false,
         }"
-        @click="showFilter = true"
+        @click="showFitler = true"
         v-if="!ErrorRaised"
       >
         <a><i class="fas fa-filter" title="Filter PODs"></i> </a>
@@ -146,8 +146,7 @@
     </div>
     <div style="clear: both"></div>
 
-    <CustomerFocusCards 
-      v-show="loaded === true"
+    <CustomerFocusCards      
       :focuses="focuses"
       @open-Cases-List="openCaseList"
       :card_Hovered="card_Hovered"
@@ -214,7 +213,7 @@ import ChartPieByIcM from "./ChartPieByIcM.vue";
 import ChartPieByPod from "./ChartPieByPod.vue";
 import ChartStackedBarByEngineer from "./ChartStackedBarByEngineer";
 
-import CustomerFocusFilterModal from "./CustomerFocusFilterModal";
+import PODFilterModal from "./PODFilterModal";
 import LoadingModal from "./LoadingModal";
 import CustomerFocusProfileModal from "./CustomerFocusProfileModal"
 
@@ -233,7 +232,7 @@ export default {
     ChartPieByIcM,
     ChartPieByPod,
     ChartStackedBarByEngineer,
-    CustomerFocusFilterModal,
+    PODFilterModal,
     LoadingModal,
     CustomerFocusProfileModal,
   },
@@ -373,15 +372,27 @@ export default {
 
    
 
-    if (pods_chosen_forcustomerfocus !== null) {
-      this.filterApplied = true;     
-      this.ApplyFilter(pods_chosen_forcustomerfocus);
+    if (pods_chosen_forcustomerfocus !== null && pods_chosen_forcustomerfocus!==undefined ) {
+      this.filterApplied = true;   
+      let params = {
+        data_chosen: pods_chosen_forcustomerfocus,
+        filtermode:"podfilter"
+      };  
+      this.ApplyFilter(params);
     } else {
       this.backup_focuses =  await this.CustomerFocuses();
       this.focuses = this.backup_focuses.filter( focus => focus.ServiceLevel ==='Premier');
 
     }
     this.pods = await this.podsofcustomerfocuses();
+
+    let new_pods = [];
+    this.pods.forEach(pod =>{
+      let pod_item={pod:pod,number:0};     
+      new_pods.push(pod_item);
+    });
+
+    this.pods =new_pods;
 
     const professionalCustomerEnabled = GetSettingFromLocalStorage("professionalCustomerEnabled"); 
     this.professionalCustomerEnabled = professionalCustomerEnabled !== null?  professionalCustomerEnabled ==='true'||professionalCustomerEnabled ===true : false;
@@ -480,7 +491,8 @@ export default {
       this.ServiceLevelFitler_Initial_Load();
     },
 
-    async ApplyFilter(pods_chosen) {
+    async ApplyFilter(params) {
+      let pods_chosen = params.data_chosen;
       this.pods_chosen = pods_chosen;
       SaveSettingToLocalStorage(
         "pods_chosen_forcustomerfocus",

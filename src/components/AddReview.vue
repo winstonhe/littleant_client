@@ -141,25 +141,22 @@
           <!-- new line -->
           <div class="clr"></div>
 
-          <div
-            class="tooltip"
-            style="display: inline-block; margin-left: 10px; float: left"
-          >
-            <label class="container">
-              <i class="fas fa-chart-line"></i> Report It As Trending issue
+          <div  class="tooltip"  style="display: inline-block; margin-left: 10px; float: left">
+            <label class="switch" style="display: inline-block">             
               <input
                 type="checkbox"
                 v-model="istrendingissue"
                 value="0"
                 name="istrendingissue"
               />
-              <span class="checkmark"></span>
-              <span class="tooltiptext" style="width: 200%"
-                >Mark this case as trending issue and share a notification email
-                to team.</span
-              >
+              <span class="slider round"></span>        
+             
             </label>
           </div>
+          <div   style="display: inline-block; float: left; padding-top: 5px">
+                    &nbsp; &nbsp;<label>
+                      <i class="fas fa-chart-line"></i>Report it as trending issue</label>
+           </div>
 
           <div class="input-w" v-show="istrendingissue">
             <label>IcM ID</label
@@ -321,7 +318,7 @@
 </template>
 
 <script>
-import { GetSettingFromSessionStorage, WebAPI_Helper } from "../common.js";
+import { GetSettingFromSessionStorage, GetSettingFromLocalStorage,WebAPI_Helper } from "../common.js";
 
 import BackupEngineerSelectionModal from "./BackupEngineerSelectionModal";
 
@@ -492,10 +489,27 @@ export default {
       } else this.InitButtonandHeader();
     },
 
+    async reportingm1manager(whoami) {
+      return WebAPI_Helper("get", "reportingm1manager(" + whoami + ")");
+    },
+
+ 
+
     async BackUpClicked() {
       if (this.backupRequired === false) {
         //before click it's false;
-        this.engineers = await WebAPI_Helper("get", "teammembers", null);
+        let cachedteamforservicetickets;
+      if (this.userrole >= 2) {        
+          cachedteamforservicetickets = GetSettingFromLocalStorage(
+            "cachedteamforservicetickets"
+          );
+        }
+       else {
+        cachedteamforservicetickets = await this.reportingm1manager(
+          GetSettingFromSessionStorage("whoami")
+        );      
+      }
+        this.engineers = await WebAPI_Helper("get", "teammembers("+cachedteamforservicetickets+")", null);
         this.showFilter = true;
       }
     },

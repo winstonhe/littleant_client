@@ -97,7 +97,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: ["Assignment By Method"],
+            text: ["Distribution By Sevice Level"],
           },
 
           legend: {

@@ -376,7 +376,7 @@ export default {
 
      await this.Generate_Dataset_For_Charts(
         this.backlog_teams[i].backlog,
-        this.backlog_teams[i].manager.toUpperCase()
+        this.backlog_teams[i].manager
       );
 
       let data_point = {

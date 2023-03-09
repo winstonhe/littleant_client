@@ -134,13 +134,26 @@
       v-show="userrole >=2"
       style="float: right"
       v-bind:class="{
+        filter_applied: podfilterApplied === 'true' || podfilterApplied===true,
+        filter_canceled:
+          podfilterApplied === 'false' ||  podfilterApplied === false ||podfilterApplied === undefined,
+      }"
+      @click="$emit('Show-PodFilter')"
+    >
+      <a><i class="fas fa-cubes" title="Filter By PODs"></i> </a>
+    </li>
+
+    <li
+      v-show="userrole >=2"
+      style="float: right"
+      v-bind:class="{
         filter_applied: filterApplied === 'true' || filterApplied===true,
         filter_canceled:
-          filterApplied === 'false' || filterApplied === undefined,
+          filterApplied === 'false'  || filterApplied === false|| filterApplied === undefined,
       }"
       @click="$emit('Show-Filter')"
     >
-      <a><i class="fas fa-filter" title="Filter Engineers"></i> </a>
+      <a><i class="fas fa-filter" title="Filter By Engineers"></i> </a>
     </li>
 
     <li  v-show="userrole >2"   
@@ -178,7 +191,7 @@ import SearchCase from "../components/SearchCase";
 
 export default {
   name: "Nav",
-  props: ["filterApplied","isTeamSwitched", "chartEnabled","showAllActions","chartFilter_Enabled","chart_Filters_Description","showIdleCasesOnly"],
+  props: ["filterApplied","podfilterApplied","isTeamSwitched", "chartEnabled","showAllActions","chartFilter_Enabled","chart_Filters_Description","showIdleCasesOnly"],
 
   data() {
     return {
@@ -213,6 +226,7 @@ export default {
     },
 
   },
+
 
   async updated(){
     this.userrole= GetSettingFromSessionStorage("userrole") === null? await WebAPI_Helper("get","currentuserrole",null):parseInt(GetSettingFromSessionStorage("userrole")); 
@@ -255,6 +269,11 @@ export default {
     //   return false;
     // },
 
+         
+  async fetch_reviewer() {
+      return await WebAPI_Helper("get", "whoami", null);
+    },
+    
     async GetFreshTime() {
       let userrole = parseInt(GetSettingFromSessionStorage("userrole"));
       if(userrole <2) {

@@ -54,7 +54,9 @@ export default {
     };
   },
 
-  created() {},
+  created() {
+    console.log("card called");
+  },
 
   computed: {
     Computed_Country: function () {

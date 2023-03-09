@@ -14,10 +14,22 @@
   <RefreshConfirmationModal :showDialog="showDialog" @Refresh_Confirmed="RefreshConfirmed" @Refresh_Canceled="RefreshCanceled"  greetingMessage="Are you sure to refresh the cache to get the live data which could take seconds ?">
   </RefreshConfirmationModal>
 
+  <PODFilterModal
+        :pods="Pods"
+        :showDialog="showPodFilter"
+        :PodsFilterModalTitle="PodsFilterModalTitle"
+        @ApplyPodFilter="Apply_PodFilter"
+        @Cancel_PodFilter="Cancel_PodFilter"
+        @ClosePodFilterModal="showPodFilter = false"
+      ></PODFilterModal>
+  
+
     <ul v-show="loaded === true">
       <li style="float: left">
         <a>Monthly Metrics </a>
       </li>
+
+     
 
       <li style="float: right;padding-right:30px" @click="CleanCache">
         <a>
@@ -27,6 +39,29 @@
           ></i>  &nbsp;{{latestFreshTime}} UTC
         </a>
       </li>
+
+      <li        
+         style="float: right"
+         v-bind:class="{
+          filter_applied: metricsFilterByPod === 'true' || metricsFilterByPod===true,
+          filter_canceled:
+          metricsFilterByPod === 'false' ||  metricsFilterByPod === false ||metricsFilterByPod === undefined,
+        }"
+        @click="ShowPodFilter"
+      >
+        <a><i class="fas fa-filter" title="Filter By PODs"></i> </a>
+      </li>
+
+      <li   v-show="metricsFilterByPod"  
+          style="float: right"
+        class=cahrtfilter_applied
+          @click="Cancel_PodFilter"    
+        >
+          <a>[{{pod_Filters_Description}}]    <i class="fas fa-eraser"></i></a>
+        </li>  
+
+
+
     </ul>
     <div v-for="(data, index) in analyzed_ds_teams" :key="data.manager">
       <label
@@ -194,15 +229,18 @@ import {
   GetSettingFromSessionStorage,
   SaveSettingToSessionStorage,
   GetSettingFromLocalStorage,
+  SaveSettingToLocalStorage,
      GetAppStyleMode,
 
   Shuffle,
+  ClearSettingFromLocalStorage,
 } from "../common.js";
 
 import ChartBarByEngineer from "./ChartBarByEngineer.vue";
 import SiteNav from "../components/SiteNav";
 import Footer from "../components/layout/Footer";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
+import PODFilterModal from "./PODFilterModal";
 
 export default {
   name: "GroupMonthlyMetrics",
@@ -211,6 +249,7 @@ export default {
     SiteNav,
      Footer,
       RefreshConfirmationModal,
+      PODFilterModal,
   },
 
   data() {
@@ -221,6 +260,7 @@ export default {
        showDialog:false, //trigger the refresh modal 
 
         latestFreshTime:"",
+        pod_Filters_Description:"",
 
       metrics_of_team_level: {
         cases_assigned: 0,
@@ -234,6 +274,16 @@ export default {
 
       //background color for metrics
       backgroundColor_metrics:[],
+
+      //Pods
+      Pods:[],
+
+      metricsFilterByPod:false,
+
+      //swithc to show filter modal.
+      showPodFilter:false,
+
+       
 
       //dataset for barchat of assignment
       dataset_chart_bar_monthly_metrics: {
@@ -263,11 +313,13 @@ export default {
     };
   },
 
+
   async created() {
     this.loaded = false;
 
      //set monthly metrics menu as selected item
-     SaveSettingToSessionStorage('selectedMenu','3')
+     SaveSettingToSessionStorage('selectedMenu','3');
+     this.pod_Filters_Description = GetSettingFromLocalStorage("pod_Filters_Description");
 
     this.latestFreshTime = await this.GetFreshTime();
 
@@ -276,8 +328,26 @@ export default {
     );
 
     this.appstylemode =GetAppStyleMode();
+    await this.Init();  
 
-   let teammanagers_alias_str =
+     //loading completed.
+     this.loaded = true;
+
+   
+  },
+
+  methods: {
+    //Show | show Nav Bar of left panel
+    ToggleNavBar(siteNivBar_expanded) {
+      this.siteNivBar_expanded = siteNivBar_expanded;
+    },
+
+       CleanCache() {
+        this.showDialog = true;
+    },
+
+    async Init(){
+      let teammanagers_alias_str =
       GetSettingFromSessionStorage("teammanagers_alias");
 
     if(teammanagers_alias_str=== null){
@@ -285,18 +355,29 @@ export default {
        SaveSettingToSessionStorage("teammanagers_alias",setting.teammanagers_alias);
     }
 
+    this.Generate_Pods();
+
     let teammanagers_alias =
       GetSettingFromSessionStorage("teammanagers_alias").split(",");
+        
 
     this.userRole = await WebAPI_Helper("get", "currentuserrole", null);
 
+    this.montlymetrics_teams = [];
+
     //initial backlog for each team before we are going to analyze the data;
     for (let i = 0; i < teammanagers_alias.length; i++) {
-       if(teammanagers_alias[i]==="" || teammanagers_alias[i] ===null) continue;
-
-      //  if (this.userRole <=3 && teammanagers_alias[i] !== GetSettingFromSessionStorage("whoami")) continue;
-
-      const data = await this.MonthlyMetricsByManager(teammanagers_alias[i]);
+       if(teammanagers_alias[i]==="" || teammanagers_alias[i] ===null) continue;  
+       
+       let metricsFilterByPod = this.metricsFilterByPod = GetSettingFromLocalStorage("metricsFilterByPod")!== null? GetSettingFromLocalStorage("metricsFilterByPod") : false;
+       let data;
+       if(metricsFilterByPod === true || metricsFilterByPod === 'true'){
+         let podsSelectedForMetrics = GetSettingFromLocalStorage("podsSelectedForMetrics")
+         data = await this.MonthlyMetricsByManagerByPods(teammanagers_alias[i], podsSelectedForMetrics);
+       }
+       else {
+          data = await this.MonthlyMetricsByManager(teammanagers_alias[i]);
+       }
       const item = {
         manager: teammanagers_alias[i],
         metricses: data
@@ -374,17 +455,7 @@ export default {
       this.analyzed_ds_teams = [...this.analyzed_ds_teams, data_point];
       this.Clean_Dataset_ForAllCharts();
     }
-    this.loaded = true;
-  },
 
-  methods: {
-    //Show | show Nav Bar of left panel
-    ToggleNavBar(siteNivBar_expanded) {
-      this.siteNivBar_expanded = siteNivBar_expanded;
-    },
-
-       CleanCache() {
-        this.showDialog = true;
     },
 
     async GetFreshTime() {
@@ -394,8 +465,8 @@ export default {
     async RefreshConfirmed(){
       this.showDialog=false;
       await WebAPI_Helper("get", "cleancache/cachetype/metrics/teamoruser/na", null);
-      location.reload();
-
+       location.reload();
+       //this.Init();
     },
 
     
@@ -403,12 +474,110 @@ export default {
       this.showDialog=false;   
 
     },
+
+    async AssignmentByManager(manager_alias,mode) {
+      let data = WebAPI_Helper(
+        "get",
+        "assignments/manager/" + manager_alias + "/mode/" + mode,
+        null
+      );
+
+      return data;
+    },
+
+    Convert_To_Pods(pods){
+      let temp_pods=[];  
+      pods.forEach(item =>{
+            let temp = {"pod":item,"number":0};
+            temp_pods.push(temp);
+        })
+        return temp_pods
+    },
+
+    async Generate_Pods(){
+      const pods = GetSettingFromSessionStorage("AllPods");   
     
+      if(pods !== null) {       
+        this.Pods = this.Convert_To_Pods(pods.split(","));
+      }else {
+        let teammanagers_alias =
+        GetSettingFromSessionStorage("teammanagers_alias").split(",");
+
+        for (let i = 0; i < teammanagers_alias.length; i++) {
+        if (teammanagers_alias[i] === "" || teammanagers_alias[i] === null)
+          continue;      
+
+        let assignments = await this.AssignmentByManager(teammanagers_alias[i], 1);
+        this.Retrieve_Pod(assignments);
+           }
+
+      }
+    },    
+
+    Retrieve_Pod(assignments){    
+     
+     assignments.forEach((assignment) => {
+       let pod_index = -1;
+       let pod_item = {pod:"",number:0};
+       pod_item.pod = assignment.support_pod;
+      
+       if(pod_item.pod === null)  {
+           pod_item.pod = "Unknown";                 
+       }
+
+       pod_index = this.Pods.findIndex(function checkValue(element) {
+         return element.pod === assignment.support_pod;
+       })
+
+       if (pod_index === -1) {
+         pod_item.number = 1;
+         this.Pods.push(pod_item);
+       }
+       else {
+         this.Pods[pod_index].number +=1;
+       }
+     });
+   },
+
+
+   ShowPodFilter(){
+    this.showPodFilter = true;
+   },
+
+ Apply_PodFilter(params){
+   // this.metricsFilterByPod = true;
+    this.showPodFilter = false;
+    SaveSettingToLocalStorage("pod_Filters_Description","PODS In (' "+ params.data_chosen +" ')")    
+    SaveSettingToLocalStorage("podsSelectedForMetrics",params.data_chosen);
+    SaveSettingToLocalStorage("metricsFilterByPod",true);
+    // this.Init();   
+    location.reload();
+   },
+
+   Cancel_PodFilter(){
+     this.metricsFilterByPod = false;
+     ClearSettingFromLocalStorage("pod_Filters_Description");
+     ClearSettingFromLocalStorage("metricsFilterByPod");
+     ClearSettingFromLocalStorage("podsSelectedForMetrics");
+    this.showPodFilter = false;   
+     //this.Init();   
+     location.reload();
+   },
 
     async MonthlyMetricsByManager(manager_alias) {
       const data = WebAPI_Helper(
         "get",
-        "monthlymetrics(" + manager_alias + ")",
+        "monthlymetrics/" + manager_alias + "",
+        null
+      );
+
+      return data;
+    },
+
+    async MonthlyMetricsByManagerByPods(manager_alias,pods) {
+      const data = WebAPI_Helper(
+        "get",
+        "monthlymetrics/" + manager_alias + "/pods/" + pods,
         null
       );
 

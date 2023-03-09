@@ -56,22 +56,23 @@
               margin: 5px;
               float: left;
               padding-left: 20px;
+              width:45%;
             "
-            v-bind:key="pod"
-            v-for="pod in pods"
+            v-bind:key="pod_item"
+            v-for="pod_item in pods"
           >
             <label
               class="container"
               style="
                 text-transform: uppercase;
                 display: inline-block;
-                width: 350px;
+                width: 100%;
               "             
-              ><i class="fas fa-user-alt"></i> {{ pod }} 
+              ><i class="fas fa-cubes"></i> {{ POD_V1(pod_item) }}
               <input
                 type="checkbox"
                 v-model="pods_chosen"
-                :value="pod"
+                :value="pod_item.pod"
                 name="pods_chosen"              
               />
               <span class="checkmark"></span>
@@ -96,7 +97,7 @@
           <button
             type="button"
             class="cancelfilter_button"
-            @click="$emit('Cancel_Filter')"
+            @click="$emit('Cancel_PodFilter')"
           >
             <i class="fas fa-eraser"></i> Clean Filter
           </button>
@@ -110,7 +111,7 @@
 
 <script>
 export default {
-  name: "CustomerFocusFilterModal",
+  name: "PODFilterModal",
   data() {
     return {
       pods_chosen: [],
@@ -128,25 +129,54 @@ export default {
     },
   },
 
+  
   created() {  
 
     
   },
 
   methods: {
+
+    Shorten_POD (pod_item)
+    {
+        if(pod_item.pod.length >=30){
+            return  pod_item.pod.substring(0,30);
+           }
+          
+        return pod_item.pod;
+    },
+
+    POD_V1(pod_item){
+      if(pod_item.pod === null) return ;
+
+      //cut the long pod name
+      // if(pod_item.pod.length >=30){
+      //     pod_item.pod = pod_item.pod.substring(0,30);
+      //    }
+
+      if(pod_item.number !== 0){
+         
+        return `${pod_item.pod} ( ${pod_item.number} )`
+      }
+      else
+      return `${pod_item.pod} `
+
+
+    
+    },
+
     apply_filter() {
       if (this.pods_chosen.length !== 0) {
-        this.$emit("ApplyFilter", this.pods_chosen, "podfilter");
+        let params= {
+          data_chosen : this.pods_chosen,
+          filtermode:"podfilter"
+        };
+        this.$emit("ApplyPodFilter", params);
       }
     },
-
-    cancal_filter() {
-      this.engineers_chosen = null;
-      this.$emit("Cancel_Filter");
-    },
-
+   
      CloseModal() {    
-      this.$emit("CloseEngineerFilterModal");
+      this.$emit("ClosePodFilterModal");
     },
    
   },

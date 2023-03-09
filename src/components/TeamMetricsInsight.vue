@@ -48,7 +48,7 @@
           <a><i class="fas fa-th" title="Daily View"></i> </a>
         </li>
 
-        <li v-show="userrole<=4"
+        <li v-show="userrole<=2"
           style="float: right;"
           v-bind:class="{
             filter_applied: filterApplied === true,
@@ -495,7 +495,7 @@ export default {
       this.yearmonth = parseInt(yearmonthdate_string.slice(0, 6));
 
       let teammanagers_alias=[];
-      if(this.userrole <=4) // the engineer filter will be enabled for M1 manager or below.
+      if(this.userrole <=2) // the engineer filter will be enabled for M1 manager or below.
       {
       const whoami = GetSettingFromSessionStorage("whoami") !== null?GetSettingFromSessionStorage("whoami") : await WebAPI_Helper("get","whoami",null);
       SaveSettingToSessionStorage("whoami",whoami);
