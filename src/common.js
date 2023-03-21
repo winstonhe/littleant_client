@@ -196,8 +196,27 @@ let Shuffle = (backgroundColor_Array) => {
   return backgroundColor_Array;
 }
 
+let Get_Team_DisplayName =(manager_alias) =>{
+
+  let engineerMode_Enabled = GetSettingFromSessionStorage("EngineerModeEnabled"+"_Of_Team_"+manager_alias);
+
+  if(engineerMode_Enabled === null || engineerMode_Enabled === undefined)
+    return manager_alias;
+  else if(engineerMode_Enabled === 'false') {
+    return manager_alias;
+  }
+  else if(engineerMode_Enabled === 'true') {
+    let team_displayname = GetSettingFromSessionStorage("Displayname"+"_Of_Team_"+manager_alias)
+    if(team_displayname === null || team_displayname === undefined)
+      return manager_alias;
+      else
+      return team_displayname;
+  }
+
+}
+
 export {
   WebAPI_Helper, Process_Country, Sleep, SetAppStyleMode, GetAppStyleMode, Days_Diff,
   DataLabelFormatter, GetSettingFromLocalStorage, GetSettingFromSessionStorage, SaveSettingToSessionStorage,
-  SaveSettingToLocalStorage, ClearSettingFromLocalStorage, Shuffle,
+  SaveSettingToLocalStorage, ClearSettingFromLocalStorage, Shuffle,Get_Team_DisplayName,
 }

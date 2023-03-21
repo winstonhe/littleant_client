@@ -7,9 +7,7 @@
       NavBarExpanded: siteNivBar_expanded === 'true',
     }"
   >
-    <div id="loadingcontainer" v-show="loaded !== true">
-      <img src="../images/loading.jpg" />
-    </div>
+  <LoadingCircle :showLoading="loaded === false" ></LoadingCircle>
 
   <RefreshConfirmationModal :showDialog="showDialog" @Refresh_Confirmed="RefreshConfirmed" @Refresh_Canceled="RefreshCanceled"  greetingMessage="Are you sure to refresh the cache to get the live data which could take seconds ?">
   </RefreshConfirmationModal>
@@ -70,7 +68,7 @@
           'black-text': appstylemode === 'DEFAULT',
         }"
         style="display:block;font-size:14px;text-align:left;padding:10px;text-transform: uppercase;text-align:left;c"
-        ><i class="fas fa-user-friends" :class="{seperator: index!==0 }"></i> {{ data.manager }}'S TEAM
+        ><i class="fas fa-user-friends" :class="{seperator: index!==0 }"></i> {{ Get_Team_DisplayName(data.manager) }}'S TEAM
       </label>
 
       <!-- Statistics  start-->
@@ -221,7 +219,7 @@
       <div style="clear: both"></div>
     </div>
   </div>
-    <Footer :appstylemode="appstylemode" />
+    <Footer :appstylemode="appstylemode" v-if="loaded === true"/>
 </template>
 <script>
 import {
@@ -231,9 +229,9 @@ import {
   GetSettingFromLocalStorage,
   SaveSettingToLocalStorage,
      GetAppStyleMode,
-
   Shuffle,
-  ClearSettingFromLocalStorage,
+  ClearSettingFromLocalStorage,Get_Team_DisplayName
+ 
 } from "../common.js";
 
 import ChartBarByEngineer from "./ChartBarByEngineer.vue";
@@ -241,6 +239,7 @@ import SiteNav from "../components/SiteNav";
 import Footer from "../components/layout/Footer";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
 import PODFilterModal from "./PODFilterModal";
+import LoadingCircle from "./LoadingCircle.vue";
 
 export default {
   name: "GroupMonthlyMetrics",
@@ -250,6 +249,7 @@ export default {
      Footer,
       RefreshConfirmationModal,
       PODFilterModal,
+      LoadingCircle,
   },
 
   data() {
@@ -345,6 +345,11 @@ export default {
        CleanCache() {
         this.showDialog = true;
     },
+
+    Get_Team_DisplayName(manager_alias) {
+      return Get_Team_DisplayName(manager_alias);
+    },
+
 
     async Init(){
       let teammanagers_alias_str =

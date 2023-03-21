@@ -3,22 +3,26 @@
     @ToggleNavBar="ToggleNavBar"
     :siteNivBar_expanded="siteNivBar_expanded"
   ></SiteNav>
+ 
   <div
     :class="{
       NavBarCollapsed: siteNivBar_expanded === 'false',
       NavBarExpanded: siteNivBar_expanded === 'true',
     }"
   >
-    <div id="loadingcontainer" v-show="loaded !== true">
+    <!-- <div id="loadingcontainer" v-show="false">
       <img src="../images/loading.jpg" />
-    </div>
+    </div> -->
+    <LoadingCircle :showLoading="loaded === false" ></LoadingCircle>
     <Nav
       v-show="loaded === true"
       @Show-Filter="ShowFilterModal"
       @Show-PodFilter="ShowPodFilterModal"
+      @Show-CustomerFilter="ShowCustomerFilterModal"
       @Switch-Chart="SwitchChart"
       :filterApplied="filterApplied"
       :podfilterApplied="podfilterApplied"
+      :customerfilterApplied="customerfilterApplied"
       :isTeamSwitched="isTeamSwitched"
       :chartEnabled="chartEnabled"
       :showAllActions="showAllActions"
@@ -87,6 +91,22 @@
         @ClosePodFilterModal="showPodFilter = false"
       ></PODFilterModal>
     </div>
+
+    <div
+      style="margin: 0px auto; width: 100%"
+      v-if="showCustomerFilter && userrole >= 2"
+    >    
+      <CustomerFilterModal
+        :customers="Customers"
+        :showDialog="showCustomerFilter"
+        :CustomersFilterModalTitle="CustomersFilterModalTitle"
+        @ApplyCustomerFilter="Apply_Filter"
+        @Cancel_CustomerFilter="Cancel_CustomerFilter"
+        @CloseCustomerFilterModal="showCustomerFilter = false"
+      ></CustomerFilterModal>
+
+    </div>
+  
 
     <div
       style="margin: 0px auto; width: 100%"
@@ -220,7 +240,7 @@
       >Something wrong happened , or you are not a user of little ant!</label
     >
   </div>
-  <Footer :appstylemode="appstylemode" />
+  <Footer :appstylemode="appstylemode" v-if="loaded === true"/>
   <div id="right" style="background-color: #eee"></div>
   <router-view></router-view>
 </template>
@@ -251,6 +271,9 @@ import RefreshConfirmationModal from "./RefreshConfirmationModal";
 import FeedbackModal from "./FeedbackModal";
 import TeamFilterModal from "../components/TeamFilterModal";
 import PODFilterModal from "../components/PODFilterModal";
+import CustomerFilterModal from "../components/CustomerFilterModal"
+
+import LoadingCircle from "./LoadingCircle.vue";
 
 import Footer from "../components/layout/Footer";
 // import SearchCase from '../components/SearchCase'
@@ -279,8 +302,11 @@ export default {
 
     FeedbackModal,
     PODFilterModal,
+    CustomerFilterModal,
     Footer,
     SiteNav,
+
+    LoadingCircle,
   },
   data() {
     return {
@@ -321,13 +347,17 @@ export default {
       backup_engineers: [], // the backup of engineers list
 
       loaded: false, //  a bool to see if the data is loaded completely
+   
       showFilter: false, // a bool to determine if filter modal show or hide
       showPodFilter: false, // a bool to deterin if pod filter modal sho or hide.
+
+      showCustomerFilter: false, // a bool to deterin if pod filter modal sho or hide.
 
       showDialog_Refresh: false,
 
       filterApplied: false, // a bool to check if enginer filter is applied or not.
       podfilterApplied: false, // a bool to check if pod filter is applied or not.
+      customerfilterApplied : false ,  // a bool to check if customer filter is applied or not.
 
       chartEnabled: "false", // enable chart or now.
 
@@ -382,7 +412,7 @@ export default {
       actions: [],
 
       //setting
-      setting: "",
+      setting: "", 
 
       //profile
       teamprofile: "",
@@ -398,6 +428,9 @@ export default {
 
       //Pods
       Pods: [],
+
+      //Customers
+      Customers :[],
 
       //dataset for charts
       dataset_chart_bubble: {
@@ -484,6 +517,12 @@ export default {
     ShowPodFilterModal() {
       this.showPodFilter = true;
     },
+
+     // Display POD Filter Modal
+     ShowCustomerFilterModal() {
+      this.showCustomerFilter = true;
+    },
+
 
     SwitchChart() {
       let chartEnabled = window.localStorage.getItem("chartEnabled"); // this.showAllActions);
@@ -599,6 +638,16 @@ export default {
 
      }     
 
+     else if(GetSettingFromLocalStorage("customerfilterApplied") === true || GetSettingFromLocalStorage("customerfilterApplied") === 'true') {
+       
+       const customers_chosen = JSON.parse(
+       GetSettingFromLocalStorage("customers_chosen")
+     );
+
+     params.filtermode ="customerfilter";
+     params.data_chosen = customers_chosen;   
+      }   
+
       //disable chart filter
       this.DisableChartFitler_UI();
 
@@ -616,6 +665,8 @@ export default {
       window.localStorage.removeItem("engineers_chosen");
       window.localStorage.removeItem("podfilterApplied");
       window.localStorage.removeItem("pods_chosen");
+      window.localStorage.removeItem("customerfilterApplied");
+      window.localStorage.removeItem("customers_chosen");
       window.sessionStorage.removeItem("showIdleCasesOnly");
 
       // the chosen team is not team current user belongs to.
@@ -943,6 +994,18 @@ export default {
       for (let i = 0; i < pods_chosen.length; i++) {
         if (
           serviceticket.sr_support_pod!==null &&serviceticket.sr_support_pod.toLowerCase().startsWith(pods_chosen[i].toLowerCase())
+        )
+          return true;
+      }
+
+      return false;
+    },
+
+       // Judge if current service ticekt belongs to any chosen customers.
+     IsCaseCustomer_In_Chosen_List(serviceticket, customers_chosen) {
+      for (let i = 0; i < customers_chosen.length; i++) {
+        if (
+          serviceticket.primaryAddress!==null &&serviceticket.primaryAddress.startsWith(customers_chosen[i])
         )
           return true;
       }
@@ -1305,7 +1368,7 @@ export default {
 
     // Apply filter to generate coreponding service ticket lists including total, 60,4560,3045,1530,15.
     Apply_Filter_Internal(data_chosen, filter_mode) {
-      let filter_callback = null; //=this.FilterByEngineers_Callback;
+      let filter_callback = null; 
       switch (filter_mode) {
         case "engineerfilter":
           //toggle the filter
@@ -1315,6 +1378,12 @@ export default {
           ClearSettingFromLocalStorage("pods_chosen");
           this.podfilterApplied = false; 
           SaveSettingToLocalStorage("podfilterApplied", "false");
+
+           //remove customer filter once engineer filter is applied.
+          ClearSettingFromLocalStorage("customers_chosen");
+          this.customerfilterApplied = false; 
+          SaveSettingToLocalStorage("customerfilterApplied", "false");        
+
 
           if (data_chosen !== null) {
             SaveSettingToLocalStorage("filterApplied", "true");
@@ -1336,7 +1405,12 @@ export default {
             //remove engineer  filter once pod filter is applied.
           ClearSettingFromLocalStorage("engineers_chosen");
           this.filterApplied = false; 
-          SaveSettingToLocalStorage("filterApplied", "false");
+          SaveSettingToLocalStorage("filterApplied", "false");          
+
+          //remove customer  filter once pod filter is applied.
+          ClearSettingFromLocalStorage("customers_chosen");
+          this.customerfilterApplied = false; 
+          SaveSettingToLocalStorage("customerfilterApplied", "false");         
 
           if (data_chosen !== null) {
             SaveSettingToLocalStorage("podfilterApplied", "true");
@@ -1350,6 +1424,35 @@ export default {
           }
           filter_callback = this.FilterByPods_Callback;
           break;
+        
+        case "customerfilter":
+
+        //toggle the filter
+        this.showCustomerFilter = false; 
+
+        //remove engineer  filter once pod filter is applied.
+        ClearSettingFromLocalStorage("engineers_chosen");
+        this.filterApplied = false; 
+        SaveSettingToLocalStorage("filterApplied", "false");
+
+         //remove pod  filter once customer filter is applied.
+         ClearSettingFromLocalStorage("pods_chosen");
+        this.podfilterApplied = false; 
+        SaveSettingToLocalStorage("podfilterApplied", "false");
+
+        if (data_chosen !== null) {
+        SaveSettingToLocalStorage("customerfilterApplied", "true");
+
+        this.customerfilterApplied = "true";
+        // persist the chosen engineers list to local storage.
+        SaveSettingToLocalStorage(
+          "customers_chosen",
+          JSON.stringify(data_chosen)
+        );
+        }
+        filter_callback = this.FilterByCustomers_Callback;
+        break;
+        
           default:
           filter_callback = this.FilterByEngineers_Callback;
           break;
@@ -1481,6 +1584,39 @@ export default {
       return temp_list;
     },
 
+    FilterByCustomers_Callback(servicetickets, customers_chosen) {
+      let temp_list = [];
+
+      if (servicetickets === null) return null;
+
+      if (customers_chosen === null || customers_chosen === undefined || customers_chosen.length===0) {
+        temp_list = servicetickets;
+      } else {
+        for (let i = 0; i < servicetickets.length; i++) {
+          if (
+            this.IsCaseCustomer_In_Chosen_List(servicetickets[i], customers_chosen)
+          ) {
+            //check if trendingissueonly switch is on or off
+            temp_list = [...temp_list, servicetickets[i]];
+          }
+        }
+      }
+
+      // Just choose idle cases if showidlecasesonly is applied.
+      if (GetSettingFromSessionStorage("showIdleCasesOnly") === "true") {
+        let idle_threshold =
+          GetSettingFromSessionStorage("Idle_Threshold_In_Days") !== null
+            ? parseInt(GetSettingFromSessionStorage("Idle_Threshold_In_Days"))
+            : 7;
+
+        temp_list = temp_list.filter(
+          (item) => item.sr_idle_days > idle_threshold
+        );
+      }
+
+      return temp_list;
+    },
+
     Refresh_Summary() {
       this.summary.count15 = this.servicetickets_15.length;
       this.summary.count1530 = this.servicetickets_15_30.length;
@@ -1527,7 +1663,8 @@ export default {
       if (this.chartFilter_Enabled !== true) {
         if (
           (this.filterApplied === "false" ||    this.filterApplied === false ||     this.filterApplied === undefined) &&
-          (this.podfilterApplied === "false" ||          this.podfilterApplied === false || this.podfilterApplied === undefined)
+          (this.podfilterApplied === "false" || this.podfilterApplied === false || this.podfilterApplied === undefined) &&
+          (this.customerfilterApplied === "false" ||  this.customerfilterApplied === false || this.customerfilterApplied === undefined)
         ) {
           if (
             this.showIdleCasesOnly === "false" ||  this.showIdleCasesOnly === false
@@ -1592,6 +1729,27 @@ export default {
       //refersh the acton cards
       this.Generate_Actions(this.backup_servicetickets);
     },
+
+    Cancel_CustomerFilter() {
+      //disable chart filter
+      this.DisableChartFitler_UI();
+
+      //set filterAplied status as false
+      SaveSettingToLocalStorage("customerfilterApplied", "false");
+      this.customerfilterApplied = "false";
+
+      //clean the chosen engineers list so that all service tickets will be loaded.
+      ClearSettingFromLocalStorage("customers_chosen");
+
+      this.showCustomerFilter = false; // !this.showFilter;
+
+      this.Refresh_Default_Categarized_ServiceLists();
+      this.Generate_Dataset_For_Charts();
+
+      //refersh the acton cards
+      this.Generate_Actions(this.backup_servicetickets);
+    },
+
 
 
     Refresh_Trending_Issues_Count(servicetickets) {
@@ -1668,8 +1826,7 @@ export default {
 
       let servicetickets_filteredfromchart = [];
       let filter;
-      //console.log(value);
-      switch (parameter) {
+       switch (parameter) {
         case "ICM":
           if (value === "Cases with IcM Raised") {
             filter = "IcM Raised ";
@@ -1884,6 +2041,35 @@ export default {
           this.Pods[pod_index].number +=1;
         }
       });
+    },
+
+      
+    //Generate Customers for further filter
+    Generate_Customers(servicetickets) {            
+     
+      servicetickets.forEach((ticket) => {
+        let index = -1;
+        let item = {customer:"",number:0};
+        item.customer = ticket.primaryAddress;
+       
+        if(item.customer === null)  {
+            item.customer = "Unknown";                 
+        }
+
+        index = this.Customers.findIndex(function checkValue(element) {
+          return element.customer === ticket.primaryAddress;
+        })
+
+        if (index === -1) {
+          item.number = 1;
+          this.Customers.push(item);
+        }
+        else {
+          this.Customers[index].number +=1;
+        }
+      });
+
+      this.Customers = this.Customers.filter(customer => customer.number > 2).sort((a,b)=>b.number - a.number);
     },
 
     // Generat action card list
@@ -2134,6 +2320,7 @@ export default {
     async Init() {
       //loaded = false so that the loaing animation will be displayed
       this.loaded = false;
+      this.loading = true;
 
       //Modify the page title
       document.title = this.$route.meta.title;
@@ -2256,6 +2443,7 @@ export default {
 
       this.EngineersFilterModalTitle = "Please select engineers";
       this.PodsFilterModalTitle = "Please select PODs";
+      this.CustomersFilterModalTitle ="Note: Only customers with over 2 open cases will be filtered here"
 
       // Cache the approver list if it's an admin
       //if (this.userrole >=2)
@@ -2294,8 +2482,13 @@ export default {
 
       //generate action cards:
       this.Generate_Actions(this.servicetickets);
+
+      //generate pods
       this.Generate_Pods(this.servicetickets);
 
+      //generate customers
+      this.Generate_Customers(this.servicetickets);
+  
       if (this.servicetickets !== null) {
         this.Refresh_Default_Categarized_ServiceLists();
       }
@@ -2311,6 +2504,13 @@ export default {
         GetSettingFromLocalStorage("podfilterApplied") === null
           ? "false"
           : GetSettingFromLocalStorage("podfilterApplied");
+
+
+       //initialize the customer filterApplied status
+      this.customerfilterApplied =
+        GetSettingFromLocalStorage("customerfilterApplied") === null
+          ? "false"
+          : GetSettingFromLocalStorage("customerfilterApplied");
 
 
       //Apply the engineers filter if it's applied before.
@@ -2332,12 +2532,23 @@ export default {
         const pods_chosen = JSON.parse(
           GetSettingFromLocalStorage("pods_chosen")
         );
-
-        //hide the filter
-        this.showPodFilter = true; // set it as true then apply_filter wil toggle the value as false
+      
         let params = {
           data_chosen: pods_chosen,
           filtermode: "podfilter",
+        };
+        this.Apply_Filter(params);
+      }
+         //check if customer filter is enabled 
+     else if(this.customerfilterApplied === "true") {
+        const customers_chosen = JSON.parse(
+          GetSettingFromLocalStorage("customers_chosen")
+        );
+
+   
+        let params = {
+          data_chosen: customers_chosen,
+          filtermode: "customerfilter",
         };
         this.Apply_Filter(params);
       }

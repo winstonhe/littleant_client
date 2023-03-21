@@ -7,9 +7,7 @@
       NavBarExpanded: siteNivBar_expanded === 'true',
     }"
   >
-    <div id="loadingcontainer" v-show="loaded === false">
-      <img src="../images/loading.jpg" />
-    </div>
+  <LoadingCircle :showLoading="loaded === false" ></LoadingCircle>
 
     <div v-show="loaded === true">
       <EngineerFilterModal
@@ -34,7 +32,7 @@
           }"
           @click="showChartofMonth"
         >
-          <a><i class="fas fa-th-large" title="Monthly View"></i> </a>
+          <a><i class="fas fa-th-large" title="Monthly View (Past 12 months)"></i> </a>
         </li>
 
         <li
@@ -45,7 +43,7 @@
           }"
           @click="showChartofDate"
         >
-          <a><i class="fas fa-th" title="Daily View"></i> </a>
+          <a><i class="fas fa-th" title="Daily View (Past 30 days)"></i> </a>
         </li>
 
         <li v-show="userrole<=2"
@@ -202,7 +200,7 @@
     </div>
   </div>
   <div style="clear: both"></div>
-  <Footer :appstylemode="appstylemode" />
+  <Footer :appstylemode="appstylemode" v-if="loaded === true"/>
 </template>
 <script>
 import {
@@ -212,6 +210,7 @@ import {
   GetSettingFromLocalStorage,
   SaveSettingToLocalStorage,
   GetAppStyleMode,
+  Get_Team_DisplayName
 
 } from "../common.js";
 
@@ -220,6 +219,7 @@ import ChartLinePercentage from "./ChartLinePercentage";
 import SiteNav from "./SiteNav";
 import Footer from "../components/layout/Footer";
 import EngineerFilterModal from "../components/EngineerFilterModal";
+import LoadingCircle from "./LoadingCircle.vue";
 
 export default {
   name: "TeamMetricsInsight",
@@ -228,6 +228,7 @@ export default {
     ChartLinePercentage,
     SiteNav,
     EngineerFilterModal,
+    LoadingCircle,
     Footer,
   },
 
@@ -570,7 +571,7 @@ export default {
     let isDataContained = this.dataset_chart_line.datasets[0].data.filter( data => data!==0).length >0;
 
       this.Team_DataSet = {
-        name: manager_alias+ "'s TEAM",
+        name:Get_Team_DisplayName(manager_alias)+ "'s TEAM",
         isDataContained: isDataContained,
         dataset: team_dataset_chart_line,
         dataset_assigned: team_dataset_chart_line_assigned,
@@ -661,9 +662,9 @@ export default {
 
         let month = parseInt(this.yearmonthdate.toString().slice(4, 6));
         let year = parseInt(this.yearmonthdate.toString().slice(0, 4));
-        if (month >= 6) {
+        if (month >= 12) {
           // generate labels of month if month >=6
-          for (let i = month - 5; i <= month; i++) {
+          for (let i = month - 11; i <= month; i++) {
             let month = "";
             let yearmonth = "";
             if (i.toString().length == 1) month = "0" + i.toString();
@@ -672,9 +673,9 @@ export default {
             yearmonth = year.toString() + month;
             labels_xAxis.push(yearmonth);
           }
-        } else if (month <= 5) {
+        } else if (month <= 11) {
           // generate labels of month if month <=5
-          for (let i = 5 - month; i >= 0; i--) {
+          for (let i = 11 - month; i >= 0; i--) {
             let month = "";
             if((12 - i).toString().length === 1) {
               month = "0" + (12 - i).toString();

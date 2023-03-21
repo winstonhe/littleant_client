@@ -9,9 +9,7 @@
       NavBarExpanded: siteNivBar_expanded === 'true',
     }"
   >
-    <div id="loadingcontainer" v-show="loaded !== true">
-      <img src="../images/loading.jpg" />
-    </div>
+  <LoadingCircle :showLoading="loaded === false" ></LoadingCircle>
 
     <RefreshConfirmationModal
       :showDialog="showDialog"
@@ -55,7 +53,7 @@
           text-transform: uppercase;
           text-align: left;
         "
-        ><i class="fas fa-user-friends" :class="{seperator: index!==0 }"></i> {{ data.manager }}'S TEAM</label
+        ><i class="fas fa-user-friends" :class="{seperator: index!==0 }"></i> {{ Get_Team_DisplayName(data.manager) }}'S TEAM</label
       >
       <div style="clear: both"></div>
 
@@ -70,7 +68,7 @@
     </div>
     <div style="clear: both"></div>
   </div>
-  <Footer :appstylemode="appstylemode" />
+  <Footer :appstylemode="appstylemode" v-if="loaded === true"/>
 </template>
 <script>
 import {
@@ -79,6 +77,7 @@ import {
   SaveSettingToSessionStorage,
   GetSettingFromLocalStorage,
      GetAppStyleMode,
+     Get_Team_DisplayName,
 } from "../common.js";
 
 import BookableResources from "./BookableResources.vue";
@@ -87,6 +86,7 @@ import ChartPieByResource from "./ChartPieByResource";
 //site nav
 import SiteNav from "../components/SiteNav";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
+import LoadingCircle from "./LoadingCircle.vue";
 
 export default {
   name: "GroupBookableResources",
@@ -96,6 +96,7 @@ export default {
     Footer,
     ChartPieByResource,
     RefreshConfirmationModal,
+    LoadingCircle,
   },
 
   data() {
@@ -198,6 +199,10 @@ export default {
           },
         ],
       };
+    },
+
+    Get_Team_DisplayName(manager_alias) {
+      return Get_Team_DisplayName(manager_alias);
     },
 
     async GetFreshTime() {

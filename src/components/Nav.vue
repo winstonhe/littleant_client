@@ -134,6 +134,19 @@
       v-show="userrole >=2"
       style="float: right"
       v-bind:class="{
+        filter_applied: customerfilterApplied === 'true' || customerfilterApplied===true,
+        filter_canceled:
+          customerfilterApplied === 'false' ||  customerfilterApplied === false ||customerfilterApplied === undefined,
+      }"
+      @click="$emit('Show-CustomerFilter')"
+    >
+      <a><i class="fas fa-user-alt" title="Filter By Customers"></i> </a>
+    </li>
+
+    <li
+      v-show="userrole >=2"
+      style="float: right"
+      v-bind:class="{
         filter_applied: podfilterApplied === 'true' || podfilterApplied===true,
         filter_canceled:
           podfilterApplied === 'false' ||  podfilterApplied === false ||podfilterApplied === undefined,
@@ -191,7 +204,7 @@ import SearchCase from "../components/SearchCase";
 
 export default {
   name: "Nav",
-  props: ["filterApplied","podfilterApplied","isTeamSwitched", "chartEnabled","showAllActions","chartFilter_Enabled","chart_Filters_Description","showIdleCasesOnly"],
+  props: ["filterApplied","podfilterApplied","customerfilterApplied","isTeamSwitched", "chartEnabled","showAllActions","chartFilter_Enabled","chart_Filters_Description","showIdleCasesOnly"],
 
   data() {
     return {

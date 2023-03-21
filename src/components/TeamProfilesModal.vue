@@ -245,6 +245,43 @@
              
             </tr>
 
+            <tr>   
+              <td>
+                <div style="display: inline-block; margin: 5px; float: left">
+                  <label class="switch" style="display: inline-block">
+                    <input
+                      type="checkbox"
+                      v-model="Enable_Engineer_Mode"
+                      :value="true"
+                    />
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+
+                <div
+                  style="display: inline-block; float: left; padding-top: 10px"
+                >
+                  <label>Enable Engineer Mode </label>
+                </div>
+              </td>        
+
+              <td v-show="
+                Enable_Engineer_Mode === true || Enable_Engineer_Mode === 'true'
+              "> 
+                <label class="container" style="display: inline-block">
+                 Team Display Name Under Engineer Mode</label
+                >
+                <input
+                  type="text"
+                  placeholder="Type the team display name"
+                  v-model="team_displayname"
+                  name="team_displayname"
+                />           
+              </td>       
+                 
+             
+            </tr>
+
          
           </table>
 
@@ -252,7 +289,7 @@
 
           <table>               
  <!--Engineer mode-->
-            <tr>
+            <!-- <tr>
               <td style="width:98%">
                 <div style="display: inline-block; margin: 5px; float: left">
                   <label class="switch" style="display: inline-block">
@@ -271,7 +308,7 @@
                   <label>Enable Engineer Mode </label>
                 </div>
               </td>
-            </tr>   
+            </tr>    -->
 
             <tr v-show="
                 Enable_Engineer_Mode === true || Enable_Engineer_Mode === 'true'
@@ -285,7 +322,7 @@
                   style="width: 97.5%;"                    
                   v-model="Engineers_List"
                   name="Engineers_List"
-                  placeholder="Engineers seperated by ','. The engineers must belong to this team manager's members"
+                  placeholder="Engineers seperated by ','"
                 />
               </td>   
             </tr>    
@@ -369,6 +406,8 @@ export default {
 
       grouplead_alias:"", // group lead alias
 
+      team_displayname:"", // team display name
+
       Enable_Idle_Notification: false , //swithc to enable idle notificaiton sent;      
 
       userRole: "",
@@ -417,6 +456,7 @@ grouplead_alias(new_group) {
       this.Enable_Idle_Notification = teamprofile.Enable_Idle_Notification;
       this.Bandwidth_Per_Day = teamprofile.Bandwidth_Per_Day;
       this.Threshold_After_Solution_Delivered = teamprofile.Threshold_After_Solution_Delivered;
+      this.team_displayname = teamprofile.team_displayname;
     },
 
  
@@ -441,7 +481,9 @@ grouplead_alias(new_group) {
           timezone_offset: this.timezone_offset,
           Enable_Idle_Notification : this.Enable_Idle_Notification,
           Bandwidth_Per_Day : this.Bandwidth_Per_Day,
-          Threshold_After_Solution_Delivered : this.Threshold_After_Solution_Delivered
+          Threshold_After_Solution_Delivered : this.Threshold_After_Solution_Delivered,
+          team_displayname: this.team_displayname,
+
         };
         WebAPI_Helper("post", "upsertprofile", this.teamprofile);
         Sleep(500);        

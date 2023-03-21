@@ -6,9 +6,7 @@
         siteNivBar_expanded === 'false' || siteNivBar_expanded === undefined,
       NavBarExpanded: siteNivBar_expanded === 'true',
     }"  >
-      <div id="loadingcontainer" v-show="loaded !== true">
-      <img src="../images/loading.jpg" />
-      </div>
+        <LoadingCircle :showLoading="loaded === false" ></LoadingCircle>
 
     <RefreshConfirmationModal
       :showDialog="showDialog"     
@@ -96,7 +94,7 @@
             'black-text': appstylemode === 'DEFAULT',
           }"
           style="display:block;font-size:14px;text-align:left;padding:10px;text-transform: uppercase;text-align:left"
-          ><i class="fas fa-user-friends" style="margin-top: 20px"></i> {{ data.manager }}'S TEAM</label
+          ><i class="fas fa-user-friends" style="margin-top: 20px"></i> {{ Get_Team_DisplayName(data.manager) }}'S TEAM</label
         >
         <Displayboard
           :summary="data.summary"
@@ -135,7 +133,7 @@
       </div>
     </div>
   </div>
-  <Footer :appstylemode="appstylemode" />
+  <Footer :appstylemode="appstylemode" v-if="loaded === true"/>
 </template>
 <script>
 import {
@@ -144,6 +142,7 @@ import {
   SaveSettingToSessionStorage,
   GetSettingFromLocalStorage,
      GetAppStyleMode,
+     Get_Team_DisplayName,
 
   Shuffle,
 } from "../common.js";
@@ -156,6 +155,7 @@ import ChartPieByRegion from "./ChartPieByRegion.vue";
 import ChartBarByEngineer from "./ChartBarByEngineer";
 import Footer from "../components/layout/Footer";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
+import LoadingCircle from "./LoadingCircle.vue";
 
 import Displayboard from "../components/Displayboard.vue";
 
@@ -175,6 +175,7 @@ export default {
     Displayboard,
     Footer,
     RefreshConfirmationModal,
+    LoadingCircle,
   },
   data() {
     return {
@@ -434,6 +435,10 @@ export default {
         "showdetailsPanelofGroupDashboard",
         this.showdetailsPanelofGroupDashboard
       );
+    },
+
+    Get_Team_DisplayName(manager_alias) {
+     return  Get_Team_DisplayName(manager_alias);
     },
 
     async GetFreshTime() {

@@ -7,9 +7,7 @@
       NavBarExpanded: siteNivBar_expanded === 'true',
     }"
   >
-    <div id="loadingcontainer" v-show="loaded !== true">
-      <img src="../images/loading.jpg" />
-    </div>
+  <LoadingCircle :showLoading="loaded === false" ></LoadingCircle>
 
    <LoadingModal
         :showLoading="showLoading"      
@@ -100,7 +98,9 @@
 
       </ul>
 
-      <div v-for="(data, index) in analyzed_ds_teams" :key="data.manager">
+      <div v-for="(data, index) in analyzed_ds_teams" :key="data.team_displayname">
+
+        <div v-if="data.totalAssignment_count !== 0 || assignmentFilterByPod === false">
         <label
           :class="{
             'white-text': appstylemode === 'DARK' || appstylemode === null,
@@ -119,7 +119,7 @@
             class="fas fa-user-friends"
             :class="{ seperator: index !== 0 }"
           ></i>
-          {{ data.manager }}'S TEAM &nbsp;&nbsp;
+          {{ data.team_displayname }}'S TEAM &nbsp;&nbsp;
         </label>
 
         <!-- Statistics  start-->
@@ -172,6 +172,7 @@
             <!-- <div v-show="appstylemode === 'DARK'" style="background:gray;height:2px;width:100%;margin-bottom:0px" ></div> -->
           </div>
           <div style="clear: both"></div>
+         </div>
         </div>
 
         <!-- end -->
@@ -210,7 +211,7 @@
       </div>
     </div>
   </div>
-  <Footer :appstylemode="appstylemode" />
+  <Footer :appstylemode="appstylemode" v-if="loaded === true"/>
 </template>
 
 <script>
@@ -233,6 +234,7 @@ import ChartPieByAssignmentMethod from "./ChartPieByAssignmentMethod";
 import ChartPieByProgramType from "./ChartPieByProgramType";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
 import PODFilterModal from "./PODFilterModal";
+import LoadingCircle from "./LoadingCircle.vue";
 
 import Footer from "../components/layout/Footer";
 //site nav
@@ -254,6 +256,7 @@ export default {
     RefreshConfirmationModal,
     LoadingModal,
     PODFilterModal,
+    LoadingCircle,
  
     Footer,
   },
@@ -326,7 +329,15 @@ export default {
         "#df682e",
         "#126da2",
         "#361909",
-        "#516f57"
+        "#516f57",
+        "#E80CAA",
+        "#8500FF",
+        "#00AEF4",
+        "#F0CF3C",
+        "#D4942F",
+        "#155CD4",
+        "#B3D408",
+        "#84E5F5"
       ],
 
 
@@ -544,6 +555,11 @@ export default {
       
       //retrieve bandwidth from each team;
       let  Bandwidth_Per_Day =1.2;
+      let  engineerMode_Enabled = GetSettingFromSessionStorage("EngineerModeEnabled"+"_Of_Team_"+teammanagers_alias[i]) === "false" ||
+                                  GetSettingFromSessionStorage("EngineerModeEnabled"+"_Of_Team_"+teammanagers_alias[i])=== undefined?
+                                  "false":GetSettingFromSessionStorage("EngineerModeEnabled"+"_Of_Team_"+teammanagers_alias[i]);
+      
+      
       if(GetSettingFromSessionStorage("Bandwidth_Per_Day"+"_Of_Team_"+teammanagers_alias[i].toLowerCase()) == null){
      
         let teamprofile = await WebAPI_Helper(
@@ -553,9 +569,14 @@ export default {
         );
       
         Bandwidth_Per_Day =teamprofile.Bandwidth_Per_Day == undefined|| teamprofile.Bandwidth_Per_Day == null  ? 1.2: teamprofile.Bandwidth_Per_Day;
+        engineerMode_Enabled = teamprofile.Enable_Engineer_Mode == undefined|| teamprofile.Enable_Engineer_Mode == null  ? "false": teamprofile.Enable_Engineer_Mode;
 
         SaveSettingToSessionStorage("Bandwidth_Per_Day"+"_Of_Team_"+teammanagers_alias[i],Bandwidth_Per_Day)
-
+        SaveSettingToSessionStorage("EngineerModeEnabled"+"_Of_Team_"+teammanagers_alias[i],engineerMode_Enabled)
+        if(engineerMode_Enabled === "true") {
+          SaveSettingToSessionStorage("Displayname"+"_Of_Team_"+teammanagers_alias[i],teamprofile.team_displayname);
+        }
+       
       }    
 
         let data = await this.AssignmentByManager(teammanagers_alias[i], this.retrieveMode);
@@ -573,6 +594,7 @@ export default {
 
         let item = {
           manager: teammanagers_alias[i],
+          team_displayname : engineerMode_Enabled === "false"?teammanagers_alias[i] : GetSettingFromSessionStorage("Displayname"+"_Of_Team_"+teammanagers_alias[i]),
           assignments: data,
         };
         this.assignment_teams.push(item);
@@ -594,12 +616,13 @@ export default {
         //Generate dataset for team, the generate dataset will be stored tempororily by compononent data.
         this.Generate_Dataset_For_Charts(
           team.assignments,
-          team.manager,
+          team.manager,          
           engineers
         );
 
         let data_point = {
           manager: team.manager,
+          team_displayname: team.team_displayname,
           engineers: engineers.length,
           DSBarAssignment: this.dataset_chart_bar_assignment,
           DSPieBandwidth: this.dataset_chart_pie_by_bandwidth,

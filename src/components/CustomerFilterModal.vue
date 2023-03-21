@@ -1,5 +1,5 @@
 <template>
-  <div class="dialog" v-if="showTeamDialog">
+  <div class="dialog" v-if="showDialog">
     <div class="dialog_mask"></div>
     <div class="dialog_container">
       <div class="dialog_content">
@@ -20,7 +20,7 @@
               font-weight: lighter;
             "
           >
-           Switch Team 
+            Customer Filter
           </p>
           <p
             style="
@@ -33,7 +33,7 @@
               top: 10px;
               cursor: pointer;
             "
-            @click="CloseModal"
+         @click="CloseModal"
           >
             <i class="fas fa-times"></i>
           </p>
@@ -46,7 +46,7 @@
             color: black;
             text-align: left;
           "
-          v-text="teamFilterModalTitle"
+          v-text="CustomersFilterModalTitle"
         ></div>
 
         <div id="cpe_container" style="margin: 0px auto">
@@ -56,24 +56,23 @@
               margin: 5px;
               float: left;
               padding-left: 20px;
+              width:45%;
             "
-            v-bind:key="team"
-            v-for="team in teams"
+            v-bind:key="customer_item"
+            v-for="customer_item in customers"
           >
             <label
               class="container"
-              style="
-                text-transform: uppercase;
+              style="              
                 display: inline-block;
-                width: 220px;
-              "
-             
-              ><i class='fas fa-address-card'></i> {{ Get_Team_DisplayName(team) }} 
+                width: 100%;
+              "             
+              ><i class="fas fa-user-circle"></i> {{ Customer_V1(customer_item) }}
               <input
-                type="radio"
-                v-model="team_chosen"
-                :value="team"
-                name="team_chosen"               
+                type="checkbox"
+                v-model="customers_chosen"
+                :value="customer_item.customer"
+                name="customers_chosen"              
               />
               <span class="checkmark"></span>
             </label>
@@ -92,14 +91,14 @@
             }"
             @click="apply_filter"
           >
-          <i class="fas fa-random"></i> Proceed To Switch
+            <i class="fas fa-check"></i> Apply Filter
           </button>
           <button
             type="button"
             class="cancelfilter_button"
-            @click="$emit('CancelTeamFilter')"
+            @click="$emit('Cancel_CustomerFilter')"
           >
-            <i class="fas fa-times"></i> Cancel 
+            <i class="fas fa-eraser"></i> Clean Filter
           </button>
         </div>
       </div>
@@ -110,60 +109,66 @@
 </template>
 
 <script>
-import { GetSettingFromLocalStorage ,SaveSettingToSessionStorage,WebAPI_Helper,Get_Team_DisplayName } from '../common';
-
 export default {
-  name: "TeamFilterModal",
+  name: "CustomerFilterModal",
   data() {
     return {
-      team_chosen: [],
-      filter_enabled: false,    
+      customers_chosen: [],
+      filter_enabled: false,
+      Threshold_High_Backlog: 1000,
     };
   },
 
-  props: ["teams", "showTeamDialog", "teamFilterModalTitle"],
+  props: ["customers", "showDialog", "CustomersFilterModalTitle"],
 
   watch: {
-    team_chosen(new_team) {
-      if (new_team != "") this.filter_enabled = true;
+    customers_chosen(new_customerslist) {
+      if (new_customerslist != "") this.filter_enabled = true;
       else this.filter_enabled = false;
     },
   },
 
-  async created() {
+  
+  created() {  
 
-      let team_chosen;
-      if(GetSettingFromLocalStorage("cachedteamforservicetickets") === null){
-        const setting = await WebAPI_Helper("get", "getsetting", null);
-        SaveSettingToSessionStorage("teammanagers_alias",setting.teammanagers_alias);
-        team_chosen = setting.teammanagers_alias.split(",")[0];
-      }  else {
-        team_chosen = GetSettingFromLocalStorage("cachedteamforservicetickets");
-      }
-    this.team_chosen = team_chosen;
-   
+    
   },
 
   methods: {
+
+    Customer_V1(item){
+      if(item.customer === null) return ;
+
+      //cut the long pod name
+      //  if(item.customer.length >=24){
+      //   item.customer = item.customer.substring(0,24);
+      //     }
+
+      if(item.number !== 0){
+         
+        return `${item.customer} (${item.number})`
+      }
+      else
+      return `${item.customer} `
+
+
+    
+    },
+
     apply_filter() {
-      if (this.team_chosen.length !== 0) {
-        //this.engineers_chosen = this.engineers_chosen.sort(); // why i sort the selection? am I crazy?
-        this.$emit("ApplyTeamFilter", this.team_chosen);
+      if (this.customers_chosen.length !== 0) {
+        let params= {
+          data_chosen : this.customers_chosen,
+          filtermode:"customerfilter"
+        };
+        this.$emit("ApplyCustomerFilter", params);
       }
     },
-
-    cancal_filter() {
-      this.engineers_chosen = null;
-      this.$emit("CancelTeamFilter");
+   
+     CloseModal() {    
+      this.$emit("CloseCustomerFilterModal");
     },
-
-    CloseModal() {
-      this.$emit("CloseTeamFilterModal");
-    },
-
-    Get_Team_DisplayName(manager_alias){
-      return Get_Team_DisplayName(manager_alias);
-    },
+   
   },
 };
 </script>

@@ -49,11 +49,10 @@
     <div v-html="Computed_Program_Type"></div>
   </td>
   <td :title="Computed_Title"
-    :class="{
-       'Sev-A': serviceticket.sr_severityCode === 'A',
+    :class="{    
        'caseclosed': serviceticket.sr_status === 'Resolved',
-       'Pro_dark':   serviceticket.sr_service_level === 'Pro' && appstylemode === 'DARK' ,
-       'Pro_default':   serviceticket.sr_service_level === 'Pro' && appstylemode === 'DEFAULT' ,
+       'Pro_dark':   (serviceticket.sr_service_level === 'Pro' ||serviceticket.sr_service_level === 'Professional') && appstylemode === 'DARK' ,
+       'Pro_default':  (serviceticket.sr_service_level === 'Pro' ||serviceticket.sr_service_level === 'Professional') && appstylemode === 'DEFAULT' ,
        'MC_dark':   serviceticket.sr_service_level === 'MC' && appstylemode === 'DARK',
        'MC_default':   serviceticket.sr_service_level === 'MC' && appstylemode === 'DEFAULT'
   }"
@@ -95,7 +94,7 @@
     'a_default': appstylemode === 'DEFAULT',
     'a_dark': appstylemode === 'DARK',
     }"
-    :href="`https://unify.services.dynamics.com/CRM/Org/${serviceticket.org_ID}/Incident/ServiceDesk/${serviceticket.sr_number}/Home`"
+    :href="Computed_Unify(serviceticket)"
       target="_blank"
       >
       <i v-show="serviceticket.org_ID!==null" class="fab fa-gg"></i>
@@ -149,7 +148,12 @@
     <div v-html="Computed_Country" :title="serviceticket.sr_country_code"></div>
   </td>
 
-  <td style="text-align: left">
+  <td style="text-align: left" :title="ComputedCustomerTitle(serviceticket)"
+  :class="{
+       'CritsitOnce': serviceticket.iscritsit === true && serviceticket.isgoingcritsit === false,
+       'CritsitOngoing': serviceticket.isgoingcritsit === true,       
+  }"
+  >     
     {{ serviceticket.primaryAddress }}
     <i
       v-show="serviceticket.is_vip_notification_done === true"
@@ -297,6 +301,28 @@ export default {
       this.showDialog = true;
     },
 
+    Computed_Unify(serviceticket){
+      if(serviceticket.is_EU_Org !== null && serviceticket.is_EU_Org === true){
+        return `https://unify-eu.services.dynamics.com/CRM/Org/${serviceticket.org_ID}/Incident/ServiceDesk/${serviceticket.sr_number}/Home`
+      }
+      else
+      return `https://unify.services.dynamics.com/CRM/Org/${serviceticket.org_ID}/Incident/ServiceDesk/${serviceticket.sr_number}/Home`
+
+    },
+
+    ComputedCustomerTitle(serviceticket){
+    
+      if(serviceticket.isgoingcritsit) {
+        return  "Critsit Ongoing"
+      }
+
+      if(serviceticket.iscritsit) {
+        return "Critsit case once"
+      }
+      
+    },
+
+
     CloseAssignModal() {
       this.showDialog = false;
     },
@@ -380,7 +406,9 @@ export default {
       let title="";
       if(!(level=== "None" || level === null) ){
         switch(level) {
-         case "Premier" :  title +="Premier;" ; break;
+         case "Premier" : 
+         case "Prem": title +="Premier;" ; break;
+         case "Pro":
          case "Professional": title +="Professional;"; break;
          case "MC": title +="Mission Critical;"; break;
          default:"";
@@ -460,10 +488,15 @@ export default {
   color: #fff;
 }
 
-.Sev-A {
+.CritsitOnce {
   border-left: 3px red solid;
-  color: black;
+
 }
+
+.CritsitOngoing {
+  border-bottom: 1px red solid;
+}
+
 
 .Pro_dark {
   border-left: 3px rgb(153, 113, 132) solid;

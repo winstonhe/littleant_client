@@ -9,9 +9,7 @@
       NavBarExpanded: siteNivBar_expanded === 'true',
     }"
   >
-    <div id="loadingcontainer" v-show="loaded !== true">
-      <img src="../images/loading.jpg" />
-    </div>
+  <LoadingCircle :showLoading="loaded === false" ></LoadingCircle>
 
     
 
@@ -72,7 +70,7 @@
           filter_applied: filterApplied === true,
           filter_canceled: filterApplied === false,
         }"
-        @click="showFitler = true"
+        @click="showFilter = true"
         v-if="!ErrorRaised"
       >
         <a><i class="fas fa-filter" title="Filter PODs"></i> </a>
@@ -186,7 +184,7 @@
     </div>
   </div>
   <div style="clear: both"></div>
-  <Footer :appstylemode="appstylemode" />
+  <Footer :appstylemode="appstylemode"  v-if="loaded === true"/>
 </template>
 <script>
 import {
@@ -216,6 +214,7 @@ import ChartStackedBarByEngineer from "./ChartStackedBarByEngineer";
 import PODFilterModal from "./PODFilterModal";
 import LoadingModal from "./LoadingModal";
 import CustomerFocusProfileModal from "./CustomerFocusProfileModal"
+import LoadingCircle from "./LoadingCircle.vue";
 
 import { Buffer } from "buffer";
 
@@ -235,6 +234,7 @@ export default {
     PODFilterModal,
     LoadingModal,
     CustomerFocusProfileModal,
+    LoadingCircle,
   },
 
   data() {
