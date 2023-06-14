@@ -36,7 +36,9 @@ export default {
     
     this.userRole = await WebAPI_Helper("get", "currentuserrole", null);
 
-    if (window.location.href.length < 30) {     
+    if(this.userRole === 8) // deleted user not need to littleant page
+        this.$router.push("operationfootprint");
+    else if (window.location.href.length < 30) {     
        this.$router.push("dashboard");
     }
 

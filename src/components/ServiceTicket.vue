@@ -19,7 +19,7 @@
       style="color: darkred"
       title="High CPE Risk"
     ></i>
-    &nbsp;<i  v-show="serviceticket.latest_review_type === 10 && serviceticket.case_backup_owner!== null" class="fas fa-handshake">&nbsp;{{serviceticket.case_backup_owner}}</i>
+    &nbsp;<i  v-show="serviceticket.latest_review_type === 10 && serviceticket.case_backup_owner!== null &&serviceticket.case_backup_owner!== ''" class="fas fa-handshake">&nbsp;{{serviceticket.case_backup_owner}}</i>
     <i
       v-show="serviceticket.mce_status === 1"
       class="fas fa-phone-alt"
@@ -40,15 +40,19 @@
   <td
     :class="{
       S500_default:
-        serviceticket.programType !== 'None' && appstylemode === 'DEFAULT',
+        serviceticket.programType !== 'None' && serviceticket.programType !== null && appstylemode === 'DEFAULT',
       S500_dark:
-        serviceticket.programType !== 'None' && appstylemode === 'DARK'
+      serviceticket.programType !== 'None' && serviceticket.programType !== null && appstylemode === 'DARK',
+      ACE_default:
+      serviceticket.programType !== 'None' && serviceticket.programType === 'ACE' && appstylemode === 'DEFAULT',
+      ACE_dark:
+      serviceticket.programType !== 'None' && serviceticket.programType === 'ACE' && appstylemode === 'DARK'   
      
     }"
   >
     <div v-html="Computed_Program_Type"></div>
   </td>
-  <td :title="Computed_Title"
+  <td  :title="Computed_Title"
     :class="{    
        'caseclosed': serviceticket.sr_status === 'Resolved',
        'Pro_dark':   (serviceticket.sr_service_level === 'Pro' ||serviceticket.sr_service_level === 'Professional') && appstylemode === 'DARK' ,
@@ -56,17 +60,18 @@
        'MC_dark':   serviceticket.sr_service_level === 'MC' && appstylemode === 'DARK',
        'MC_default':   serviceticket.sr_service_level === 'MC' && appstylemode === 'DEFAULT'
   }"
-    style="text-align: left"
+    style="text-align: left;cursor: pointer; "
+    @click="copyToClipboard(serviceticket.sr_number)"
   >
-    <a
+    <!-- <a
       :class="{
         a_default: appstylemode === 'DEFAULT',
         a_dark: appstylemode === 'DARK',
       }"
       :href="`https://onesupport.crm.dynamics.com/main.aspx?appid=101acb62-8d00-eb11-a813-000d3a8b3117&forceUCI=1&pagetype=entityrecord&etn=incident&id=${serviceticket.sr_record_guid}&formid=33fb74b3-86ac-4db6-9904-2ad75648175b`"
       target="_blank"
-    >
-      {{ serviceticket.sr_number }}
+    > -->
+      {{ serviceticket.sr_number }} <i v-show="showTips" class="far fa-copy"></i>
       <i
         v-show="serviceticket.sr_TechBlockAssessment === 1"
         class="fas fa-bell"
@@ -84,7 +89,7 @@
         style="color: orangered"
         title="Trending Issue"
       ></i>     
-    </a>
+    <!-- </a> -->
    
   </td>
 
@@ -170,6 +175,11 @@
 
   <!-- <td>{{ shorDate }}</td> -->
   <td>{{ serviceticket.sr_age }}</td>
+  <td :title="serviceticket.sr_age - serviceticket.sr_days_since_solutiondelivered + ' days\' pain time '"  v-bind:class="{
+      long_pain_default: serviceticket.sr_age - serviceticket.sr_days_since_solutiondelivered >= 30 && appstylemode === 'DEFAULT',
+      long_pain_dark: serviceticket.sr_age - serviceticket.sr_days_since_solutiondelivered >= 30 && appstylemode === 'DARK',
+    }"
+    >{{serviceticket.sr_age - serviceticket.sr_days_since_solutiondelivered }} </td>
   <td
     v-bind:class="{
       long_idle_default: isIdle && appstylemode === 'DEFAULT',
@@ -206,7 +216,20 @@
   </td>
   <td style="text-align: center">{{ computed_POD }}</td>
 
-  <td style="text-align: left">{{ serviceticket.sr_title }}</td>
+  <td style="text-align: left">
+
+    <a
+      :class="{
+        a_default: appstylemode === 'DEFAULT',
+        a_dark: appstylemode === 'DARK',
+      }"
+      :href="`https://onesupport.crm.dynamics.com/main.aspx?appid=101acb62-8d00-eb11-a813-000d3a8b3117&forceUCI=1&pagetype=entityrecord&etn=incident&id=${serviceticket.sr_record_guid}&formid=33fb74b3-86ac-4db6-9904-2ad75648175b`"
+      target="_blank"
+    >
+    {{ serviceticket.sr_title }}       
+    </a>   
+  
+  </td>
   <td v-show="showInternalTitle==='true'" style="text-align: left">{{ serviceticket.sr_internaltitle }}</td> 
 
   <td style="text-align: left">
@@ -256,7 +279,8 @@ export default {
       showDialog: false,
       modalTitle: "",
       isIdle: false,
-      isIdleAfterSolutionDelivered:false
+      isIdleAfterSolutionDelivered:false,
+      showTips:false,
      
       //showInternalTitle:false,
     };
@@ -296,6 +320,23 @@ export default {
   },
 
   methods: {
+
+    copyToClipboard(text) {
+      const tempEl = document.createElement("textarea");
+      tempEl.value = text ;    
+      document.body.appendChild(tempEl);  
+      tempEl.select(); 
+      document.execCommand("copy");
+      document.body.removeChild(tempEl);  
+
+      this.showTips = true;
+
+      setTimeout(() => {
+       this.showTips = false
+      }, 2000);      
+      },
+
+
     Show_Assign_MCE_Modal() {
       this.modalTitle = "Please choose the engineer who will take MCE request";
       this.showDialog = true;
@@ -417,6 +458,7 @@ export default {
 
       if(!(programType ==="None" || programType === null))
       title +="  Progam Type: " + programType;
+      title +=" >>Click to copy case ID";
       return title;
     },
 
@@ -426,8 +468,8 @@ export default {
       switch (pod) {
         case "CE Application":
           return "APP";
-        case "CE Power Platform":
-          return "PP";
+        // case "CE Power Platform":
+        //   return "PP";
         case "CE Clients":
           return "Client";
         case "CE Platform":
@@ -475,6 +517,20 @@ export default {
   background-color: #444;
   color: #fff;
 }
+
+.ACE_dark {
+  border-left: 3px orange solid;
+  background-color: #444;
+  color: #fff;
+}
+
+.MC_default {
+  border-left: 3px orange solid;
+  background-color: #f2f2f2;
+  color: black;
+}
+
+
 
 .MC_default {
   border-left: 3px orange solid;
@@ -535,6 +591,18 @@ export default {
 
 .long_idle_dark {
   border-left: 3px red solid;
+  background-color: #444;
+  color: #fff;
+}
+
+.long_pain_default {
+  border-left: 3px #d11b8e solid;
+  background-color: #f2f2f2;
+  color: black;
+}
+
+.long_pain_dark {
+  border-left: 3px  #d11b8e solid;
   background-color: #444;
   color: #fff;
 }

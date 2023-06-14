@@ -16,11 +16,22 @@
         :pods="Pods"
         :showDialog="showPodFilter"
         :PodsFilterModalTitle="PodsFilterModalTitle"
+        :parameterForSelectedPods="'podsSelectedForMetrics'"
         @ApplyPodFilter="Apply_PodFilter"
         @Cancel_PodFilter="Cancel_PodFilter"
         @ClosePodFilterModal="showPodFilter = false"
       ></PODFilterModal>
   
+      <TeamFilterModal_MultipleChoose
+        :teams="teams"
+        :showTeamDialog="showTeamsModal"
+        @ApplyTeamFilter="Apply_Team_Filter"
+        :parameterForSelectedTeam="'selected_teams_metrics'"
+        @CancelTeamFilter="Cancel_Team_Fitler_Modal"
+        @CloseTeamFilterModal="Close_Team_Fitler_Modal"
+    >
+
+    </TeamFilterModal_MultipleChoose>
 
     <ul v-show="loaded === true">
       <li style="float: left">
@@ -37,6 +48,22 @@
           ></i>  &nbsp;{{latestFreshTime}} UTC
         </a>
       </li>
+
+      
+      <li 
+      style="float: right"
+      v-bind:class="{
+        filter_applied: isTeamFilterApplied === 'true' || isTeamFilterApplied===true,
+        filter_canceled:
+        isTeamFilterApplied === 'false' ||isTeamFilterApplied === false|| isTeamFilterApplied === undefined,
+      }"
+      @click="showTeamsModal= true"
+    >
+      <a>        
+        <i class="fas fa-sitemap" title="Choose Teams to filter"></i>
+      </a>
+    </li>
+
 
       <li        
          style="float: right"
@@ -230,7 +257,8 @@ import {
   SaveSettingToLocalStorage,
      GetAppStyleMode,
   Shuffle,
-  ClearSettingFromLocalStorage,Get_Team_DisplayName
+  ClearSettingFromLocalStorage,Get_Team_DisplayName,
+  Init_TeamDisplayNames
  
 } from "../common.js";
 
@@ -240,6 +268,7 @@ import Footer from "../components/layout/Footer";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
 import PODFilterModal from "./PODFilterModal";
 import LoadingCircle from "./LoadingCircle.vue";
+import TeamFilterModal_MultipleChoose from "./TeamFilterModal_MultipleChoose"
 
 export default {
   name: "GroupMonthlyMetrics",
@@ -250,6 +279,7 @@ export default {
       RefreshConfirmationModal,
       PODFilterModal,
       LoadingCircle,
+      TeamFilterModal_MultipleChoose
   },
 
   data() {
@@ -277,6 +307,10 @@ export default {
 
       //Pods
       Pods:[],
+
+      teams:[],
+      showTeamsModal:false,
+      isTeamFilterApplied:false,
 
       metricsFilterByPod:false,
 
@@ -310,6 +344,9 @@ export default {
 
       //metrices data for teams
       montlymetrics_teams: [],
+
+      //team mananger alias
+      teammanagers_alias:[]
     };
   },
 
@@ -328,11 +365,14 @@ export default {
     );
 
     this.appstylemode =GetAppStyleMode();
-    await this.Init();  
-
+    try
+    {
+      await this.Init();  
+    }
+    finally {
      //loading completed.
      this.loaded = true;
-
+    }
    
   },
 
@@ -350,6 +390,25 @@ export default {
       return Get_Team_DisplayName(manager_alias);
     },
 
+    Apply_Team_Filter(teams_chosen){
+      SaveSettingToLocalStorage("selected_teams_metrics",teams_chosen);
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = true;
+      this.Init();
+      location.reload();
+    },
+ 
+    Close_Team_Fitler_Modal(){
+      this.showTeamsModal = false;
+    },
+
+    Cancel_Team_Fitler_Modal(){     
+      ClearSettingFromLocalStorage("selected_teams_metrics");
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = false;
+      this.Init();
+     // location.reload();
+    },
 
     async Init(){
       let teammanagers_alias_str =
@@ -358,33 +417,41 @@ export default {
     if(teammanagers_alias_str=== null){
        const setting = await this.getsetting();
        SaveSettingToSessionStorage("teammanagers_alias",setting.teammanagers_alias);
-    }
+    }    
 
+    this.teammanagers_alias =
+      GetSettingFromSessionStorage("teammanagers_alias").split(",");       
+      
+    this.teams = this.teammanagers_alias; 
+
+    Init_TeamDisplayNames();
+   
+       //if teams filter was there, we apply the filter.
+   if(GetSettingFromLocalStorage("selected_teams_metrics")!==null) {
+        this.teammanagers_alias = GetSettingFromLocalStorage("selected_teams_metrics").split(",");
+        this.isTeamFilterApplied = true;
+      }           
+ 
     this.Generate_Pods();
-
-    let teammanagers_alias =
-      GetSettingFromSessionStorage("teammanagers_alias").split(",");
-        
-
     this.userRole = await WebAPI_Helper("get", "currentuserrole", null);
 
     this.montlymetrics_teams = [];
 
     //initial backlog for each team before we are going to analyze the data;
-    for (let i = 0; i < teammanagers_alias.length; i++) {
-       if(teammanagers_alias[i]==="" || teammanagers_alias[i] ===null) continue;  
+    for (let i = 0; i < this.teammanagers_alias.length; i++) {
+       if(this.teammanagers_alias[i]==="" || this.teammanagers_alias[i] ===null) continue;  
        
        let metricsFilterByPod = this.metricsFilterByPod = GetSettingFromLocalStorage("metricsFilterByPod")!== null? GetSettingFromLocalStorage("metricsFilterByPod") : false;
        let data;
        if(metricsFilterByPod === true || metricsFilterByPod === 'true'){
-         let podsSelectedForMetrics = GetSettingFromLocalStorage("podsSelectedForMetrics")
-         data = await this.MonthlyMetricsByManagerByPods(teammanagers_alias[i], podsSelectedForMetrics);
+         let podsSelectedForMetrics =JSON.parse(GetSettingFromLocalStorage("podsSelectedForMetrics"));
+         data = await this.MonthlyMetricsByManagerByPods(this.teammanagers_alias[i], podsSelectedForMetrics);
        }
        else {
-          data = await this.MonthlyMetricsByManager(teammanagers_alias[i]);
+          data = await this.MonthlyMetricsByManager(this.teammanagers_alias[i]);
        }
       const item = {
-        manager: teammanagers_alias[i],
+        manager: this.teammanagers_alias[i],
         metricses: data
        
       };
@@ -505,14 +572,14 @@ export default {
       if(pods !== null) {       
         this.Pods = this.Convert_To_Pods(pods.split(","));
       }else {
-        let teammanagers_alias =
-        GetSettingFromSessionStorage("teammanagers_alias").split(",");
+        // let teammanagers_alias =
+        // this.teammanagers_alias;
 
-        for (let i = 0; i < teammanagers_alias.length; i++) {
-        if (teammanagers_alias[i] === "" || teammanagers_alias[i] === null)
+        for (let i = 0; i < this.teammanagers_alias.length; i++) {
+        if (this.teammanagers_alias[i] === "" || this.teammanagers_alias[i] === null)
           continue;      
 
-        let assignments = await this.AssignmentByManager(teammanagers_alias[i], 1);
+        let assignments = await this.AssignmentByManager(this.teammanagers_alias[i], 1);
         this.Retrieve_Pod(assignments);
            }
 
@@ -553,7 +620,7 @@ export default {
    // this.metricsFilterByPod = true;
     this.showPodFilter = false;
     SaveSettingToLocalStorage("pod_Filters_Description","PODS In (' "+ params.data_chosen +" ')")    
-    SaveSettingToLocalStorage("podsSelectedForMetrics",params.data_chosen);
+    SaveSettingToLocalStorage("podsSelectedForMetrics", JSON.stringify(params.data_chosen));
     SaveSettingToLocalStorage("metricsFilterByPod",true);
     // this.Init();   
     location.reload();

@@ -32,6 +32,19 @@ let WebAPI_Helper = async (method, method_name, body) => {
 
 }
 
+let Init_TeamDisplayNames = async () =>
+{
+  let displayname_list = await WebAPI_Helper(
+      "get",
+      "teamdisplaynames",
+      ""
+    );
+
+    displayname_list.forEach(item =>{
+      SaveSettingToLocalStorage("Displayname"+"_Of_Team_"+item.team_alias,item.team_displayname);
+    })
+}
+
 
 
 
@@ -99,7 +112,12 @@ let Process_Country = (region) => {
     case "CO":
     case "MX":
     case "BR":
+    case "KH":
     case "GT":
+    case "PE":
+    case "KP":
+    case "HN":
+    case "LK":
       return "<img src='../img/regions/" + region + ".png' :title=${region}></img>";
     default:
       return "<label style='color:white;background-color:#2196F3'>" + region + "</label>";
@@ -198,25 +216,34 @@ let Shuffle = (backgroundColor_Array) => {
 
 let Get_Team_DisplayName =(manager_alias) =>{
 
-  let engineerMode_Enabled = GetSettingFromSessionStorage("EngineerModeEnabled"+"_Of_Team_"+manager_alias);
+  // let engineerMode_Enabled = GetSettingFromSessionStorage("EngineerModeEnabled"+"_Of_Team_"+manager_alias);
 
-  if(engineerMode_Enabled === null || engineerMode_Enabled === undefined)
-    return manager_alias;
-  else if(engineerMode_Enabled === 'false') {
-    return manager_alias;
-  }
-  else if(engineerMode_Enabled === 'true') {
-    let team_displayname = GetSettingFromSessionStorage("Displayname"+"_Of_Team_"+manager_alias)
-    if(team_displayname === null || team_displayname === undefined)
+  // if(engineerMode_Enabled === null || engineerMode_Enabled === undefined)
+  //   return manager_alias;
+  // else if(engineerMode_Enabled === 'false') {
+  //   return manager_alias;
+  // }
+  // else if(engineerMode_Enabled === 'true') {
+    let team_displayname = GetSettingFromLocalStorage("Displayname"+"_Of_Team_"+manager_alias)
+    if(team_displayname === "null"||team_displayname === null || team_displayname === undefined)
       return manager_alias;
       else
       return team_displayname;
-  }
+  //}
 
 }
+
+let Get_AccessDelegation_FullName =(alias) =>{ 
+    let fullname = GetSettingFromLocalStorage("Delegate_FullName"+"_Of_Team_"+alias);
+    if(fullname === null || fullname === undefined)
+      return alias;
+      else
+      return fullname;
+  }
+
 
 export {
   WebAPI_Helper, Process_Country, Sleep, SetAppStyleMode, GetAppStyleMode, Days_Diff,
   DataLabelFormatter, GetSettingFromLocalStorage, GetSettingFromSessionStorage, SaveSettingToSessionStorage,
-  SaveSettingToLocalStorage, ClearSettingFromLocalStorage, Shuffle,Get_Team_DisplayName,
+  SaveSettingToLocalStorage, ClearSettingFromLocalStorage, Shuffle,Get_Team_DisplayName,Init_TeamDisplayNames,Get_AccessDelegation_FullName
 }

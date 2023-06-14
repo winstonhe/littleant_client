@@ -32,12 +32,12 @@ import {
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale);
 
 export default {
-  name: "ChartPieByAssignmentMethod",
+  name: "ChartPieByServiceLevel",
   components: { Doughnut },
   props: {
     chartId: {
       type: String,
-      default: "piechartbyicm",
+      default: "piechartbyservicelevel",
     },
     datasetIdKey: {
       type: String,
@@ -70,7 +70,16 @@ export default {
     
   },
 
-  methods: {    
+  methods: { 
+    Filter_ServiceTickets_FromChart(evt, item) {     
+     
+       let selectedIndex=item[0].index;
+       let selectedLabel= this.$props.chartData.labels[selectedIndex]  
+ 
+  
+       this.$emit("E_FilterServiceTicketsFromChart", "SERVICELEVEL", selectedLabel);
+
+     },
   },
 
   data() {
@@ -78,7 +87,8 @@ export default {
     // store the orginal background color
       original_backgroundColor:"",
       chartOptions: {
-        responsive: true,       
+        responsive: true,     
+        onClick: this.Filter_ServiceTickets_FromChart,  
         layout: {
           padding: 10,
         },
@@ -97,7 +107,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: ["Distribution By Sevice Level"],
+            text: ["Cases By Sevice Level"],
           },
 
           legend: {
@@ -129,7 +139,10 @@ export default {
                 let percent = ((100 * currentvalue) / total).toFixed(1);
                
                 let tips =[ label,  "Count: " + currentvalue,  "Percentage: " + percent + "%"];
-                
+                if (context.dataset.data.length > 1) {
+                  tips = [...tips,""]
+                  tips = [...tips,"Click to filter data"]
+                }
                 return tips;
               },
             },

@@ -128,7 +128,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: "Case Distribution by Status",
+            text: "Cases By Status",
           },
 
           legend: {

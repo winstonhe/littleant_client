@@ -113,7 +113,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: "Case Distribution by Age by Idle Days",
+            text: "Cases By Age By Idle Days",
             //color: this.$props.appstylemode === 'DARK'?'white':'black',
           },
 

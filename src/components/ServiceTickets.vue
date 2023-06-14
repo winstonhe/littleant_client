@@ -31,6 +31,7 @@
 
           <!-- <th width="6%">Created On</th> -->
           <th width="3%">Age</th>
+          <th width="3%">Pain</th>
           <th width="3%">Idle</th>
 
           <th width="2%">Status</th>

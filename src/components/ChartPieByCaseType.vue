@@ -32,12 +32,12 @@ import {
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale);
 
 export default {
-  name: "ChartPieByIcM",
+  name: "ChartPieByCaseType",
   components: { Doughnut },
   props: {
     chartId: {
       type: String,
-      default: "piechartbyicm",
+      default: "piechartbycasetype",
     },
     datasetIdKey: {
       type: String,
@@ -75,9 +75,8 @@ export default {
     // const clicked_backgroundColor = 'blue'
      // get the selected label which will be conditiion to filter
 
-     let datalabels= this.$props.chartData.datalabels ;
-     console.log(datalabels)
-     
+  
+       
       //if(datalabels !== "100%") return; // only one label, then do nothing
 
       let selectedIndex=item[0].index;
@@ -99,7 +98,7 @@ export default {
           //this.$props.chartData.labels[item[0].index] +=" \u221A";
           //console.log("begin to filer");
 
-          this.$emit("E_FilterServiceTicketsFromChart", "ICM", selectedLabel);
+          this.$emit("E_FilterServiceTicketsFromChart", "CHANNEL", selectedLabel);
     //  }
     //  else { // backgron coor is black already, so it's 2nd click and we need to restore the background color 
 
@@ -136,7 +135,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: ["Cases By IcM Raising"],
+            text: ["Creation Channel"],
           },
 
           legend: {
@@ -154,7 +153,8 @@ export default {
           //tooltip
           tooltip: {
             callbacks: {
-              label: function (context) {
+             label: function (context) {
+               
                 let total = 0;
                 for (
                   let index = 0;
@@ -166,9 +166,8 @@ export default {
                 let currentvalue = context.parsed;
                 let label = context.label;
                 let percent = ((100 * currentvalue) / total).toFixed(1);
-               
                 let tips =[ label,  "Count: " + currentvalue,  "Percentage: " + percent + "%"];
-                if (context.dataset.data.length > 1 &&  parseInt(percent) !== 100) {
+                if (context.dataset.data.length > 1) {
                   tips = [...tips,""]
                   tips = [...tips,"Click to filter data"]
                 }

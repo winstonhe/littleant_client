@@ -19,6 +19,16 @@
         @CloseEngineerFilterModal="showFilter = false"
       ></EngineerFilterModal>
 
+      <TeamFilterModal_MultipleChoose
+        :teams="teams"
+        :showTeamDialog="showTeamsModal"
+        :parameterForSelectedTeam="'selected_teams_footprint'"
+        @ApplyTeamFilter="Apply_Team_Filter"
+        @CancelTeamFilter="Cancel_Team_Fitler_Modal"
+        @CloseTeamFilterModal="Close_Team_Fitler_Modal"
+    >
+    </TeamFilterModal_MultipleChoose>
+
       <ul>
         <li style="float: left">
           <a>{{ title }}</a>
@@ -45,6 +55,22 @@
         >
           <a><i class="fas fa-th" title="Daily View (Past 30 days)"></i> </a>
         </li>
+
+         
+      <li 
+      style="float: right"
+      v-bind:class="{
+        filter_applied: isTeamFilterApplied === 'true' || isTeamFilterApplied===true,
+        filter_canceled:
+        isTeamFilterApplied === 'false' ||isTeamFilterApplied === false|| isTeamFilterApplied === undefined,
+      }"
+      @click="showTeamsModal= true"
+    >
+      <a>        
+        <i class="fas fa-sitemap" title="Choose Teams to filter"></i>
+      </a>
+    </li>
+
 
         <li v-show="userrole<=2"
           style="float: right;"
@@ -114,14 +140,14 @@
           :maxValue="Team_DataSet.maxValue"
           :stepValue="20"
         ></ChartLine>
-
+<!-- 
         <ChartLinePercentage
           :interactive="false"
           :width_param="49.75"
           :chartData="Team_DataSet.dataset_percent"
           :height="200"
           :title="`Percentage of Team Case Distribution By Age`"
-        ></ChartLinePercentage>
+        ></ChartLinePercentage> -->
 
         <ChartLine
           :interactive="false"
@@ -210,7 +236,9 @@ import {
   GetSettingFromLocalStorage,
   SaveSettingToLocalStorage,
   GetAppStyleMode,
-  Get_Team_DisplayName
+  Get_Team_DisplayName,
+  ClearSettingFromLocalStorage,
+  Init_TeamDisplayNames
 
 } from "../common.js";
 
@@ -220,6 +248,7 @@ import SiteNav from "./SiteNav";
 import Footer from "../components/layout/Footer";
 import EngineerFilterModal from "../components/EngineerFilterModal";
 import LoadingCircle from "./LoadingCircle.vue";
+import TeamFilterModal_MultipleChoose from "./TeamFilterModal_MultipleChoose"
 
 export default {
   name: "TeamMetricsInsight",
@@ -230,6 +259,7 @@ export default {
     EngineerFilterModal,
     LoadingCircle,
     Footer,
+    TeamFilterModal_MultipleChoose,
   },
 
   data() {
@@ -270,6 +300,10 @@ export default {
       //for engineer's dataset
       Engineers_Dataset: [],
 
+       teammanagers_alias:[],
+       isTeamFilterApplied :false,
+       showTeamsModal : false,
+
       //temp dataset for storing the processed data
       dataset_chart_line: {
         labels: [],
@@ -306,6 +340,7 @@ export default {
   },
 
   async created() {
+    
     this.loaded = false;
 
    this.userrole= GetSettingFromSessionStorage("userrole") === null? await WebAPI_Helper("get","currentuserrole",null):parseInt(GetSettingFromSessionStorage("userrole")); 
@@ -322,7 +357,8 @@ export default {
 
     this.appstylemode =GetAppStyleMode();
 
-    
+    Init_TeamDisplayNames();
+
     this.lineChartMode =
       GetSettingFromLocalStorage("lineChartMode") === null
         ? "datemode"
@@ -332,6 +368,28 @@ export default {
   },
 
   methods: {
+
+    Apply_Team_Filter(teams_chosen){
+      SaveSettingToLocalStorage("selected_teams_footprint",teams_chosen);
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = true;
+      this.Init_LineChart_For_Team();
+      location.reload();
+    },
+ 
+    Close_Team_Fitler_Modal(){
+      this.showTeamsModal = false;
+    },
+
+    Cancel_Team_Fitler_Modal(){     
+      ClearSettingFromLocalStorage("selected_teams_footprint");
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = false;            
+
+      this.Team_DateSet_Array=[];
+      //clearn existing dataset;
+      this.Init_LineChart_For_Team();
+    },
     //Show | show Nav Bar of left panel
     ToggleNavBar(siteNivBar_expanded) {
       this.siteNivBar_expanded = siteNivBar_expanded;
@@ -356,12 +414,13 @@ export default {
     },
 
     CancelFilter() {
-      this.Engineers_Dataset = [];
-      this.showFilter = false;
+     
+       this.showFilter = false;
       window.localStorage.removeItem("engineers_chosen_forchart");
       this.filterApplied = false;
       this.engineers_Filters_Description = "";
     },
+
     ApplyFilter(engineers_chosen) {
       SaveSettingToLocalStorage(
         "engineers_chosen_forchart",
@@ -495,7 +554,7 @@ export default {
       this.yearmonthdate = parseInt(yearmonthdate_string.slice(0, 8));
       this.yearmonth = parseInt(yearmonthdate_string.slice(0, 6));
 
-      let teammanagers_alias=[];
+     
       if(this.userrole <=2) // the engineer filter will be enabled for M1 manager or below.
       {
       const whoami = GetSettingFromSessionStorage("whoami") !== null?GetSettingFromSessionStorage("whoami") : await WebAPI_Helper("get","whoami",null);
@@ -504,31 +563,36 @@ export default {
       let manager_alias = await this.reportingm1manager(whoami);
           // generate engineers list for filter modal
       this.Generate_Engineers(manager_alias);  
-      teammanagers_alias.push(manager_alias);     
+      this.teammanagers_alias.push(manager_alias);     
       }
       else { // M1 manager or above.
 
       // retrieve manager alias array
-        let teammanagers_alias_str =  GetSettingFromSessionStorage("teammanagers_alias");
+       let teammanagers_alias_str =  GetSettingFromSessionStorage("teammanagers_alias");
       if (teammanagers_alias_str === null) {
         const setting = await WebAPI_Helper("get","getsetting",null);
         SaveSettingToSessionStorage(
           "teammanagers_alias",
           setting.teammanagers_alias
         );
-         teammanagers_alias =  setting.teammanagers_alias.split(",");    
+         this.teammanagers_alias =  setting.teammanagers_alias.split(",");    
         }  
-
-        else  teammanagers_alias =  teammanagers_alias_str.split(","); 
-        
+        else  this.teammanagers_alias =  teammanagers_alias_str.split(",");         
       }      
+
+      this.teams = this.teammanagers_alias;    
+   //if teams filter was there, we apply the filter.
+if(GetSettingFromLocalStorage("selected_teams_footprint")!==null) {
+    this.teammanagers_alias = GetSettingFromLocalStorage("selected_teams_footprint").split(",");
+    this.isTeamFilterApplied = true;
+  }     
      
 
-      for(let i=0;i<teammanagers_alias.length;i++){
+      for(let i=0;i<this.teammanagers_alias .length;i++){
         
       //create dataset for current team stars.
 
-        let manager_alias = teammanagers_alias[i];
+        let manager_alias = this.teammanagers_alias [i];
 
           if (this.lineChartMode === "datemode") {
         this.title = "Case Distribution and Assignment By Date";
@@ -571,7 +635,7 @@ export default {
     let isDataContained = this.dataset_chart_line.datasets[0].data.filter( data => data!==0).length >0;
 
       this.Team_DataSet = {
-        name:Get_Team_DisplayName(manager_alias)+ "'s TEAM",
+        name:Get_Team_DisplayName(manager_alias),
         isDataContained: isDataContained,
         dataset: team_dataset_chart_line,
         dataset_assigned: team_dataset_chart_line_assigned,
@@ -863,6 +927,14 @@ export default {
       ];
 
       this.dataset_chart_line.datasets = dataset_chart_line;
+
+      if(this.lineChartMode === "datemode"){
+        labels_xAxis[labels_xAxis.length -1] ="Today";
+       }
+       // else {
+      //   labels_xAxis[labels_xAxis.length -1] ="THIS MONTH";
+      // }
+
       this.dataset_chart_line.labels = labels_xAxis;
 
       this.dataset_chart_line_assigned.datasets = dataset_chart_line_assigned;

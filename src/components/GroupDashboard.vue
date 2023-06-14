@@ -16,6 +16,17 @@
      >
       </RefreshConfirmationModal>
 
+      <TeamFilterModal_MultipleChoose
+        :teams="teams"
+        :showTeamDialog="showTeamsModal"
+        :parameterForSelectedTeam="'selected_teams_dashboard'"
+        @ApplyTeamFilter="Apply_Team_Filter"
+        @CancelTeamFilter="Cancel_Team_Fitler_Modal"
+        @CloseTeamFilterModal="Close_Team_Fitler_Modal"
+    >
+
+    </TeamFilterModal_MultipleChoose>
+
     <div v-show="loaded">
       <ul>
         <li style="float: left">
@@ -31,6 +42,20 @@
            
           </a>
         </li>
+        
+      <li 
+      style="float: right"
+      v-bind:class="{
+        filter_applied: isTeamFilterApplied === 'true' || isTeamFilterApplied===true,
+        filter_canceled:
+        isTeamFilterApplied === 'false' ||isTeamFilterApplied === false|| isTeamFilterApplied === undefined,
+      }"
+      @click="showTeamsModal= true"
+    >
+      <a>        
+        <i class="fas fa-sitemap" title="Choose Teams to filter"></i>
+      </a>
+    </li>
 
         <li v-show="userrole===5"
           style="float: right"
@@ -94,7 +119,7 @@
             'black-text': appstylemode === 'DEFAULT',
           }"
           style="display:block;font-size:14px;text-align:left;padding:10px;text-transform: uppercase;text-align:left"
-          ><i class="fas fa-user-friends" style="margin-top: 20px"></i> {{ Get_Team_DisplayName(data.manager) }}'S TEAM</label
+          ><i class="fas fa-user-friends" style="margin-top: 20px"></i> {{ Get_Team_DisplayName(data.manager) }}</label
         >
         <Displayboard
           :summary="data.summary"
@@ -141,10 +166,13 @@ import {
   GetSettingFromSessionStorage,
   SaveSettingToSessionStorage,
   GetSettingFromLocalStorage,
+  SaveSettingToLocalStorage,
+  ClearSettingFromLocalStorage,
      GetAppStyleMode,
      Get_Team_DisplayName,
 
   Shuffle,
+  Init_TeamDisplayNames,
 } from "../common.js";
 
 import ChartBubble from "./ChartBubble.vue";
@@ -158,6 +186,7 @@ import RefreshConfirmationModal from "./RefreshConfirmationModal";
 import LoadingCircle from "./LoadingCircle.vue";
 
 import Displayboard from "../components/Displayboard.vue";
+import TeamFilterModal_MultipleChoose from "./TeamFilterModal_MultipleChoose"
 
 //site nav
 import SiteNav from "../components/SiteNav";
@@ -176,6 +205,7 @@ export default {
     Footer,
     RefreshConfirmationModal,
     LoadingCircle,
+    TeamFilterModal_MultipleChoose
   },
   data() {
     return {
@@ -197,6 +227,11 @@ export default {
 
        //generated background colors for regions
        generated_backgourndcolors_for_status:{},
+
+       teammanagers_alias:[],
+       isTeamFilterApplied :false,
+       showTeamsModal : false,
+
          //backgorund color buffers for status
       backgroundColor_buffer_for_status : [
         "#1f7115",
@@ -327,8 +362,35 @@ export default {
         : "false";
 
     this.appstylemode =GetAppStyleMode();
+    await this.Init(); 
 
-    let teammanagers_alias_str =
+    this.loaded = true;
+  },
+
+  methods: {
+
+    Apply_Team_Filter(teams_chosen){
+      SaveSettingToLocalStorage("selected_teams_dashboard",teams_chosen);
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = true;
+      this.Init();
+      //location.reload();
+    },
+ 
+    Close_Team_Fitler_Modal(){
+      this.showTeamsModal = false;
+    },
+
+    Cancel_Team_Fitler_Modal(){     
+      ClearSettingFromLocalStorage("selected_teams_dashboard");
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = false;      
+      this.Init();
+    },
+
+    async Init() {
+      this.loaded= false;
+      let teammanagers_alias_str =
       GetSettingFromSessionStorage("teammanagers_alias");
 
     if (teammanagers_alias_str === null) {
@@ -340,30 +402,40 @@ export default {
       );
     }
 
-    let teammanagers_alias =
+    Init_TeamDisplayNames();
+
+    this.teammanagers_alias =
       GetSettingFromSessionStorage("teammanagers_alias").split(",");
 
+  this.teams = this.teammanagers_alias;    
+   //if teams filter was there, we apply the filter.
+if(GetSettingFromLocalStorage("selected_teams_dashboard")!==null) {
+    this.teammanagers_alias = GetSettingFromLocalStorage("selected_teams_dashboard").split(",");
+    this.isTeamFilterApplied = true;
+  }     
 
-      for(let i=0;i<teammanagers_alias.length;i++){
-         let profile = await WebAPI_Helper("get","teamprofile/manager/"+teammanagers_alias[i],null);
-         SaveSettingToSessionStorage("Threshold_High_Backlog"+"_Of_Team_"+teammanagers_alias[i],profile.Threshold_High_Backlog)
+      for(let i=0;i<this.teammanagers_alias.length;i++){
+         let profile = await WebAPI_Helper("get","teamprofile/manager/"+this.teammanagers_alias[i],null);
+         SaveSettingToSessionStorage("Threshold_High_Backlog"+"_Of_Team_"+this.teammanagers_alias[i],profile.Threshold_High_Backlog)
 
       }
    
-
+     
+      this.backlog_teams = []; // reset this array
     //initial backlog for each team before we are going to analyze the data;
-    for (let i = 0; i < teammanagers_alias.length; i++) {
-       if(teammanagers_alias[i]==="" || teammanagers_alias[i] ===null) continue;
+    for (let i = 0; i <  this.teammanagers_alias.length; i++) {
+       if( this.teammanagers_alias[i]==="" ||  this.teammanagers_alias[i] ===null) continue;
 
-      const data = await this.ServiceTicketsByManager(teammanagers_alias[i]);
+      const data = await this.ServiceTicketsByManager( this.teammanagers_alias[i]);
       const item = {
-        manager: teammanagers_alias[i],
+        manager:  this.teammanagers_alias[i],
         backlog: data,
       };
       this.backlog_teams.push(item);
     }
 
     let backlog_overall = [];
+    this.analyzed_ds_teams = []; //reset the data set
 
     //Analyze the backlog of each team
     let overall_engineers_number = 0;
@@ -420,12 +492,12 @@ export default {
     this.analyzed_ds_teams_overall = data_point_overall;
     
  }
- //end
 
-    this.loaded = true;
-  },
+ this.loaded = true;
 
-  methods: {
+    },
+
+    
     ToggleDetailsPanel() {
       if (this.showdetailsPanelofGroupDashboard === "true") {
         this.showdetailsPanelofGroupDashboard = "false";
@@ -482,7 +554,7 @@ export default {
       if(engineers.length ===0)   engineers= single_teammembers.slice();
       else engineers=engineers.concat(single_teammembers);
     }
-      console.log(engineers)
+    
     } else  // normal team  dist
       engineers= await this.GetTeamMembers(manager_alias);
 
@@ -575,17 +647,13 @@ export default {
       summary.count60 = servicetickets_60.length;
       summary.backlog = servicetickets.length;
 
-      // if (manager_alias !== null) {
-      //   //  summary.engineers =await this.getteammembers(manager_alias).length; //this.Refresh_Engieers_Number(servicetickets);
-      //   let engineers_string = GetSettingFromSessionStorage(manager_alias);
-      //   let engineers=[];
-      //   if (engineers_string === null) {
-      //     engineers = await this.getteammembers(manager_alias);
-      //     SaveSettingToSessionStorage(manager_alias, engineers);
-      //   }
-      //   else {
-      //     engineers = engineers_string.split(",");
-      //   }
+   // avg pain time
+   let totalpain = 0;
+      servicetickets.forEach(serviceticket => {
+        totalpain =  totalpain + serviceticket.sr_age - serviceticket.sr_days_since_solutiondelivered ;
+      });
+      summary.average_pain_time =(totalpain / servicetickets.length ).toFixed(1);
+
       let engineers=[];
       engineers = await this.GetTeamMembers(manager_alias);   
       summary.engineers = engineers.length;
@@ -1097,7 +1165,7 @@ export default {
     async ServiceTicketsByManager(manager_alias) {
       const data = WebAPI_Helper(
         "get",
-        "serviceticketsbymanager(" + manager_alias + ")",
+        "servicetickets/teamoruser/" + manager_alias,
         null
       );
 

@@ -70,7 +70,7 @@
               v-bind:class="{
                 overload: parseInt(engineer.backlog) >= Threshold_High_Backlog, lowload:parseInt(engineer.backlog) ==0 ||isNaN(parseInt(engineer.backlog))
               }"
-              ><i class="fas fa-user-alt"></i> {{ engineer.engineer_name }} ({{
+              ><i class="fas fa-user-md"></i> {{ engineer.engineer_name }} ({{
                 engineer.backlog
               }})
               <input
@@ -116,7 +116,7 @@
 </template>
 
 <script>
-import { GetSettingFromSessionStorage } from '../common';
+import { GetSettingFromSessionStorage,GetSettingFromLocalStorage } from '../common';
 export default {
   name: "EngineerFilterModal",
   data() {
@@ -151,6 +151,8 @@ export default {
 
   created() {
    
+    this.engineers_chosen = GetSettingFromLocalStorage("engineers_chosen") !== null? JSON.parse(GetSettingFromLocalStorage("engineers_chosen")):[]; 
+ 
     let Threshold_High_Backlog = GetSettingFromSessionStorage("Threshold_High_Backlog");
     if (
       Threshold_High_Backlog === null ||

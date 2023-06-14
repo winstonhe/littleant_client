@@ -4,7 +4,7 @@
     style="float: left; width: 100%; margin-bottom: 30px"
   >
     <div
-      style="float: left;width:32%;margin:2px;cursor:pointer"
+      style="float: left;width:24.5%;margin:2px;cursor:pointer"
       v-bind:key="index"
       v-for="(profile, index) in profiles"
 
@@ -27,7 +27,7 @@
       >
       </TeamProfileCard>
     </div>
-    <div style="float: left;width:32%;margin:2px ;cursor:pointer" v-show="userRole>=5">
+    <div style="float: left;width:24.5%;margin:2px ;cursor:pointer" v-show="userRole>=7">
       <TeamProfileCard 
       :teamprofile="newprofile"     
         :class="{

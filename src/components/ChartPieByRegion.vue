@@ -138,7 +138,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: "Case Distribution by Region",
+            text: "Cases By Region",
           },
 
           legend: {
@@ -170,10 +170,10 @@ export default {
                 let label = context.label;
                 let percent = ((100 * currentvalue) / total).toFixed(1);
                 let tips =[ label,  "Count: " + currentvalue,  "Percentage: " + percent + "%"];
-                // if (context.dataset.data.length > 1) {
-                //   tips = [...tips,""]
-                //   tips = [...tips,"Click to filter data"]
-                // }
+                if (context.dataset.data.length > 1) {
+                  tips = [...tips,""]
+                  tips = [...tips,"Click to filter data"]
+                }
                 return tips;
               },
             },

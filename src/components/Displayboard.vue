@@ -84,6 +84,27 @@
       <!-- <div v-show="appstylemode === 'DARK'" style="background:gray;height:2px;width:100%;margin-bottom:0px" ></div> -->
     </div>
 
+
+    <div title="Average pain time in days"
+      id="display60"
+      :class="{
+        'displayboard displayavgpt': appstylemode === 'DEFAULT',
+        'displayboard dark': appstylemode === 'DARK',
+      }"
+    >
+      <p
+        :class="{
+          'title title_default': appstylemode === 'DEFAULT',
+          'title title_dark': appstylemode === 'DARK',
+        }"
+      >
+       <i class="fas fa-heartbeat"></i> AVG PT
+      </p>
+      <p class="boardcontent">{{ Compueted_APT }}</p>
+      <p class="boardcontent_sub">&nbsp;days</p>
+      <!-- <div v-show="appstylemode === 'DARK'" style="background:gray;height:2px;width:100%;margin-bottom:0px" ></div> -->
+    </div>
+
     <div
       id="display15"
       :class="{
@@ -183,6 +204,9 @@
       <p class="boardcontent_sub">&nbsp;{{ Compueted_count60_percentage }}</p>
       <!-- <div v-show="appstylemode === 'DARK'" style="background:gray;height:2px;width:100%;margin-bottom:0px" ></div> -->
     </div>
+
+    
+
   </div>
 </template>
 
@@ -278,9 +302,15 @@ export default {
       if (this.$props.summary != null) return this.$props.summary.count60;
       else return "...";
     },
+  
     Compueted_count60_percentage() {
       if (this.$props.summary != null)
         return this.$props.summary.count60_percentage;
+      else return "...";
+    },
+
+    Compueted_APT() {
+      if (this.$props.summary != null) return this.$props.summary.average_pain_time;
       else return "...";
     },
   },
@@ -320,7 +350,7 @@ export default {
 }
 
 .displayboard {
-  width: 11.1%;
+  width: 10%;
   height: 100px;
   display: inline-block;
 }
@@ -352,6 +382,11 @@ export default {
 
 .display60 {
   background: #b71c1c;
+  color: #fff;
+}
+
+.displayavgpt {
+  background: #285194;
   color: #fff;
 }
 

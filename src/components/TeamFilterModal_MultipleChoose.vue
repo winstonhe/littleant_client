@@ -1,5 +1,5 @@
 <template>
-  <div class="dialog" v-if="showDialog">
+  <div class="dialog" v-if="showTeamDialog">
     <div class="dialog_mask"></div>
     <div class="dialog_container">
       <div class="dialog_content">
@@ -20,7 +20,7 @@
               font-weight: lighter;
             "
           >
-            POD Filter
+           Teams Filter
           </p>
           <p
             style="
@@ -33,7 +33,7 @@
               top: 10px;
               cursor: pointer;
             "
-         @click="CloseModal"
+            @click="CloseModal"
           >
             <i class="fas fa-times"></i>
           </p>
@@ -46,7 +46,7 @@
             color: black;
             text-align: left;
           "
-          v-text="PodsFilterModalTitle"
+          v-text="teamFilterModalTitle"
         ></div>
 
         <div id="cpe_container" style="margin: 0px auto">
@@ -55,25 +55,27 @@
               display: inline-block;
               margin: 5px;
               float: left;
-              padding-left: 20px;
-              width:45%;
+              padding-left: 20px;             
+              width:24%
             "
-            v-bind:key="pod_item"
-            v-for="pod_item in pods"
+            v-bind:key="team"
+            v-for="team in teams"
           >
             <label
               class="container"
               style="
                 text-transform: uppercase;
                 display: inline-block;
-                width: 100%;
+                width: 220px;
+                text-align: left;
+                width:95%
               "             
-              ><i class="fas fa-cubes"></i> {{ POD_V1(pod_item) }}
+              ><i class="fas fa-user-alt"></i> {{ Get_Team_DisplayName(team) }} 
               <input
                 type="checkbox"
-                v-model="pods_chosen"
-                :value="pod_item.pod"
-                name="pods_chosen"              
+                v-model="teams_chosen"
+                :value="team"
+                name="teams_list"               
               />
               <span class="checkmark"></span>
             </label>
@@ -92,14 +94,14 @@
             }"
             @click="apply_filter"
           >
-            <i class="fas fa-check"></i> Apply Filter
+          <i class="fas fa-check"></i> Apply Filter
           </button>
           <button
             type="button"
             class="cancelfilter_button"
-            @click="Cancel_Pod_Filter"
+            @click="cancal_filter"
           >
-            <i class="fas fa-eraser"></i> Clean Filter
+            <i class="fas fa-times"></i> Cancel 
           </button>
         </div>
       </div>
@@ -110,82 +112,55 @@
 </template>
 
 <script>
-import { GetSettingFromLocalStorage} from "../common.js";
+import {GetSettingFromLocalStorage, Get_Team_DisplayName } from '../common';
 
 export default {
-  name: "PODFilterModal",
+  name: "TeamFilterModal_MultipleChoose",
   data() {
     return {
-      pods_chosen: [],
-      filter_enabled: false,
-      Threshold_High_Backlog: 1000,
+      teams_chosen: [],
+      filter_enabled: false,    
     };
   },
 
-  props: ["pods", "showDialog", "PodsFilterModalTitle","parameterForSelectedPods","refreshTimeStamp"],
+  props: ["teams", "showTeamDialog", "teamFilterModalTitle","parameterForSelectedTeam"],
 
   watch: {
-    pods_chosen(new_podslist) {
-      if (new_podslist != "") this.filter_enabled = true;
+    teams_chosen(new_team) {
+      if (new_team != "") this.filter_enabled = true;
       else this.filter_enabled = false;
+      
     },
   },
 
+  mouted (){
+    this.teams_chosen = GetSettingFromLocalStorage(this.$props.parameterForSelectedTeam) !== null ?GetSettingFromLocalStorage(this.$props.parameterForSelectedTeam).split(","):[];
+    },
 
-  created() {  
-
-    this.pods_chosen = GetSettingFromLocalStorage(this.$props.parameterForSelectedPods) !== null? JSON.parse(GetSettingFromLocalStorage(this.$props.parameterForSelectedPods)):[]; 
+  async created() {   
+    this.teams_chosen = GetSettingFromLocalStorage(this.$props.parameterForSelectedTeam) !== null ?GetSettingFromLocalStorage(this.$props.parameterForSelectedTeam).split(","):[];
+    
   },
 
   methods: {
-
-    Shorten_POD (pod_item)
-    {
-        if(pod_item.pod.length >=30){
-            return  pod_item.pod.substring(0,30);
-           }
-          
-        return pod_item.pod;
-    },
-
-    POD_V1(pod_item){
-      if(pod_item.pod === null) return ;
-
-      //cut the long pod name
-      // if(pod_item.pod.length >=30){
-      //     pod_item.pod = pod_item.pod.substring(0,30);
-      //    }
-
-      if(pod_item.number !== 0){
-         
-        return `${pod_item.pod} ( ${pod_item.number} )`
-      }
-      else
-      return `${pod_item.pod} `
-
-
-    
-    },
-
     apply_filter() {
-      if (this.pods_chosen.length !== 0) {
-        let params= {
-          data_chosen : this.pods_chosen,
-          filtermode:"podfilter"
-        };
-        this.$emit("ApplyPodFilter", params);
+      if (this.teams_chosen.length !== 0) { 
+        this.$emit("ApplyTeamFilter", this.teams_chosen);
       }
     },
-   
-     CloseModal() {    
-      this.$emit("ClosePodFilterModal");
+
+    cancal_filter() {     
+      this.teams_chosen =[]; // erase the chosen status;
+      this.$emit("CancelTeamFilter");
     },
 
-    Cancel_Pod_Filter() {
-      this.pods_chosen=[];
-      this.$emit('Cancel_PodFilter')
-    }
-   
+    CloseModal() {
+      this.$emit("CloseTeamFilterModal");
+    },
+
+    Get_Team_DisplayName(manager_alias){
+      return Get_Team_DisplayName(manager_alias);
+    },
   },
 };
 </script>

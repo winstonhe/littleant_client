@@ -31,6 +31,7 @@
       :showIdleCasesOnly="showIdleCasesOnly"
       @ShowPersonalSettingModal="ShowPersonalSettingModal"
       @ShowSettingModal="ShowSettingModal"
+      @ShowDelegationModal="ShowDelegationModal"
       @ShowFeedbackModal="ShowFeedbackModal"
       @ShowTeamProfileModal="ShowTeamProfileModal"
       @CleanCache="ShowRefreshModal"
@@ -56,6 +57,15 @@
       @Close_TeamProfile_Modal="Close_TeamProfile_Modal"
     >
     </TeamProfilesModal>
+
+    <AccessDelegationModal
+      
+      :showDelegationDialog="showDelegationDialog"
+    
+      @Close_AccessDelegation_Modal="Close_Delegation_Modal"
+    >
+    </AccessDelegationModal>
+
     <PersonalSettingModal
       :showPersonalSettingDialog="showPersonalSettingDialog"
       @Save_Personal_Settings="SavePersonalSettings"
@@ -86,6 +96,7 @@
         :pods="Pods"
         :showDialog="showPodFilter"
         :PodsFilterModalTitle="PodsFilterModalTitle"
+        :parameterForSelectedPods="'pods_chosen'"
         @ApplyPodFilter="Apply_PodFilter"
         @Cancel_PodFilter="Cancel_PodFilter"
         @ClosePodFilterModal="showPodFilter = false"
@@ -257,6 +268,7 @@ import {
   SaveSettingToSessionStorage,
   Sleep,
   ClearSettingFromLocalStorage,
+  Init_TeamDisplayNames,
 } from "../common.js";
 
 import Servicetickets from "../components/ServiceTickets.vue";
@@ -280,6 +292,7 @@ import Footer from "../components/layout/Footer";
 
 import ChartPanel from "../components/ChartPanel.vue";
 import TeamProfilesModal from "./TeamProfilesModal";
+import AccessDelegationModal from "./AccessDelegationModal"
 
 //site nav
 import SiteNav from "../components/SiteNav";
@@ -299,6 +312,7 @@ export default {
     SnapshotConfirmationModal,
     RefreshConfirmationModal,
     TeamProfilesModal,
+    AccessDelegationModal,
 
     FeedbackModal,
     PODFilterModal,
@@ -379,7 +393,10 @@ export default {
       //show team profile Modal
       showTeamProfileDialog: false,
 
-      //show snapshow modal
+        //show access delegation Modal
+        showDelegationDialog: false,
+
+      //show snapshow 
       showDialog_Snapshot: false,
 
       // show personal settign modal
@@ -562,6 +579,13 @@ export default {
       this.showTeamProfileDialog = true;
     },
 
+     // Disaply Team Profile  Modal
+     ShowDelegationModal() {
+      this.showDelegationDialog = true;
+    },
+
+    
+
     // Hide settings Modal
     Close_Setting_Modal() {
       this.showSettingDialog = false;
@@ -578,6 +602,10 @@ export default {
     // Hide settings Modal
     Close_TeamProfile_Modal() {
       this.showTeamProfileDialog = false;
+    },
+
+    Close_Delegation_Modal() {
+      this.showDelegationDialog = false;
     },
 
     // Hide the set
@@ -801,9 +829,19 @@ export default {
         ).length;
 
         //get the asigned number for current engineer
-        let assigned = assignments.filter(
-          (assignment) => assignment.sr_caseowner === engineer.engineer_name
+     
+        let assigned= assignments.filter(
+          (assignment) => assignment.sr_caseowner === engineer.engineer_name 
         ).length;
+       
+
+        let assigned_tasks=0;
+        assigned_tasks= assignments.filter(
+          (assignment) => assignment.sr_caseowner === engineer.engineer_name && assignment.sr_number.length != 16
+        ).length;
+       
+
+        assigned = assigned - assigned_tasks / 2;
 
         let total =
           lessthan15days +
@@ -1255,9 +1293,9 @@ export default {
       datasets_pod = [...datasets_pod, dataitem_pod];
       this.dataset_chart_pie_by_pod.datasets = datasets_pod;
 
-      //Cut the labes if it's longer than 8
+      //Cut the labes if it's longer than 13
       let labels_pod_shortened = labels_pod.map(function (label) {
-        return label.length <= 10 ? label : label.slice(0, 8);
+        return label.length <= 13 ? label : label.slice(0, 13);
       });
 
       this.dataset_chart_pie_by_pod.labels = labels_pod_shortened;
@@ -1624,6 +1662,14 @@ export default {
       this.summary.count4560 = this.servicetickets_45_60.length;
       this.summary.count60 = this.servicetickets_60.length;
       this.summary.backlog = this.servicetickets.length;
+
+      // avg pain time
+      let totalpain = 0;
+      this.servicetickets.forEach(serviceticket => {
+        totalpain =  totalpain + serviceticket.sr_age - serviceticket.sr_days_since_solutiondelivered ;
+      });
+      this.summary.average_pain_time =(totalpain / this.servicetickets.length ).toFixed(1);
+
       this.summary.bug_count = this.bug_count;
       this.summary.engineers = this.Refresh_Engieers_Number();
       this.summary.trendingissues_count = this.Refresh_Trending_Issues_Count(
@@ -1669,6 +1715,8 @@ export default {
           if (
             this.showIdleCasesOnly === "false" ||  this.showIdleCasesOnly === false
           ) {
+            if(this.userrole === 1) return 1; // return 1 for normal user.
+            else
             return this.backup_engineers.length;
           }
         }
@@ -2098,6 +2146,8 @@ export default {
 
         this.Generate_Action(temp);
       }
+
+      this.actions.sort((a,b) => b.action_type - a. action_type);
     },
 
     //generate a singole action card based on a service ticket
@@ -2113,10 +2163,10 @@ export default {
         sr_country_code: temp_serviceticket.sr_country_code,
       };
 
-      let Threshold_After_Solution_Delivered =
-        this.teamprofile.Threshold_After_Solution_Delivered !== null
-          ? this.teamprofile.Threshold_After_Solution_Delivered
-          : 28;
+      // let Threshold_After_Solution_Delivered =
+      //   this.teamprofile.Threshold_After_Solution_Delivered !== null
+      //     ? this.teamprofile.Threshold_After_Solution_Delivered
+      //     : 28;
 
       if (temp_serviceticket.mce_status === 1) {
         // create action card of MCE assignment : 1 means pending on MCE
@@ -2162,19 +2212,19 @@ export default {
       }
 
       //creat action card for case pending on solution delivered for long time
-      else if (
-        temp_serviceticket.sr_days_since_solutiondelivered >
-        parseInt(Threshold_After_Solution_Delivered)
-      ) {
-        new_action.action_type = 7;
-        new_action.action_description =
-          "Pending On Confirmation For  " +
-          temp_serviceticket.sr_days_since_solutiondelivered +
-          " Days";
-        new_action.action_label = "OPEN CASE";
-        new_action.action_owner = temp_serviceticket.sr_caseowner;
-        this.actions = [...this.actions, new_action]; // append to actions array
-      }
+      // else if (
+      //   temp_serviceticket.sr_days_since_solutiondelivered >
+      //   parseInt(Threshold_After_Solution_Delivered)
+      // ) {
+      //   new_action.action_type = 7;
+      //   new_action.action_description =
+      //     "Pending On Confirmation For  " +
+      //     temp_serviceticket.sr_days_since_solutiondelivered +
+      //     " Days";
+      //   new_action.action_label = "OPEN CASE";
+      //   new_action.action_owner = temp_serviceticket.sr_caseowner;
+      //   this.actions = [...this.actions, new_action]; // append to actions array
+      // }
 
       // create action card of idle case notification
       let idle_action = {
@@ -2211,7 +2261,7 @@ export default {
       };
       if (
         temp_serviceticket.latest_review_type === 10 &&
-        temp_serviceticket.case_backup_owner !== null
+        temp_serviceticket.case_backup_owner !== null && temp_serviceticket.case_backup_owner !== ""
       ) {
         seperated_action.action_type = 6;
         seperated_action.action_description =
@@ -2335,6 +2385,8 @@ export default {
 
       //Init the app theme
       this.appstylemode = GetAppStyleMode();
+
+      Init_TeamDisplayNames();
 
       //initialize whoami
       if (GetSettingFromSessionStorage("whoami") !== null)

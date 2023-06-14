@@ -18,6 +18,17 @@
       greetingMessage="Are you sure to refresh the cache to get the live data which could take seconds ?"
     ></RefreshConfirmationModal>
 
+    <TeamFilterModal_MultipleChoose
+        :teams="teams"
+        :showTeamDialog="showTeamsModal"
+        :parameterForSelectedTeam="'selected_teams_resource'"
+        @ApplyTeamFilter="Apply_Team_Filter"
+        @CancelTeamFilter="Cancel_Team_Fitler_Modal"
+        @CloseTeamFilterModal="Close_Team_Fitler_Modal"
+    >
+
+    </TeamFilterModal_MultipleChoose>
+
     <ul v-show="loaded === true">
       <li style="float: left">
         <a>Engineers Availability Center </a>
@@ -32,6 +43,21 @@
           &nbsp;{{ latestFreshTime }} UTC
         </a>
       </li>
+
+      <li 
+      style="float: right"
+      v-bind:class="{
+        filter_applied: isTeamFilterApplied === 'true' || isTeamFilterApplied===true,
+        filter_canceled:
+        isTeamFilterApplied === 'false' ||isTeamFilterApplied === false|| isTeamFilterApplied === undefined,
+      }"
+      @click="showTeamsModal= true"
+    >
+      <a>        
+        <i class="fas fa-sitemap" title="Choose Teams to filter"></i>
+      </a>
+    </li>
+
     </ul>
 
     <div
@@ -78,6 +104,8 @@ import {
   GetSettingFromLocalStorage,
      GetAppStyleMode,
      Get_Team_DisplayName,
+     SaveSettingToLocalStorage,
+     ClearSettingFromLocalStorage,
 } from "../common.js";
 
 import BookableResources from "./BookableResources.vue";
@@ -87,6 +115,7 @@ import ChartPieByResource from "./ChartPieByResource";
 import SiteNav from "../components/SiteNav";
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
 import LoadingCircle from "./LoadingCircle.vue";
+import TeamFilterModal_MultipleChoose from "./TeamFilterModal_MultipleChoose"
 
 export default {
   name: "GroupBookableResources",
@@ -97,6 +126,7 @@ export default {
     ChartPieByResource,
     RefreshConfirmationModal,
     LoadingCircle,
+    TeamFilterModal_MultipleChoose,
   },
 
   data() {
@@ -110,6 +140,13 @@ export default {
 
       //dataset after analysis
       analyzed_ds_teams: [],
+
+      teams:[],
+      showTeamsModal:false,
+      isTeamFilterApplied:false,
+      //team mananger alias
+      teammanagers_alias:[],
+
 
       //dataset for piechar by region
       dataset_chart_pie_by_resource: {
@@ -137,12 +174,42 @@ export default {
  
      this.appstylemode =GetAppStyleMode();
 
-    let teammanagers_alias_str =
-      GetSettingFromSessionStorage("teammanagers_alias");
+   
 
     this.latestFreshTime = await this.GetFreshTime();
 
-    if (teammanagers_alias_str === null) {
+    await this.Init();
+   
+    this.loaded = true;
+  },
+
+  methods: {
+
+    Apply_Team_Filter(teams_chosen){
+      SaveSettingToLocalStorage("selected_teams_resource",teams_chosen);
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = true;
+      this.Init();
+      location.reload();
+    },
+ 
+    Close_Team_Fitler_Modal(){
+      this.showTeamsModal = false;
+    },
+
+    Cancel_Team_Fitler_Modal(){     
+      ClearSettingFromLocalStorage("selected_teams_resource");
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = false;
+     
+      this.Init();
+    },
+
+
+    async Init() {
+      let teammanagers_alias_str =
+      GetSettingFromSessionStorage("teammanagers_alias");
+      if (teammanagers_alias_str === null) {
       const setting = await this.getsetting();
   
       SaveSettingToSessionStorage(
@@ -151,19 +218,27 @@ export default {
       );
     }
 
-    let teammanagers_alias =
-      GetSettingFromSessionStorage("teammanagers_alias").split(",");
+    this.teammanagers_alias =
+      GetSettingFromSessionStorage("teammanagers_alias").split(",");       
+      
+    this.teams = this.teammanagers_alias; 
+   
+       //if teams filter was there, we apply the filter.
+   if(GetSettingFromLocalStorage("selected_teams_resource")!==null) {
+        this.teammanagers_alias = GetSettingFromLocalStorage("selected_teams_resource").split(",");
+        this.isTeamFilterApplied = true;
+      }         
 
     this.userRole = await WebAPI_Helper("get", "currentuserrole", null);
     //initial backlog for each team before we are going to analyze the data;
-    for (let i = 0; i < teammanagers_alias.length; i++) {
-      if (teammanagers_alias[i] === "" || teammanagers_alias[i] === null)
+    for (let i = 0; i < this.teammanagers_alias.length; i++) {
+      if (this.teammanagers_alias[i] === "" || this.teammanagers_alias[i] === null)
         continue;
 
         
       // if (this.userRole <=3 && teammanagers_alias[i] !== GetSettingFromSessionStorage("whoami")) continue;
 
-      const data = await this.BookableResources(teammanagers_alias[i]);
+      const data = await this.BookableResources(this.teammanagers_alias[i]);
 
       let online = [];
       let offline = [];
@@ -176,7 +251,7 @@ export default {
       this.Generate_Dataset_For_Charts(online, offline);
 
       const item = {
-        manager: teammanagers_alias[i],
+        manager: this.teammanagers_alias[i],
         resources: data,
         DSPieResource: this.dataset_chart_pie_by_resource,
       };
@@ -184,10 +259,10 @@ export default {
       this.Clean_Dataset_ForAllCharts();
     }
 
-    this.loaded = true;
-  },
 
-  methods: {
+    },
+
+
     Clean_Dataset_ForAllCharts() {
       //dataset for piechar by region
       this.dataset_chart_pie_by_resource = {

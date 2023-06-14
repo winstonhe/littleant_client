@@ -142,7 +142,7 @@ export default {
         plugins: {
           title: {
             display: true,
-            text: "Case Distribution by POD",
+            text: "Cases By POD",
           },
 
           legend: {

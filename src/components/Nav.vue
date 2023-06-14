@@ -12,19 +12,28 @@
         
         
          <div
-          v-show="userrole >=3"
+          v-show="userrole >=3 && userrole !== 8"
           @click="$emit('ShowTeamProfileModal')"
         >
           <a><i class="fas fa-address-card"></i> Team Profiles</a>
         </div>
 
+        
         <div
-          v-show="userrole >5"
+          v-show="userrole >5 && userrole !== 8"
+          @click="$emit('ShowDelegationModal')"
+        >
+          <a><i class="fas fa-link"></i> Delegations </a>
+        </div>
+       
+
+        <div
+          v-show="userrole >5 && userrole !== 8"
           @click="$emit('ShowSettingModal')"
         >
           <a><i class="fas fa-cog"></i> Global Settings</a>
         </div>
-       
+
 
         
       </div>
@@ -297,8 +306,10 @@ export default {
       let cachedteamforservicetickets;
       if(GetSettingFromLocalStorage("cachedteamforservicetickets") === null){
         const setting = await WebAPI_Helper("get", "getsetting", null);
+        if(setting != null){
         SaveSettingToSessionStorage("teammanagers_alias",setting.teammanagers_alias);
         cachedteamforservicetickets = setting.teammanagers_alias.split(",")[0];
+        }
       }  else {
         cachedteamforservicetickets = GetSettingFromLocalStorage("cachedteamforservicetickets"); 
       }   

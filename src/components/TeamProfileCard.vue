@@ -26,7 +26,7 @@
 
 
 <script>
-//import { Process_Country } from "../common.js";
+import { Get_Team_DisplayName } from "../common.js";
 
 export default {
   name: "TeamProfileCard",
@@ -54,7 +54,7 @@ export default {
       
         return  "<i class='fas fa-plus'></i> New";
       } else {      
-        return "<i class='fas fa-address-card'></i>  "+ teamprofile.Manager_Nickname + "  ( <i class='fas fa-user-shield'></i>  "+teamprofile.grouplead_alias+"  )  ";
+        return "<i class='fas fa-address-card'></i>  "+ Get_Team_DisplayName(teamprofile.Manager_Nickname) + "  ( <i class='fas fa-user-shield'></i>  "+teamprofile.grouplead_alias+"  )  ";
       }
     },
    

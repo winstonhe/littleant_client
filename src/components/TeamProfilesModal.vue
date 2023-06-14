@@ -265,11 +265,10 @@
                 </div>
               </td>        
 
-              <td v-show="
-                Enable_Engineer_Mode === true || Enable_Engineer_Mode === 'true'
-              "> 
+              <td              
+             > 
                 <label class="container" style="display: inline-block">
-                 Team Display Name Under Engineer Mode</label
+                 Team Display Name</label
                 >
                 <input
                   type="text"
@@ -408,7 +407,11 @@ export default {
 
       team_displayname:"", // team display name
 
-      Enable_Idle_Notification: false , //swithc to enable idle notificaiton sent;      
+      Enable_Idle_Notification: false , //swithc to enable idle notificaiton sent;    
+
+      mode:"Edit",
+      
+      profile_id:-1, // team profile id
 
       userRole: "",
       teamprofile:"",
@@ -440,6 +443,15 @@ grouplead_alias(new_group) {
     },
 
     OpenTeamProfile(teamprofile){
+      if(teamprofile.Manager_Nickname === "New"){
+        this.mode = "Insert";
+        this.profile_id = Math.floor(Math.random() * 65585);
+      }
+      else  {
+      this.mode = "Edit";
+      this.profile_id = teamprofile.profile_id;
+      }
+      
       this.TA_list = teamprofile.TA_list;
       this.Bcc_list = teamprofile.Bcc_list;
       this.MCEApproval_List = teamprofile.MCEApproval_List;
@@ -457,6 +469,7 @@ grouplead_alias(new_group) {
       this.Bandwidth_Per_Day = teamprofile.Bandwidth_Per_Day;
       this.Threshold_After_Solution_Delivered = teamprofile.Threshold_After_Solution_Delivered;
       this.team_displayname = teamprofile.team_displayname;
+      
     },
 
  
@@ -465,6 +478,7 @@ grouplead_alias(new_group) {
       if(this.submit_disable) return;
 
         this.teamprofile = {
+          profile_id: this.profile_id,
           TA_list: this.TA_list,
           Bcc_list: this.Bcc_list,
           MCEApproval_List: this.MCEApproval_List,      
@@ -604,7 +618,7 @@ input:focus {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 50%;
+  width: 80%;
   animation: 0.5s fadeIn;
 }
 

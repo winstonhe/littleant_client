@@ -19,10 +19,23 @@
         :pods="Pods"
         :showDialog="showPodFilter"
         :PodsFilterModalTitle="PodsFilterModalTitle"
+        :refreshTimeStamp="refreshTimeStamp"
+        :parameterForSelectedPods="'podsSelectedForAssignment'"
         @ApplyPodFilter="Apply_PodFilter"
         @Cancel_PodFilter="Cancel_PodFilter"
         @ClosePodFilterModal="showPodFilter = false"
       ></PODFilterModal>
+
+    <TeamFilterModal_MultipleChoose
+        :teams="teams"
+        :showTeamDialog="showTeamsModal"
+        :parameterForSelectedTeam="'selected_teams'"
+        @ApplyTeamFilter="Apply_Team_Filter"
+        @CancelTeamFilter="Cancel_Team_Fitler_Modal"
+        @CloseTeamFilterModal="Close_Team_Fitler_Modal"
+    >
+
+    </TeamFilterModal_MultipleChoose>
 
     <div v-show="loaded === true">
       <RefreshConfirmationModal
@@ -75,6 +88,19 @@
           <a><i class="fas fa-th" title="Daily Assignments"></i> </a>
         </li>       
    
+        <li 
+      style="float: right"
+      v-bind:class="{
+        filter_applied: isTeamFilterApplied === 'true' || isTeamFilterApplied===true,
+        filter_canceled:
+        isTeamFilterApplied === 'false' ||isTeamFilterApplied === false|| isTeamFilterApplied === undefined,
+      }"
+      @click="displayTeamsModal"
+    >
+      <a>        
+        <i class="fas fa-sitemap" title="Choose Teams to filter"></i>
+      </a>
+    </li>
 
         <li        
          style="float: right"
@@ -85,7 +111,7 @@
         }"
         @click="ShowPodFilter"
       >
-        <a><i class="fas fa-filter" title="Filter By PODs"></i> </a>
+        <a><i class="fas fa-cubes" title="Filter By PODs"></i> </a>
       </li>
           
           <li   v-show="assignmentFilterByPod"  
@@ -93,10 +119,57 @@
         class=cahrtfilter_applied
           @click="Cancel_PodFilter"    
         >
-          <a>[{{pod_Filters_Description_assignment}}]    <i class="fas fa-eraser"></i></a>
+          <a>[{{Filters_Description}}]    <i class="fas fa-eraser"></i></a>
         </li>  
 
       </ul>
+
+
+
+
+
+      <div style="background-color:black" v-show="loaded === true && ErrorRaised !== true">
+          <div class="clr"></div>          
+          <div
+            style="
+              display: inline-block;
+              margin: 5px;
+              float: right;
+              padding-top: 5px;
+            "
+          >
+            <label style="top: 5px;margin-right:30px" 
+            :class="{
+        switch_black: appstylemode === 'DEFAULT',
+        switch_white: appstylemode === 'DARK',
+      }"
+              >Task Assignment Excluded</label
+            >
+          </div>
+
+          <div
+            style="
+              display: inline-block;
+              margin: 5px;
+              float: right;
+              padding-left: 30px;
+            "
+          >
+            <label class="switch">
+              <input
+                type="checkbox"
+                v-model="taskexcluded"
+                :value="true"
+                name="taskexcluded"
+                @click="Toggle_Exclude_Task"
+              />
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          </div>
+
+       <div style="clear: both"></div>
 
       <div v-for="(data, index) in analyzed_ds_teams" :key="data.team_displayname">
 
@@ -119,7 +192,7 @@
             class="fas fa-user-friends"
             :class="{ seperator: index !== 0 }"
           ></i>
-          {{ data.team_displayname }}'S TEAM &nbsp;&nbsp;
+          {{ data.team_displayname }}
         </label>
 
         <!-- Statistics  start-->
@@ -159,7 +232,7 @@
                 'title title_dark': appstylemode === 'DARK',
               }"
             >
-              <i class="fas fa-bone"></i> CASES {{mode_description}}
+              <i class="fas fa-bone"></i> ASSIGN {{mode_description}}
             </p>
             <p class="boardcontent">
               {{ data.totalAssignment_count }}
@@ -171,6 +244,74 @@
             </p>
             <!-- <div v-show="appstylemode === 'DARK'" style="background:gray;height:2px;width:100%;margin-bottom:0px" ></div> -->
           </div>
+
+<!-- net assign -->
+          <div
+            id="display3045"
+            style="float: left"
+            :class="{
+              'displayboard display3045': appstylemode === 'DEFAULT',
+              'displayboard dark': appstylemode === 'DARK',
+            }"
+            v-show="data.numberofChatAssignments !== 0"
+          >
+            <p
+              :class="{
+                'title title_default': appstylemode === 'DEFAULT',
+                'title title_dark': appstylemode === 'DARK',
+              }"
+            >
+            <i class="fas fa-headset"></i> NET ASSIGN
+            </p>
+
+
+            <p class="boardcontent">
+              {{ data.assignments.length - data.numberofChatAssignments }}
+            </p>
+            <p class="boardcontent_sub">
+              &nbsp;&nbsp;RATIO:{{
+                (100*(data.assignments.length - data.numberofChatAssignments)/data.assignments.length).toFixed(2)
+              }}%
+            </p>
+
+            <!-- <p class="boardcontent">{{ data.chat2web_ratio }} %</p> -->
+            <!-- <div v-show="appstylemode === 'DARK'" style="background:gray;height:2px;width:100%;margin-bottom:0px" ></div> -->
+          </div>
+<!-- net assign end -->
+
+          <div
+            id="display4560"
+            style="float: left"
+            :class="{
+              'displayboard display4560': appstylemode === 'DEFAULT',
+              'displayboard dark': appstylemode === 'DARK',
+            }"
+            v-show="data.numberofChatAssignments !== 0"
+          >
+            <p
+              :class="{
+                'title title_default': appstylemode === 'DEFAULT',
+                'title title_dark': appstylemode === 'DARK',
+              }"
+            >
+            <i class="fas fa-coffee"></i>  Resolved in Chat
+            </p>
+
+
+            <p class="boardcontent">
+              {{ data.numberofResolvedInChat }}/{{data.numberofChatAssignments }}
+            </p>
+            <p class="boardcontent_sub">
+              &nbsp;&nbsp;RATIO:{{
+                data.ResolvedInChat_ratio
+              }}%
+            </p>
+
+            <!-- <p class="boardcontent">{{ data.chat2web_ratio }} %</p> -->
+            <!-- <div v-show="appstylemode === 'DARK'" style="background:gray;height:2px;width:100%;margin-bottom:0px" ></div> -->
+          </div>
+        
+
           <div style="clear: both"></div>
          </div>
         </div>
@@ -180,32 +321,53 @@
           <ChartStackedBarByEngineer
             :chartData="data.DSBarAssignment"
             :height="125"
+            @click=" ToggleShowDetails(data)"
           ></ChartStackedBarByEngineer>
           <ChartPieByPod
             :chartData="data.DSPiePod"
             :height="70.99"
+            @E_FilterServiceTicketsFromChart = "FilterRecordsFromChart"
           ></ChartPieByPod>        
 
           <ChartPieByRegion
             :chartData="data.DSPieRegion"
             :height="70.99"
+            @E_FilterServiceTicketsFromChart = "FilterRecordsFromChart"
           ></ChartPieByRegion>
           <ChartPieByProgramType
             :chartData="data.DSPieProgramType"
             :height="70.99"
+            @E_FilterServiceTicketsFromChart = "FilterRecordsFromChart"
           ></ChartPieByProgramType>
-          <ChartPieByBandwidth
+          <ChartPieByCaseType
+            :chartData="data.DSPieCaseType"
+            :height="70.99"
+            @E_FilterServiceTicketsFromChart = "FilterRecordsFromChart"
+          ></ChartPieByCaseType>
+          <!-- <ChartPieByBandwidth
             :chartData="data.DSPieBandwidth"
             :height="70.99"
-          ></ChartPieByBandwidth>
-          <ChartPieByAssignmentMethod
+          ></ChartPieByBandwidth> -->
+          <ChartPieByServiceLevel
             :chartData="data.DSPieAssignmentMethod"
             :height="70.99"
-          ></ChartPieByAssignmentMethod>
-         
+            @E_FilterServiceTicketsFromChart = "FilterRecordsFromChart"
+          ></ChartPieByServiceLevel>       
+    
           
         </div>
-
+        <div style="float:left">   
+         <Assignments v-show="data.showdetails=== true"
+          :assignments="data.assignments"
+          :numberofChatAssignments="data.numberofChatAssignments"
+          :appstylemode="appstylemode"
+           :hovered="hovered"
+           @MouseOver="Mouse_Over"
+           @MouseLeave="Mouse_Leave"
+          >           
+          </Assignments>  
+         </div>
+    
         <div style="clear: both"></div>
         <!-- <div style="margin:20px;display:block"> &nbsp; </div> -->
       </div>
@@ -224,14 +386,19 @@ import {
    SaveSettingToLocalStorage,
    GetAppStyleMode,
   Shuffle,
+  Init_TeamDisplayNames,
 } from "../common.js";
 
 import ChartPieByPod from "./ChartPieByPod.vue";
 import ChartPieByRegion from "./ChartPieByRegion.vue";
-import ChartPieByBandwidth from "./ChartPieByBandwidth.vue";
+//import ChartPieByBandwidth from "./ChartPieByBandwidth.vue";
 import ChartStackedBarByEngineer from "./ChartStackedBarByEngineer";
-import ChartPieByAssignmentMethod from "./ChartPieByAssignmentMethod";
+import ChartPieByServiceLevel from "./ChartPieByServiceLevel";
 import ChartPieByProgramType from "./ChartPieByProgramType";
+import ChartPieByCaseType from "./ChartPieByCaseType";
+
+import Assignments from "./Assignments.vue"
+
 import RefreshConfirmationModal from "./RefreshConfirmationModal";
 import PODFilterModal from "./PODFilterModal";
 import LoadingCircle from "./LoadingCircle.vue";
@@ -242,21 +409,27 @@ import SiteNav from "../components/SiteNav";
 
 import LoadingModal from "./LoadingModal";
 
+import TeamFilterModal_MultipleChoose from "./TeamFilterModal_MultipleChoose"
+
 export default {
   name: "GroupAssignment",
 
   components: {
     ChartPieByPod,
     ChartPieByRegion,
-    ChartPieByBandwidth,
+    //ChartPieByBandwidth,
     ChartStackedBarByEngineer,
-    ChartPieByAssignmentMethod,
+    ChartPieByServiceLevel,
     ChartPieByProgramType,
+    ChartPieByCaseType,
+    Assignments,
+
     SiteNav,
     RefreshConfirmationModal,
     LoadingModal,
     PODFilterModal,
     LoadingCircle,
+    TeamFilterModal_MultipleChoose,
  
     Footer,
   },
@@ -274,7 +447,16 @@ export default {
       //assignments for teams
       assignment_teams: [],
 
-      pod_Filters_Description_assignment:'',
+      Filters_Description:'',
+
+      hovered: false,
+
+      taskexcluded: false,// exlude tasks.
+
+      //chart filter description displayed in NAV:
+      Filters_Array: [],
+
+      isTeamFilterApplied : false,
 
       refreshtimeInterval: 0,
       userRole:1,
@@ -282,6 +464,9 @@ export default {
 
       //dataset after analysis
       analyzed_ds_teams: [],
+
+      //An array to store showdetails flag.
+      array_details_enabled_teams:[],
 
        messageforloading:"",
        showLoading: false,
@@ -298,6 +483,10 @@ export default {
       //Pods
       Pods: [],
 
+      //Teams:
+      teams:[],
+
+
       // Entire Assignment:
       backup_entire_assignment :[],
 
@@ -306,8 +495,14 @@ export default {
       showPodFilter: false,
 
       assignmentFilterByPod : false,
+ 
+      numberofChatAssignments : 0,
+      numberofResolvedInChat:0,
+      ResolvedInChat_ratio : 0,
 
+      showTeamsModal: false,
 
+      refreshTimeStamp:0,
     
       //backgorund color buffers
       backgroundColor_buffer : [
@@ -397,7 +592,7 @@ export default {
         ],
       },
 
-      //dataset for piechar by assignment method
+      //dataset for piechar by program type
       dataset_chart_pie_by_programtype: {
         labels: [],
         datasets: [
@@ -407,6 +602,18 @@ export default {
           },
         ],
       },
+
+       //dataset for piechar by case type
+       dataset_chart_pie_by_casetype: {
+        labels: [],
+        datasets: [
+          {
+            data: [],
+            backgroundColor: [],
+          },
+        ],
+      },
+
 
     };
   },
@@ -419,7 +626,10 @@ export default {
     this.showDialog = false;
     this.assignmentFilterByPod = false;
 
-    this.pod_Filters_Description_assignment = GetSettingFromLocalStorage("pod_Filters_Description_assignment");
+    this.Filters_Description = GetSettingFromLocalStorage("Filters_Description");
+    this.Filters_Array =[];
+    if(this.Filters_Description !==null)
+      this.Filters_Array = [...this.Filters_Array,this.Filters_Description];
 
      //set assignment menu as selected item
       SaveSettingToSessionStorage('selectedMenu','4')
@@ -435,6 +645,67 @@ export default {
   },
 
   methods: {
+
+    Toggle_Exclude_Task() {
+        if(this.taskexcluded === true) {
+           this.taskexcluded = false;
+            SaveSettingToLocalStorage("taskexcluded","false");
+        } else {
+          this.taskexcluded = true;
+            SaveSettingToLocalStorage("taskexcluded","true");
+        }
+
+        this.Init();
+    },
+
+    ToggleShowDetails(data){
+      if(data.showdetails === true) {// the detaisl was showned before, then we need to remove it from enabled array
+       let index_to_remove =  this.array_details_enabled_teams.indexOf(data.manager)
+        this.array_details_enabled_teams = this.array_details_enabled_teams.filter((item, index) =>index !== index_to_remove)
+      }
+      else if(data.showdetails === false) { // first time to enable, we need to add it into enabled list
+        this.array_details_enabled_teams.push(data.manager);
+
+      }
+      //reverse the flag;
+      data.showdetails = !data.showdetails;
+
+    },
+
+    Apply_Team_Filter(teams_chosen){
+      SaveSettingToLocalStorage("selected_teams",teams_chosen);
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = true;
+      this.Init();
+    },
+ 
+    Close_Team_Fitler_Modal(){
+      this.showTeamsModal = false;
+    },
+
+    Cancel_Team_Fitler_Modal(){     
+      ClearSettingFromLocalStorage("selected_teams");
+      this.showTeamsModal = false;
+      this.isTeamFilterApplied = false;
+      this.Init();
+    },
+
+
+    displayTeamsModal(){
+     this.showTeamsModal = true;
+    },
+    
+    Mouse_Over() {
+      this.hovered = true;
+      this.appstylemode = GetAppStyleMode();
+    },
+
+    Mouse_Leave() {
+      this.hovered = false;
+      this.appstylemode = GetAppStyleMode();
+    },
+
+
     Today_Load_Index(data) {
       if(this.retrieveMode === 1) {
       return (data.totalAssignment_count / data.engineers).toFixed(2);
@@ -454,9 +725,12 @@ export default {
     Apply_PodFilter(params){
 
       this.showPodFilter = false;
-      this.pod_Filters_Description_assignment = "PODS In (' "+ params.data_chosen +" ')";
-      SaveSettingToLocalStorage("pod_Filters_Description_assignment",this.pod_Filters_Description_assignment)
-      SaveSettingToLocalStorage("podsSelectedForAssignment",params.data_chosen)
+      let pods_filter = "PODS In (' "+ params.data_chosen +" ')";
+      this.Filters_Description = pods_filter;
+      this.Filters_Array =[]; // remove all existing filter
+      this.Filters_Array = [...this.Filters_Array, pods_filter];
+      SaveSettingToLocalStorage("Filters_Description",this.Filters_Description)
+      SaveSettingToLocalStorage("podsSelectedForAssignment", JSON.stringify(params.data_chosen))
       SaveSettingToLocalStorage("assignmentFilterByPod",true);
       this.Init();
     },
@@ -465,8 +739,10 @@ export default {
       this.showPodFilter = false;
       this.assignmentFilterByPod = false;
       this.podsSelectedForAssignment="";
-      this.pod_Filters_Description_assignment ="";
-      ClearSettingFromLocalStorage("pod_Filters_Description_assignment");
+      this.Filters_Description ="";
+      this.Filters_Array = [];
+      this.refreshTimeStamp = Date.now();
+      ClearSettingFromLocalStorage("Filters_Description");
       ClearSettingFromLocalStorage("assignmentFilterByPod");
       ClearSettingFromLocalStorage("podsSelectedForAssignment");
       this.Init();
@@ -484,6 +760,83 @@ export default {
        this.mode_description = "THIS-MON";
      }
 
+    },
+
+    /// Chart Filter Hanlder
+    async FilterRecordsFromChart(parameter, value) {
+      
+      this.analyzed_ds_teams=[];   //initialization
+      let filter;
+      
+      
+      this.assignment_teams.forEach(team =>{
+
+        let engineers = GetSettingFromSessionStorage(team.manager).split(",");
+
+        switch (parameter) 
+       {
+        case "CHANNEL":
+         filter = "Channel eq '" + value + "'";
+         team.assignments = team.assignments.filter(item => item.casetype.startsWith(value));
+         break;
+
+        case "POD":
+          filter = "POD like '" + value + "'";
+          team.assignments = team.assignments.filter(item => item.support_pod.startsWith(value));
+          break;
+        case "REGION":
+          filter = "Region eq '" + value + "'";         
+          team.assignments = team.assignments.filter(item => item.sr_regioncode.startsWith(value));
+          break;
+
+        case "SERVICELEVEL":
+          filter = "ServiceLevel eq '" + value + "'";
+          team.assignments = team.assignments.filter(item => item.servicelevel.startsWith(value));
+          break;
+
+        case "PROGRAMTYPE":
+          filter = "ProgramType eq '" + value + "'";
+          team.assignments = team.assignments.filter(item => item.programType.startsWith(value));
+          break;
+      }
+
+      this.Generate_Dataset_For_Charts(
+          team.assignments,
+          team.manager,          
+          engineers
+        );
+        team.assignments.sort((a,b)=> a.casetype.localeCompare(b.casetype))
+
+        let data_point = {
+          manager: team.manager,
+          assignments:team.assignments,
+          team_displayname: team.team_displayname,
+          engineers: engineers.length,
+          showdetails:this.array_details_enabled_teams.indexOf(team.manager)!==-1,
+          numberofChatAssignments:this.numberofChatAssignments,
+          numberofResolvedInChat:this.numberofResolvedInChat,
+          ResolvedInChat_ratio : this.ResolvedInChat_ratio,
+          DSBarAssignment: this.dataset_chart_bar_assignment,
+          DSPieBandwidth: this.dataset_chart_pie_by_bandwidth,
+          DSPiePod: this.dataset_chart_pie_by_pod,
+          DSPieRegion: this.dataset_chart_pie_by_region,
+          DSPieAssignmentMethod: this.dataset_chart_pie_by_assignmentmethod,
+          DSPieProgramType: this.dataset_chart_pie_by_programtype,
+          DSPieCaseType: this.dataset_chart_pie_by_casetype,
+          totalAssignment_count: this.assignment_number_after_cleanup,
+        };
+        this.analyzed_ds_teams = [...this.analyzed_ds_teams, data_point];
+        //clean the component data before next round of loop
+        this.Clean_Dataset_ForAllCharts();
+      })
+
+          
+      //avoid insert duplicated condition.
+      if (this.Filters_Array.indexOf(filter) == -1)
+        this.Filters_Array.push(filter);
+
+      this.Filters_Description = this.Filters_Array.join(" & ");
+      this.assignmentFilterByPod = true;
     },
 
     setTickWhenLoading() {
@@ -507,6 +860,7 @@ export default {
       this.Init();
     },
 
+ 
     async Init() {
       this.latestFreshTime = await this.GetFreshTime();
       
@@ -526,13 +880,13 @@ export default {
 
         this.appstylemode =GetAppStyleMode();
 
+        Init_TeamDisplayNames();
+
       let teammanagers_alias_str =
         GetSettingFromSessionStorage("teammanagers_alias");
 
       if (teammanagers_alias_str === null) {
-        const setting = await this.getsetting();
-
-        
+        const setting = await this.getsetting();       
 
         SaveSettingToSessionStorage(
           "teammanagers_alias",
@@ -542,7 +896,15 @@ export default {
 
       let teammanagers_alias =
         GetSettingFromSessionStorage("teammanagers_alias").split(",");
+      
+      this.teams = teammanagers_alias; 
 
+      //if teams filter was there, we apply the filter.
+      if(GetSettingFromLocalStorage("selected_teams")!==null) {
+        teammanagers_alias = GetSettingFromLocalStorage("selected_teams").split(",");
+        this.isTeamFilterApplied = true;
+      }      
+      
       this.userRole = await WebAPI_Helper("get", "currentuserrole", null);
 
       //initial backlog for each team before we are going to analyze the data;
@@ -567,19 +929,30 @@ export default {
           "teamprofile/manager/" + teammanagers_alias[i],
           ""
         );
+
+        if(teamprofile === null || teamprofile === undefined)
+        continue;
       
         Bandwidth_Per_Day =teamprofile.Bandwidth_Per_Day == undefined|| teamprofile.Bandwidth_Per_Day == null  ? 1.2: teamprofile.Bandwidth_Per_Day;
         engineerMode_Enabled = teamprofile.Enable_Engineer_Mode == undefined|| teamprofile.Enable_Engineer_Mode == null  ? "false": teamprofile.Enable_Engineer_Mode;
 
         SaveSettingToSessionStorage("Bandwidth_Per_Day"+"_Of_Team_"+teammanagers_alias[i],Bandwidth_Per_Day)
         SaveSettingToSessionStorage("EngineerModeEnabled"+"_Of_Team_"+teammanagers_alias[i],engineerMode_Enabled)
-        if(engineerMode_Enabled === "true") {
-          SaveSettingToSessionStorage("Displayname"+"_Of_Team_"+teammanagers_alias[i],teamprofile.team_displayname);
-        }
+        // if(engineerMode_Enabled === "true") {
+        //   SaveSettingToLocalStorage("Displayname"+"_Of_Team_"+teammanagers_alias[i],teamprofile.team_displayname);
+        // }
        
       }    
 
         let data = await this.AssignmentByManager(teammanagers_alias[i], this.retrieveMode);
+
+       const taskexcluded = GetSettingFromLocalStorage("taskexcluded"); 
+       this.taskexcluded = taskexcluded !== null? taskexcluded ==='true'||taskexcluded ===true : false;
+        //tasks excluded.
+        if(this.taskexcluded === true) {
+          data = data.filter (assignment => assignment.sr_number.length === 16)
+        }
+
         let team_assignments= {"team":teammanagers_alias[i],"assignments":data};
         this.backup_entire_assignment.push(team_assignments);
         //clean pods.
@@ -588,13 +961,13 @@ export default {
         SaveSettingToSessionStorage("AllPods",this.Pods.map(item => item.pod));
         this.assignmentFilterByPod =  GetSettingFromLocalStorage("assignmentFilterByPod") !== null ? GetSettingFromLocalStorage("assignmentFilterByPod") : false;
         if(this.assignmentFilterByPod === true ||this.assignmentFilterByPod === "true"){
-          const podsSelectedForAssignment = GetSettingFromLocalStorage("podsSelectedForAssignment");
+          const podsSelectedForAssignment =JSON.parse(GetSettingFromLocalStorage("podsSelectedForAssignment"));
           data = data.filter((item) => item.support_pod !== null && podsSelectedForAssignment !== null && podsSelectedForAssignment.includes(item.support_pod))
         }       
 
         let item = {
           manager: teammanagers_alias[i],
-          team_displayname : engineerMode_Enabled === "false"?teammanagers_alias[i] : GetSettingFromSessionStorage("Displayname"+"_Of_Team_"+teammanagers_alias[i]),
+          team_displayname : engineerMode_Enabled === "false"?teammanagers_alias[i] : GetSettingFromLocalStorage("Displayname"+"_Of_Team_"+teammanagers_alias[i]),
           assignments: data,
         };
         this.assignment_teams.push(item);
@@ -619,17 +992,23 @@ export default {
           team.manager,          
           engineers
         );
-
+        team.assignments.sort((a,b)=> a.casetype.localeCompare(b.casetype))
         let data_point = {
           manager: team.manager,
+          assignments:team.assignments,
           team_displayname: team.team_displayname,
           engineers: engineers.length,
+          showdetails:this.array_details_enabled_teams.indexOf(team.manager)!==-1,
+          numberofChatAssignments:this.numberofChatAssignments,
+          numberofResolvedInChat:this.numberofResolvedInChat,
+          ResolvedInChat_ratio : this.ResolvedInChat_ratio,
           DSBarAssignment: this.dataset_chart_bar_assignment,
           DSPieBandwidth: this.dataset_chart_pie_by_bandwidth,
           DSPiePod: this.dataset_chart_pie_by_pod,
           DSPieRegion: this.dataset_chart_pie_by_region,
           DSPieAssignmentMethod: this.dataset_chart_pie_by_assignmentmethod,
           DSPieProgramType: this.dataset_chart_pie_by_programtype,
+          DSPieCaseType: this.dataset_chart_pie_by_casetype,
           totalAssignment_count: this.assignment_number_after_cleanup,
         };
 
@@ -727,6 +1106,11 @@ export default {
       teammembers = GetSettingFromSessionStorage(manager_alias).split(",");
 
      
+      if(this.taskexcluded === true) {
+        assignments = assignments.filter(assignment =>
+          assignment.sr_number.length === 16
+        )
+      }
       //initialize the assignment number as 0 for all team members.
       let Number_pod = [];
       teammembers.forEach((member) => {
@@ -747,8 +1131,15 @@ export default {
         if (item_found !== undefined) {
           assignments_cleanedup.push(assignment);
           // find an existing item
-          item_found.assigned_number += 1;
-          count++;
+          if(assignment.sr_number.length === 16){ // for case, we counted it as 1
+            count++;
+            item_found.assigned_number += 1;
+          }
+            else {
+              item_found.assigned_number += 0.5; // for task, we counted it as 0.5
+              count += 0.5;
+            }
+          
 
           //initial labels for pod
           let pod = assignment.support_pod;
@@ -830,8 +1221,13 @@ export default {
       let Number_pod = []; // An array to store the number of each pod
 
        // Variables for piechart by program
-       let labels_programtype = ["S500","None"];
-      let Number_programtype = [0,0]; // An array to store the number of each program
+       let labels_programtype = ["S500","ACE","None"];
+      let Number_programtype = [0,0,0]; // An array to store the number of each program
+
+       // Variables for piechart by case type
+      let labels_casetype = ["Web","Chat"];
+      let Number_casetype = [0,0]; // An array to store the number of each program
+
 
       //Variables for piechart by region
       let labels_region = [];
@@ -942,11 +1338,15 @@ export default {
       });
 
       //initial background color for assignmnet mthod
-     let backgroundColor_assignmentmothod = ["#2596be","#be4d25"];     
+     let backgroundColor_assignmentmothod = ["#2596be","darkgray"];     
      
       //initial background color for programtype
       let backgroundColor_programtype = [];    
-      backgroundColor_programtype = ["#873e23","darkgray"];   
+      backgroundColor_programtype = ["green","orange","darkgray"];   
+
+      //initial background color for case type
+      let backgroundColor_casetype = [];    
+      backgroundColor_casetype = ["#7943e2","darkgray"];   
   
 
       //Initial stacked dataset.
@@ -972,6 +1372,10 @@ export default {
 
       //Initial stacked dataset end
 
+      this.numberofChatAssignments = assignments_cleanedup.filter(item =>item.casetype ==='Chat').length;
+      this.numberofResolvedInChat = assignments_cleanedup.filter(item => item.casetype ==='Chat' && item.convertedToWeb === false).length;
+      this.ResolvedInChat_ratio = (100* this.numberofResolvedInChat / this.numberofChatAssignments ).toFixed(2);
+
       assignments_cleanedup.forEach((assignment) => {
         //generated the stacked dataset for assignment based on pod
         let pod = assignment.support_pod;
@@ -989,7 +1393,9 @@ export default {
           let dataset_item =
             stacked_dataset_chart_bar[index_dataset_item_found];
 
-          dataset_item.data[index_caseowner] += 1;
+            if(assignment.sr_number.length === 16) 
+              dataset_item.data[index_caseowner] += 1;
+            else   dataset_item.data[index_caseowner] += 0.5;
         }
 
         // stacked dataset end
@@ -1006,6 +1412,10 @@ export default {
         let programtype_index = labels_programtype.indexOf(item_programtype);        
         Number_programtype[programtype_index] += 1; //increase the number of corresponding programtype
 
+         //Search the labels of case type, and increase the number if matched.
+         let item_casetype = assignment.casetype;        
+        let casetype_index = labels_casetype.indexOf(item_casetype);        
+        Number_casetype[casetype_index] += 1; //increase the number of corresponding case type
 
         //Search the labels of region, and increase the number if matched.
         let item_region = assignment.sr_regioncode;
@@ -1037,7 +1447,7 @@ export default {
 
       //Cut the labes if it's longer than 8
       let labels_pod_shortened = labels_pod.map(function (label) {
-        return label.length <= 10 ? label : label.slice(0, 8);
+        return label.length <= 14 ? label : label.slice(0, 8);
       });
 
       this.dataset_chart_pie_by_pod.labels = labels_pod_shortened;
@@ -1111,11 +1521,31 @@ export default {
       this.dataset_chart_pie_by_programtype.labels =
         labels_programtype;
 
+        
+      //generate dataset for pie chart by case  type    
+      let dataitem_casetype = [];
+      let datasets_casetype = [];
+
+      dataitem_casetype.data = Number_casetype;
+      dataitem_casetype.backgroundColor =
+        backgroundColor_casetype;
+
+      datasets_casetype = [
+        ...datasets_casetype,
+        dataitem_casetype,
+      ];
+      this.dataset_chart_pie_by_casetype.datasets =
+        datasets_casetype;
+      this.dataset_chart_pie_by_casetype.labels =
+        labels_casetype;
+
        // console.log(datasets_programtype)
       //end
     },
 
     Clean_Dataset_ForAllCharts() {
+
+      this.numberofChatAssignments = this.numberofResolvedInChat =this.ResolvedInChat_ratio = 0;
       //dataset for barchat of assignment
       this.dataset_chart_bar_assignment = {
         labels: [],
@@ -1174,6 +1604,17 @@ export default {
 
       //dataset for piechar by programtype
        this.dataset_chart_pie_by_programtype = {
+        labels: [],
+        datasets: [
+          {
+            data: [],
+            backgroundColor: [],
+          },
+        ],
+      };
+
+        //dataset for piechar by programtype
+        this.dataset_chart_pie_by_casetype = {
         labels: [],
         datasets: [
           {
@@ -1284,6 +1725,17 @@ li a:hover:not(.active) {
   color: #fff;
 }
 
+.display3045 {
+  background: #4a148c;
+  color: #fff;
+}
+
+
+.display4560 {
+  background: #880e4f;
+  color: #fff;
+}
+
 .trending {
   background: rgb(59, 103, 145);
   color: #fff;
@@ -1325,5 +1777,73 @@ li a:hover:not(.active) {
 
 .filter_canceled {
   background-color: #333;
+}
+
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 25px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch_white {
+    color:white
+}
+
+.switch_black {
+    color:black;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+}
+
+input:checked + .slider {
+  background-color: green;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px green;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(22px);
+  -ms-transform: translateX(22px);
+  transform: translateX(22px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 25px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }
 </style>

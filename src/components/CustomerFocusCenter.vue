@@ -17,6 +17,7 @@
       :pods="pods"
       :showDialog="showFilter"
       :PodsFilterModalTitle="PodsFilterModalTitle"
+      :parameterForSelectedPods="'pods_chosen_forcustomerfocus'"
       @ApplyPodFilter="ApplyFilter"
       @Cancel_PodFilter="CancelFilter"
       @ClosePodFilterModal="showFilter = false"
@@ -98,7 +99,7 @@
         switch_black: appstylemode === 'DEFAULT',
         switch_white: appstylemode === 'DARK',
       }"
-              >Your customer focus profile is not configured. Please click the setting to configure the customer focus profile </label
+              >Ops! Your customer focus profile is not configured. Please click the setting to configure the customer focus profile . BTW, the Customer Focus Feature is only available for users of M2 or M2 below </label
             >
           </div>
   <!-- action card setting -->
@@ -140,8 +141,10 @@
               >PROFESSIONAL FOCUSED CUSTOMERS</label
             >
           </div>
-           <!-- action card setting end-->
+       
     </div>
+        <!-- action card setting end-->
+
     <div style="clear: both"></div>
 
     <CustomerFocusCards      
@@ -195,6 +198,7 @@ import {
   GetSettingFromSessionStorage,
   GetAppStyleMode,
   Shuffle,
+  Init_TeamDisplayNames
   
 } from "../common.js";
 
@@ -235,6 +239,7 @@ export default {
     LoadingModal,
     CustomerFocusProfileModal,
     LoadingCircle,
+ 
   },
 
   data() {
@@ -346,6 +351,8 @@ export default {
 
     //set resource status menu as selected item
     SaveSettingToSessionStorage("selectedMenu", "7");
+
+    Init_TeamDisplayNames();
 
     this.siteNivBar_expanded =
       GetSettingFromLocalStorage("siteNivBar_expanded") !== null

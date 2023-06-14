@@ -1,5 +1,5 @@
 <template>
-  <div class="dialog" v-if="showTeamDialog">
+  <div class="dialog" v-if="showDelegationDialog">
     <div class="dialog_mask"></div>
     <div class="dialog_container">
       <div class="dialog_content">
@@ -20,7 +20,7 @@
               font-weight: lighter;
             "
           >
-           Switch Team 
+           Delegations 
           </p>
           <p
             style="
@@ -33,11 +33,19 @@
               top: 10px;
               cursor: pointer;
             "
-            @click="CloseModal"
+            @click="$emit('Close_AccessDelegation_Modal')"
           >
             <i class="fas fa-times"></i>
           </p>
         </div>
+
+        
+        <AccessDelegations 
+        @Load-Default-AccessDelegation="LoadDefaultAccessDelegation" 
+        @Open-Access-Delegation="OpenAccessDelegation"   
+       
+        >
+        </AccessDelegations>
 
         <div
           style="
@@ -46,8 +54,57 @@
             color: black;
             text-align: left;
           "
-          v-text="teamFilterModalTitle"
+         
         ></div>
+
+        <table>
+          <tr>
+            <td style="width: 100%">
+                <label class="container" style="display: inline-block;width:12%">
+                  Alias
+                </label>
+                <input style="width: 80%"
+                type="text" 
+                 
+                  v-model="alias"
+                  name="alias"
+                >
+              </td>         
+           
+          </tr>
+
+          <tr>
+            <td style="width: 100%">
+                <label class="container" style="display: inline-block;width:12%">
+                  Full Name
+                </label>
+                <input
+                  type="text"  style="width: 80%"            
+                 
+                  v-model="fullname"
+                  name="fullname"
+                />
+              </td>
+          </tr>
+        </table>
+       
+        <div
+          style="           
+            margin: 10px ;
+          "
+        >
+          <p
+            style="
+              font-size:16px;          
+              text-align: left;
+              margin:20px;                        
+            "
+          >   
+          Choose teams        
+          </p>
+        
+        </div>
+
 
         <div id="cpe_container" style="margin: 0px auto">
           <div
@@ -56,7 +113,6 @@
               margin: 5px;
               float: left;
               padding-left: 20px;
-              width:24%
             "
             v-bind:key="team"
             v-for="team in teams"
@@ -66,17 +122,14 @@
               style="
                 text-transform: uppercase;
                 display: inline-block;
-                text-align: left;
-                width:95%
-               
-              "
-             
-              ><i class='fas fa-address-card'></i> {{ Get_Team_DisplayName(team) }} 
+                width: 220px;
+              "             
+              ><i class="fas fa-user-alt"></i> {{ Get_Team_DisplayName(team) }} 
               <input
-                type="radio"
-                v-model="team_chosen"
+                type="checkbox"
+                v-model="teams_chosen"
                 :value="team"
-                name="team_chosen"               
+                name="teams_list"               
               />
               <span class="checkmark"></span>
             </label>
@@ -93,14 +146,14 @@
               applyfilter_button: filter_enabled === true,
               not_yet_filter_button: filter_enabled === false,
             }"
-            @click="apply_filter"
+           @click="Save_Access_Delegation"
           >
-          <i class="fas fa-random"></i> Proceed To Switch
+          <i class="fas fa-save"></i> Save
           </button>
           <button
             type="button"
             class="cancelfilter_button"
-            @click="$emit('CancelTeamFilter')"
+            @click="$emit('Close_AccessDelegation_Modal')"
           >
             <i class="fas fa-times"></i> Cancel 
           </button>
@@ -113,75 +166,162 @@
 </template>
 
 <script>
-import { GetSettingFromLocalStorage ,SaveSettingToSessionStorage,WebAPI_Helper,Get_Team_DisplayName } from '../common';
+import { WebAPI_Helper, Sleep,GetSettingFromSessionStorage,SaveSettingToLocalStorage,Get_Team_DisplayName} from "../common.js";
+import AccessDelegations from "./AccessDelegations.vue";
+
+
 
 export default {
-  name: "TeamFilterModal",
+  name: "AccessDelegationModal",
+  props: ["showDelegationDialog", "modalTitle"],
+  components: { AccessDelegations},
+
   data() {
     return {
-      team_chosen: [],
-      filter_enabled: false,    
+
+      card_Hovered: false,
+
+        userRole: "",
+      accessdelegation:"",
+
+      alias:"",
+      fullname:"",
+
+      
+      accessdelegations:[],
+      
+      teams_chosen: [],
+      teams:[],
+      filter_enabled: false,   
+
+      accessdelegation_id:-1,
+
     };
   },
 
-  props: ["teams", "showTeamDialog", "teamFilterModalTitle"],
 
-  watch: {
-    team_chosen(new_team) {
+
+  async created() {
+   
+    this.teams =
+        GetSettingFromSessionStorage("teammanagers_alias").split(",")!== null ? GetSettingFromSessionStorage("teammanagers_alias"): GetSettingFromSessionStorage("teammanagers_alias").split(",");
+      
+    let i=0;
+    for(i=0 ;i< this.accessdelegations.length; i++){
+    
+      SaveSettingToLocalStorage("Delegate_FullName"+"_Of_Team_"+this.accessdelegations[i].team_alias,this.accessdelegations[i].team_displayname);
+     
+    }
+   },
+
+   watch: {
+    teams_chosen(new_team) {
       if (new_team != "") this.filter_enabled = true;
       else this.filter_enabled = false;
     },
   },
 
-  async created() {
-
-      let team_chosen;
-      if(GetSettingFromLocalStorage("cachedteamforservicetickets") === null){
-        const setting = await WebAPI_Helper("get", "getsetting", null);
-        SaveSettingToSessionStorage("teammanagers_alias",setting.teammanagers_alias);
-        team_chosen = setting.teammanagers_alias.split(",")[0];
-      }  else {
-        team_chosen = GetSettingFromLocalStorage("cachedteamforservicetickets");
-      }
-    this.team_chosen = team_chosen;
-   
-  },
-
   methods: {
-    apply_filter() {
-      if (this.team_chosen.length !== 0) {
-        //this.engineers_chosen = this.engineers_chosen.sort(); // why i sort the selection? am I crazy?
-        this.$emit("ApplyTeamFilter", this.team_chosen);
-      }
-    },
-
-    cancal_filter() {
-      this.engineers_chosen = null;
-      this.$emit("CancelTeamFilter");
-    },
-
-    CloseModal() {
-      this.$emit("CloseTeamFilterModal");
-    },
 
     Get_Team_DisplayName(manager_alias){
       return Get_Team_DisplayName(manager_alias);
     },
+    
+    LoadDefaultAccessDelegation(accessdelegation) {
+     
+      this.OpenAccessDelegation(accessdelegation);
+    },
+
+   
+   async OpenAccessDelegation(accessdelegation){
+
+    this.teams =
+        GetSettingFromSessionStorage("teammanagers_alias").split(",");
+    
+      
+      if(accessdelegation.alias === "New Delegation"){
+        this.mode = "Insert";
+        this.accessdelegation_id =  Math.floor(Math.random() * 65585);
+        this.teams_chosen = [];
+
+        this.alias = "";
+        this.fullname = "";
+      }
+      else  {
+      this.mode = "Edit";
+      this.accessdelegation_id = accessdelegation.accessdelegation_id;
+      let delegate = await  WebAPI_Helper("get","accessdelegation/id/" + accessdelegation.accessdelegation_id,"");
+
+      this.alias = delegate.alias;
+      this.fullname = delegate.fullname;
+      this.teams_chosen = delegate.teams_alias.split(",");
+      }      
+      
+    },
+
+ 
+
+   async Save_Access_Delegation() {
+      if(this.submit_disable) return;
+
+        this.accessdelegation = {
+          accessdelegation_id : this.accessdelegation_id,
+          alias : this.alias,
+          fullname :this.fullname,
+          teams_alias : this.teams_chosen.join(",")
+        
+        };
+        WebAPI_Helper("post", "upsertaccessdelegation", this.accessdelegation);
+        Sleep(500);   
+        
+        //refresh UI
+        await WebAPI_Helper("get","accessdelegations","");
+       
+         this.$emit("Close_AccessDelegation_Modal"); // edit the message parent component to close the modal       
+    },
+
   },
 };
 </script>
 
 <style scoped>
-.overload {
-  color: darkred;
+table {
+  width: 100%;
+}
+td {
+  text-align: left;
+  padding-left: 30px;
 }
 
-.lowload {
-  color: gray;
+input[type="text"],
+input[type="password"] {
+  width: 95%;
+  padding: 4px;
+  padding: 5px;
+  height: 30px;
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  margin: 5px 15px 5px 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 1em;
 }
 
-.undercontrol {
-  background-color: green;
+textarea {
+  width: 98%;
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  padding: 5px;
+  resize: none;
+}
+
+textarea:focus {
+  outline-color: #ccc;
+  outline-style: none;
+}
+
+input:focus {
+  outline: none;
 }
 
 .clr {
@@ -324,7 +464,7 @@ export default {
     margin: 0 auto; */
 
   position: fixed;
-  top: 30%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 55%;
